@@ -1,0 +1,64 @@
+{% extends "layout.html" %}
+{% block pagetitle %}
+Buat Parameter Baru - {{ App.name }}
+{% endblock %}
+
+{% block content %}
+<div id="main_wrapper">
+	<div class="page_bar clearfix">
+		<div class="row">
+			<div class="col-sm-10">
+				<h1 class="page_title">Parameter Baru</h1>
+				<p class="text-muted">Buat konfigurasi parameter baru</p>
+			</div>
+			<div class="col-sm-2 text-right">
+				<a class="btn btn-default" href="{{ 'params/view' | alink }}">Daftar Parameter</a>
+			</div>
+		</div>
+	</div>
+	<div class="page_content">
+		<div class="container-fluid">
+			<div class="row">
+				<div class="col-lg-12">
+					<div class="panel panel-default">
+						<div class="panel-heading">Kolom bertanda <span class="red">*</span> tidak boleh dikosongi</div>
+						<div class="panel-body">
+							{% if message %}
+							<div class="alert {% if success %}alert-success{% else %}alert-warning{% endif %}">{{ message | raw }}</div>
+							{% endif %}
+							<form method="post" name="group-create" class="form-horizontal">
+								<div class="form-group">
+									<label class="col-sm-2 control-label">Nama Parameter <span class="red">*</span></label>
+									<div class="col-sm-6">
+										<input name="Options[option_name]" type="text" class="form-control {% if errors.option_name %}error{% endif %}" value="{{ model.option_name }}">
+										<span class="help-block">Pisahkan spasi dengan tanda underscore "_", contoh: site_name</span>
+									</div>
+								</div>
+								<div class="form-group">
+									<label class="col-sm-2 control-label">Nilai Parameter <span class="red">*</span></label>
+									<div class="col-sm-6">
+										<input name="Options[option_value]" type="text" class="form-control {% if errors.option_value %}error{% endif %}" value="{{ model.option_value }}">
+									</div>
+								</div>
+								<div class="form-group">
+									<label class="col-sm-2 control-label">Deskripsi</label>
+									<div class="col-sm-6">
+										<textarea name="Options[option_description]" class="form-control">{{ model.option_description }}</textarea>
+									</div>
+								</div>
+								<div class="form-group">
+									<label class="col-sm-2 control-label">&nbsp;</label>
+									<div class="col-sm-10">
+										<input type="submit" name="Submit" value="Simpan" class="btn btn-success btn-submit">
+									</div>
+								</div>
+							</form>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+{% include 'partial/right_menu.html' %}
+{% endblock %}

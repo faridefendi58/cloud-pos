@@ -1,0 +1,264 @@
+{% extends "layout.html" %}
+{% block pagetitle %}
+Dashboard - {{ App.name }}
+{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" href="{{ 'lib/bootstrap-daterangepicker/daterangepicker-bs3.css' | admin_asset_url }}">
+<!-- main content -->
+<div id="main_wrapper">
+    <div class="page_bar clearfix">
+        <div class="row">
+            <div class="col-sm-8">
+                <h1 class="page_title">Dashboard</h1>
+                <p class="text-muted">Selamat datang di {{ App.params.site_name }}. Anda dapat menggunakan data berikut untuk melihat efektifitas halaman website Anda.</p>
+            </div>
+            <div class="col-sm-4 text-right">
+                <div id="reportrange" class="btn">
+                    <i class="fa fa-calendar"></i>
+                    {% if params.date_from %}
+                    <span>{{ params.date_from | date("M d, Y") }} - {{ params.date_to | date("M d, Y") }}</span> <b class="caret"></b>
+                    {% else %}
+                    <span>{{ "now" | date("M d, Y") }} - {{ "now" | date("M d, Y") }}</span> <b class="caret"></b>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="page_content">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="row">
+                        <div class="col-lg-6 col-md-6">
+                            <div class="row">
+                                <div class="col-lg-6 col-md-6">
+                                    <div class="panel panel-default">
+                                        <div class="stat_box stat_up">
+                                            <div class="stat_ico color_f"><i class="ion-ios7-contact-outline"></i></div>
+                                            <div class="stat_content">
+                                                <span class="stat_count">{{ vmodel.getActiveVisitor() | default(0) }}</span>
+                                                <span class="stat_name">Pengunjung Online</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-lg-6 col-md-6">
+                                    <div class="panel panel-default">
+                                        <div class="stat_box stat_up">
+                                            <div class="stat_ico color_d"><i class="ion-ios7-glasses-outline"></i></div>
+                                            <div class="stat_content">
+                                                <span class="stat_count">{{ vmodel.getUniqueVisitor(params.date_from, params.date_to) | default(0) }}</span>
+                                                <span class="stat_name">Pengunjung Berbeda</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-lg-6 col-md-6">
+                                    <div class="panel panel-default">
+                                        <div class="stat_box stat_up">
+                                            <div class="stat_ico color_g"><i class="ion-ios7-clock-outline"></i></div>
+                                            <div class="stat_content">
+                                                <span class="stat_count">{{ vmodel.getAverageDuration(params.date_from, params.date_to) | default('00:00:00') }}</span>
+                                                <span class="stat_name">Rata-Rata Durasi Kunjungan</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-lg-6 col-md-6">
+                                    <div class="panel panel-default">
+                                        <div class="stat_box stat_down">
+                                            <div class="stat_ico color_a"><i class="ion-ios7-redo-outline"></i></div>
+                                            <div class="stat_content">
+                                                <span class="stat_count">{{ vmodel.getReferral(params.date_from, params.date_to) | default(0) }}</span>
+                                                <span class="stat_name">Situs Referral</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-6 col-md-6">
+                            <div class="panel panel-default">
+                                <div class="panel-body">
+                                    <div class="row">
+                                        <div class="col-md-7">
+                                            {% set visitor_devices = vmodel.getVisitorByDevice(params.date_from, params.date_to) %}
+                                            <table class="table table-striped">
+                                                <thead>
+                                                <tr>
+                                                    <th>Perangkat</th>
+                                                    <th class="sub_col">Jumlah Kunjungan</th>
+                                                </tr>
+                                                </thead>
+                                                <tbody>
+                                                <tr>
+                                                    <td><a href="#">Desktop</a></td>
+                                                    <td class="sub_col">{{ visitor_devices.desktop | default(0) }}</td>
+                                                </tr>
+                                                <tr>
+                                                    <td><a href="#">Mobile</a></td>
+                                                    <td class="sub_col">{{ visitor_devices.mobile | default(0) }}</td>
+                                                </tr>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                        <div class="col-md-5">
+                                            <div id="flot_device" class="chart" style="height:145px;width:100%">
+                                                <script>
+                                                    chart_device_data = [
+                                                        { label: "Desktop", data: '{{ visitor_devices.desktop }}', color: '#1f77b4' },
+                                                        { label: "Mobile", data: '{{ visitor_devices.mobile }}', color: '#ff7f0e' },
+                                                    ];
+                                                </script>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- start the cart -->
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="panel panel-default">
+                        <div class="panel-body">
+                            <div id="nvd3_cumulativeLine" style="width:100%;height:300px">
+                                <svg></svg>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- endof the cart -->
+        </div>
+    </div>
+</div>
+{% include 'partial/right_menu.html' %}
+{% endblock %}
+{% block endbodyjs %}
+<script src="{{ 'lib/d3/d3.min.js' | admin_asset_url }}"></script>
+<script src="{{ 'lib/novus-nvd3/nv.d3.min.js' | admin_asset_url }}"></script>
+<!-- flot charts-->
+<script src="{{ 'lib/flot/jquery.flot.min.js' | admin_asset_url }}"></script>
+<script src="{{ 'lib/flot/jquery.flot.pie.min.js' | admin_asset_url }}"></script>
+<script src="{{ 'lib/flot/jquery.flot.resize.min.js' | admin_asset_url }}"></script>
+<script src="{{ 'lib/flot/jquery.flot.tooltip.min.js' | admin_asset_url }}"></script>
+<!-- date range picker -->
+<script src="{{ 'lib/bootstrap-daterangepicker/daterangepicker.js' | admin_asset_url }}"></script>
+<!-- moment.js (date library) -->
+<script src="{{ 'lib/moment-js/moment.min.js' | admin_asset_url }}"></script>
+{% set page_views = vmodel.getPageViewInterval(params.date_from, params.date_to) %}
+<script type="text/javascript">
+    $(function() {
+        // nvd3 charts
+        tisa_nvd3_charts.cumulativeLine();
+        tisa_flot_charts.device();
+        initDateRage();
+    });
+    tisa_nvd3_charts = {
+        cumulativeLine: function() {
+            if ($('#nvd3_cumulativeLine').length) {
+                nv.addGraph(function() {
+                    var chart = nv.models.cumulativeLineChart()
+                            .useInteractiveGuideline(true)
+                            .x(function(d) { return d[0] })
+                            .y(function(d) { return d[1] })
+                            .color(d3.scale.category20().range())
+                            .transitionDuration(500)
+                            .clipVoronoi(false);
+
+                    chart.xAxis.tickFormat(function(d) {
+                        return d3.time.format('%m/%d/%y')(new Date(d))
+                    });
+
+                    //chart.yAxis.tickFormat(d3.format(',.1%'));
+
+                    d3.select('#nvd3_cumulativeLine svg').datum(cumulativeTestData()).call(chart);
+
+                    nv.utils.windowResize(chart.update);
+
+                    return chart;
+                });
+
+                function cumulativeTestData() {
+                    var page_view_data = JSON.parse('{{ page_views.pageview | json_encode }}');
+                    var session_data = JSON.parse('{{ page_views.session | json_encode }}');
+                    return [
+                        {
+                            key: "PageView",
+                            color: "#1f77b4",
+                            values: page_view_data,
+                        },
+                        {
+                            key: "Session",
+                            color: "#ff7f0e",
+                            values: session_data
+                        }
+                    ];
+                }
+            }
+        }
+    }
+    tisa_flot_charts = {
+        device: function () {
+            if ($('#flot_device').length) {
+                function labelFormatter(label, series) {
+                    return "<div class=\"chart_label\">" + Math.round(series.percent) + "%</div>";
+                }
+
+                $.plot('#flot_device', chart_device_data, {
+                    series: {
+                        pie: {
+                            show: true,
+                            radius: 3 / 4,
+                            label: {
+                                show: true,
+                                radius: 0.54,
+                                formatter: labelFormatter,
+                            }
+                        }
+                    }
+                });
+            }
+        },
+    }
+    function initDateRage() {
+        if($('#reportrange').length) {
+            if( $(window).width() < 974 ) {
+                var dropdownPos = 'right';
+            } else {
+                var dropdownPos = 'left';
+            }
+            $('#reportrange').daterangepicker({
+                        opens: dropdownPos,
+                        ranges: {
+                            'Today': [moment(), moment()],
+                            'Yesterday': [moment().subtract('days', 1), moment().subtract('days', 1)],
+                            'Last 7 Days': [moment().subtract('days', 6), moment()],
+                            'Last 30 Days': [moment().subtract('days', 29), moment()],
+                            'This Month': [moment().startOf('month'), moment().endOf('month')],
+                            'Last Month': [moment().subtract('month', 1).startOf('month'), moment().subtract('month', 1).endOf('month')]
+                        },
+                        startDate: moment().subtract('days', 29),
+                        endDate: moment(),
+                        buttonClasses: ['btn','btn-sm']
+                    },
+                    function(start, end) {
+                        $('#reportrange span').html(start.format('MMMM D, YYYY') + ' - ' + end.format('MMMM D, YYYY'));
+                        setDateRange(start, end);
+                    }
+            );
+        }
+    }
+    function setDateRange(start, end) {
+        var loc = window.location;
+        var currentURL = loc.protocol + '//' + loc.host + loc.pathname;
+        window.location.href = currentURL+'?start='+start+'&end='+end;
+    }
+</script>
+{% endblock %}

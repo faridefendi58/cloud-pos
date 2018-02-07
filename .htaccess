@@ -1,0 +1,30 @@
+RewriteEngine on
+
+# if a directory or a file exists, use it directly
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+
+# otherwise forward it to index.php
+RewriteRule . index.php
+
+<IfModule mod_headers.c>
+    # MONTH
+    <FilesMatch "\.(flv|gif|jpg|jpeg|png|ico|swf)$">
+       Header set Cache-Control "max-age=2592000"
+    </FilesMatch>
+
+    # WEEK
+    <FilesMatch "\.(js|css|pdf|txt)$">
+       Header set Cache-Control "max-age=604800"
+    </FilesMatch>
+
+    # DAY
+    <FilesMatch "\.(html|htm)$">
+       Header set Cache-Control "max-age=43200"
+    </FilesMatch>
+</IfModule>
+<IFModule mod_deflate.c>
+	<filesmatch "\.(js|css|jpg|png|jpeg|html|phtml|php)$">
+		SetOutputFilter DEFLATE
+	</filesmatch>
+</IFModule>

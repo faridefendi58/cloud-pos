@@ -1,0 +1,155 @@
+{% extends "layout.html" %}
+{% block pagetitle %}
+{{ model.title }} - Order - {{ App.name }}
+{% endblock %}
+
+{% block content %}
+<div id="main_wrapper">
+	<div class="page_bar clearfix">
+		<div class="row">
+			<div class="col-sm-10">
+				<h1 class="page_title">#{{ model.id }} {{ model.title }}</h1>
+				<p class="text-muted">Kelola order</p>
+			</div>
+			<div class="col-sm-2 text-right">
+				<a class="btn btn-default" href="{{ 'order/admin/view' | link }}">Daftar Order</a>
+			</div>
+		</div>
+	</div>
+    <div class="page_content">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-lg-6">
+                    <div class="panel panel-default">
+                        <div class="panel-heading">
+							Detail Order
+						</div>
+						<div class="panel-body">
+							<table class="table table-hover">
+								<tr>
+									<td>Id</td>
+									<td>#{{ model.id }}</td>
+								</tr>
+								<tr>
+									<td>Nama Order</td>
+									<td>{{ model.title }}</td>
+								</tr>
+								<tr>
+									<td>Periode</td>
+									<td>{{ model.period }}</td>
+								</tr>
+								<tr>
+									<td>Product</td>
+									<td>
+										<a href="{{ 'product/admin/manage' | link }}/{{ model.product_id }}" target="_blank">
+										{{ product.title }}
+										</a>
+									</td>
+								</tr>
+								<tr>
+									<td>Status</td>
+									<td>{{ omodel.get_status(model.status) }}</td>
+								</tr>
+								<tr>
+									<td>Catatan</td>
+									<td>{{ model.notes }}</td>
+								</tr>
+								<tr>
+									<td>Tanggal Expired</td>
+									<td>{{ model.expires_at }}</td>
+								</tr>
+								<tr>
+									<td>Tanggal Cancel</td>
+									<td>{{ model.canceled_at }}</td>
+								</tr>
+								<tr>
+									<td>Tanggal Order</td>
+									<td>{{ model.created_at }}</td>
+								</tr>
+							</table>
+						</div>
+						<div class="panel-footer">
+							{% if model.status == 'pending_setup' or model.status == 'failed_setup' %}
+								<a href="{{ 'order/admin/activate' | link }}/{{ model.id }}" class="btn btn-info btn-ajax">Activate</a>
+							{% endif %}
+							{% if model.status == 'active' %}
+								<a href="{{ 'order/admin/suspend' | link }}/{{ model.id }}" class="btn btn-warning btn-ajax">Suspend</a>
+								<a href="{{ 'order/admin/cancel' | link }}/{{ model.id }}" class="btn btn-danger btn-ajax">Cancel</a>
+							{% endif %}
+							{% if model.status == 'suspended' %}
+								<a href="{{ 'order/admin/unsuspend' | link }}/{{ model.id }}" class="btn btn-success btn-ajax">Unsuspend</a>
+							{% endif %}
+							<a href="{{ 'order/admin/delete' | link }}/{{ model.id }}" class="btn btn-danger btn-ajax">Delete</a>
+						</div>
+                    </div>
+                </div>
+				{% if model.service_id %}
+				{% set service = omodel.get_service(model.id) %}
+				<div class="col-lg-6">
+					<div class="panel panel-default">
+						<div class="panel-heading">
+							Service
+						</div>
+						<div class="panel-body">
+							<table class="table table-hover">
+								<tr>
+									<td>Nama Domain</td>
+									<td>
+										<a href="http://{{ service.domain }}" target="_blank">{{ service.domain }}</a>
+									</td>
+								</tr>
+								<tr>
+									<td>Tanggal Dibuat</td>
+									<td>{{ service.created_at | date("Y-m-d H:i:s") }}</td>
+								</tr>
+							</table>
+						</div>
+					</div>
+				</div>
+				{% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% include 'partial/right_menu.html' %}
+{% endblock %}
+{% block endbodyjs %}
+<script type="text/javascript">
+	$(function () {
+		var success_message = "{{ message }}";
+		if (success_message && success_message.length > 0) {
+			setTimeout(function () {
+				window.location.href = window.location;
+			}, 3000);
+		}
+		// btn-ajax
+		$('.btn-ajax').click(function(){
+			if (confirm('Anda yakin ingin melakukan ini?')) {
+				$.ajax({
+					'beforeSend': function() {
+						iosOverlay({
+							text: "Loading",
+							icon: "fa fa-spinner fa-spin"
+						});
+					},
+					'complete': function() {
+						setTimeout(function () {
+							$('.ui-ios-overlay').remove();
+						}, 1000);
+					},
+					'url': $(this).attr('href'),
+					'type':'post',
+					'dataType': 'json',
+					'success': function(data) {
+						if (data) {
+							window.location.reload(true);
+						}
+					}
+				});
+			}
+
+			return false;
+		});
+	});
+</script>
+{% endblock %}

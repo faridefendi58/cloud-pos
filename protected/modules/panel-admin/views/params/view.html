@@ -1,0 +1,95 @@
+{% extends "layout.html" %}
+{% block pagetitle %}
+Parameter - {{ App.name }}
+{% endblock %}
+
+{% block content %}
+<!-- main content -->
+<div id="main_wrapper">
+    <div class="page_bar clearfix">
+        <div class="row">
+            <div class="col-sm-10">
+                <h1 class="page_title">Parameter</h1>
+                <p class="text-muted">Konfigurasi umum untuk website</p>
+            </div>
+            <div class="col-sm-2 text-right">
+                <a class="btn btn-default" href="{{ 'params/create' | alink }}">Buat Parameter Baru</a>
+            </div>
+        </div>
+    </div>
+    <div class="page_content">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="panel panel-default">
+                        <div class="panel-heading">Daftar Parameter</div>
+                        <div class="panel-body">
+                            <div id="dt_basic_wrapper" class="dataTables_wrapper form-inline no-footer table-responsive" role="grid">
+                                <table id="dt_basic" class="table table-striped dataTable">
+                                    <thead>
+                                    <tr>
+                                        <th>id</th>
+                                        <th>Nama Parameter</th>
+                                        <th>Nilai</th>
+                                        <th>Deskripsi</th>
+                                        <th>&nbsp;</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    {% for i, option in options %}
+                                    <tr>
+                                        <td><center>{{ i }}</center></td>
+                                        <td>{{ option.option_name }}</td>
+                                        <td style="max-width: 300px;overflow: hidden;">{{ option.option_value }}</td>
+                                        <td>{{ option.option_description | default('-') }}</td>
+                                        <td>
+                                            <a href="{{ 'params/update' | alink }}/{{ option.id }}" title="Ubah Parameter">
+                                                <i class="fa fa-pencil"></i>
+                                            </a>
+                                            <a href="{{ 'params/delete' | alink }}/{{ option.id }}" onclick="return hapus(this);">
+                                                <i class="fa fa-trash-o"></i>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    {% else %}
+                                    <tr>
+                                        <td>No data founds</td>
+                                    </tr>
+                                    {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% include 'partial/right_menu.html' %}
+{% endblock %}
+{% block endbodyjs %}
+<script src="{{ 'lib/DataTables/media/js/jquery.dataTables.min.js' | admin_asset_url }}"></script>
+<script src="{{ 'lib/DataTables/media/js/dataTables.bootstrap.js' | admin_asset_url }}"></script>
+<script type="text/javascript">
+    function hapus(data) {
+        if (confirm('Anda yakin ingin menghapus item ini ?')) {
+            var $this =  $(data);
+            var url = $this.attr('href');
+            $.ajax({
+                //'beforeSend': function() { Loading.show(); },
+                //'complete': function() { Loading.hide(); },
+                'url': url,
+                'type':'post',
+                'dataType': 'json',
+                'success': function(data) {
+                    if (data) {
+                        $this.parent().parent().remove();
+                    }
+                }
+            });
+        }
+        return false;
+    }
+</script>
+{% endblock %}

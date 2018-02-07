@@ -1,0 +1,74 @@
+{
+    "id" : "email",
+    "name" : "Email Template",
+    "description" : "Email template module for slightsite 1.0",
+    "icon" : "icon.png",
+    "author" : "farid efendi",
+    "author_url" : "http://jagungbakar.web.id/",
+    "license" : "GPL version 2 or later - http://www.gnu.org/licenses/old-licenses/gpl-2.0.html",
+    "version" : "1.0.0",
+    "config" : [
+        {
+            "title":"Simpan log email ke database",
+            "name":"log_enabled",
+            "value":0,
+            "type":"number",
+            "options":[
+                "Tidak",
+                "Ya"
+            ],
+            "form_type":"radio"
+        },
+        {
+            "title":"Email transport",
+            "name":"mailer",
+            "value":"sendmail",
+            "type":"text",
+            "options":{
+                "sendmail" : "Sendmail",
+                "smtp" : "SMTP"
+            },
+            "form_type":"radio"
+        },
+        {
+            "title":"SMTP Hostname",
+            "name":"smtp_host",
+            "value":"smtp.gmail.com",
+            "type":"text",
+            "form_type":"input"
+        },
+        {
+            "title":"SMTP Port",
+            "name":"smtp_port",
+            "value":"587",
+            "type":"number",
+            "form_type":"input"
+        },
+        {
+            "title":"SMTP Username",
+            "name":"smtp_username",
+            "value":"my.email@gmail.com",
+            "type":"text",
+            "form_type":"input"
+        },
+        {
+            "title":"SMTP Password",
+            "name":"smtp_password",
+            "value":"smtp_password",
+            "type":"password",
+            "form_type":"input"
+        },
+        {
+            "title":"SMTP Security",
+            "name":"smtp_security",
+            "value":"none",
+            "type":"text",
+            "options":{
+                "none" : "None",
+                "ssl" : "SSL",
+                "tls" : "TLS"
+            },
+            "form_type":"radio"
+        }
+    ]
+}

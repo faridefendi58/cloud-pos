@@ -1,0 +1,74 @@
+{
+    "id" : "invoice",
+    "name" : "Invoice",
+    "description" : "Invoice module for slightsite 1.0",
+    "icon" : "icon.png",
+    "author" : "farid efendi",
+    "author_url" : "http://jagungbakar.web.id/",
+    "license" : "GPL version 2 or later - http://www.gnu.org/licenses/old-licenses/gpl-2.0.html",
+    "version" : "1.0.0",
+    "config" : [
+        {
+            "title":"Jumlah hari untuk menerbitkan tagihan sebelum order expired",
+            "name":"invoice_issue_days_before_expire",
+            "value":14,
+            "type":"number",
+            "form_type":"input"
+        },
+        {
+            "title":"Tagihan jatuh tempo (hari)",
+            "name":"invoice_due_days",
+            "value":5,
+            "type":"number",
+            "placeholder":"Max tagihan jatuh tempo dalam beberapa hari",
+            "form_type":"input"
+        },
+        {
+            "title":"Persetujuan tagihan otomatis",
+            "name":"invoice_auto_approval",
+            "value":1,
+            "type":"number",
+            "options":[
+                "Tidak",
+                "Ya"
+            ],
+            "form_type":"radio"
+        },
+        {
+            "title":"Hapus tagihan tidak terbayar dalam beberapa hari",
+            "name":"remove_after_days",
+            "value":0,
+            "type":"number",
+            "placeholder":"Isi dengan nilai 0 untuk tidak menghapus tagihan secara otomatis",
+            "form_type":"input"
+        },
+        {
+            "title":"Prefiks tagihan",
+            "name":"invoice_series",
+            "value":"SS",
+            "type":"string",
+            "form_type":"input"
+        },
+        {
+            "title":"Prefiks tagihan terbayar",
+            "name":"invoice_series_paid",
+            "value":"SS-PAID",
+            "type":"string",
+            "form_type":"input"
+        },
+        {
+            "title":"Nomor tagihan terbayar selanjutnya",
+            "name":"invoice_starting_number",
+            "value":1,
+            "type":"number",
+            "form_type":"input"
+        },
+        {
+            "title":"Nomor refund selanjutnya",
+            "name":"invoice_cn_starting_number",
+            "value":1,
+            "type":"number",
+            "form_type":"input"
+        }
+    ]
+}

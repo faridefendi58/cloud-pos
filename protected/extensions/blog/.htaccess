@@ -1,0 +1,4 @@
+<Files "icon.png">
+    Order Allow,Deny
+    Allow from all
+</Files>

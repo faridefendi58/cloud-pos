@@ -1,0 +1,13 @@
+/vendor/
+/assets/*
+/protected/runtime/*
+/.idea/*
+index.php
+/protected/configs/*
+*.phtml
+*.ehtml
+*.xhtml
+/protected/data/
+/themes/default/assets/images/*
+/uploads/*
+*.lock

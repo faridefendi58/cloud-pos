@@ -1,0 +1,181 @@
+{% extends "layout.html" %}
+{% block pagetitle %}
+Tambah Postingan Baru - {{ App.name }}
+{% endblock %}
+
+{% block content %}
+<div id="main_wrapper">
+	<div class="page_bar clearfix">
+		<div class="row">
+			<div class="col-sm-10">
+				<h1 class="page_title">Tambah Postingan Baru</h1>
+				<p class="text-muted">Formulir penambahan postingan baru</p>
+			</div>
+			<div class="col-sm-2 text-right">
+				<a class="btn btn-default" href="{{ 'blog/posts/view' | link }}">Daftar Postingan</a>
+			</div>
+		</div>
+	</div>
+    <div class="page_content">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-lg-12">
+                    <div class="panel panel-default">
+                        <div class="panel-heading">
+							Kolom bertanda <span class="red">*</span> tidak boleh dikosongi
+						</div>
+						<div class="panel-body">
+						{% if message %}
+							<div class="alert {% if success %}alert-success{% else %}alert-warning{% endif %}">{{ message }}</div>
+						{% endif %}
+						<form method="post" name="page-create">
+							<ul class="nav nav-tabs nav-justified">
+								{% for language in languages %}
+								<li {% if language.is_default %}class="active"{% endif %}>
+									<a data-toggle="tab" href="#language-{{ language.code }}">
+										<i class="glyphicon glyphicon-file"></i> <strong>{{ language.language_name }}</strong>
+									</a>
+								</li>
+								{% endfor %}
+							</ul>
+							<div class="tab-content">
+								{% for language in languages %}
+								<div id="language-{{ language.code }}" class="tab-pane {% if language.is_default %}active{% endif %}">
+									<div class="form-group col-sm-6">
+										<label>Title <span class="red">*</span></label>
+										<input type="text" name="PostContent[title][{{ language.id }}]" class="form-control" lang="{{ language.id }}" onchange="getSlug(this)">
+									</div>
+									<div class="form-group col-sm-6">
+										<label>Permalink <span class="red">*</span></label>
+										<input type="text" name="PostContent[slug][{{ language.id }}]" class="form-control" id="slug-{{ language.id }}">
+									</div>
+									<div class="form-group col-sm-12">
+										<label>Content <span class="red">*</span></label>
+										<textarea class="form-control editor" name="PostContent[content][{{ language.id }}]"></textarea>
+									</div>
+									<input type="hidden" name="PostContent[language][{{ language.id }}]" value="{{ language.id }}">
+									<div class="form-group col-sm-6">
+										<label>Meta Keywords</label>
+										<input type="text" name="PostContent[meta_keywords][{{ language.id }}]" class="form-control">
+									</div>
+									<div class="form-group col-sm-6">
+										<label>Meta Description</label>
+										<textarea name="PostContent[meta_description][{{ language.id }}]" class="form-control"></textarea>
+									</div>
+								</div>
+								{% endfor %}
+							</div>
+							<input type="hidden" name="Post[post_type]" value="post">
+							<div class="form-group col-sm-6">
+								<label>Category</label>
+								<select name="Post[post_category][]" class="form-control multiple" multiple="true">
+									{% for category in categories %}
+									<option value="{{ category.id }}">{{ category.category_name }}</option>
+									{% endfor %}
+								</select>
+							</div>
+							<div class="form-group col-sm-6">
+								<label>Tags</label>
+								<input type="text" name="Post[tags]" class="form-control" placeholder="Please separate with ','. Ex : domain, whois">
+							</div>
+							<div class="form-group col-sm-6">
+								<div class="checkbox">
+									<label>
+										<input type="checkbox" name="Post[allow_comment]" checked="checked">
+										<b>Allow Comment</b>
+									</label>
+								</div>
+							</div>
+							<div class="form-group col-sm-6">
+								<label>Status</label>
+								{% for status_code, status_name in status_list %}
+								<label class="radio-inline">
+									<input type="radio" name="Post[status]" id="optionsRadios1" value="{{ status_code }}" {% if status_code == 'draft' %}checked="checked"{% endif %}>
+									{{ status_name }}
+								</label>
+								{% endfor %}
+							</div>
+                        	<div class="form-group col-sm-12">
+                                <input type="submit" name="Submit" value="Create" class="btn btn-success btn-submit">
+                            </div>
+                        </form>
+						</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% include 'partial/right_menu.html' %}
+{% endblock %}
+{% block endbodyjs %}
+<script src="{{ 'js/bootstrap-fileupload.min.js' | admin_asset_url }}"></script>
+<script type="text/javascript" src="{{ 'lib/tinymce/tinymce.min.js' | admin_asset_url }}"></script>
+<script type="text/javascript">
+$(function(){
+	tinymce.init({
+		selector : '.editor',
+		remove_linebreaks : false,
+		gecko_spellcheck : false,
+		keep_styles : true,
+		accessibility_focus : true,
+		tabfocus_elements : 'major-publishing-actions',
+		media_strict : false,
+		height: 400,
+		plugins : 'code image imagetools paste',
+		menubar : false,
+		toolbar: 'undo redo | styleselect | bold italic | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | pastetext image code',
+		//images_upload_url: '{{ "blog/posts/direct-upload" | link }}',
+		images_upload_handler: function (blobInfo, success, failure) {
+			var xhr, formData;
+
+			xhr = new XMLHttpRequest();
+			xhr.withCredentials = false;
+			xhr.open('POST', '{{ "blog/posts/direct-upload" | link }}');
+
+			xhr.onload = function() {
+				var json;
+
+				if (xhr.status != 200) {
+					failure('HTTP Error: ' + xhr.status);
+					return;
+				}
+
+				var json = $.parseJSON(xhr.responseText);
+
+				if (!json || typeof json.location != 'string') {
+					failure('Invalid JSON: ' + xhr.responseText);
+					return;
+				}
+
+				success(json.location);
+			};
+
+			formData = new FormData();
+			formData.append('file', blobInfo.blob(), blobInfo.filename());
+
+			xhr.send(formData);
+		}
+	});
+	var success_message = "{{ message }}";
+	if (success_message && success_message.length > 0) {
+		setTimeout(function () {
+			window.location.href = "{{ 'blog/posts/update' | link }}/{{ post_id }}";
+		}, 2000);
+	}
+});
+function getSlug(data){
+	var lang = $(data).attr('lang');
+	$.ajax({
+		'beforeSend': function() {  },
+		'complete': function() {  },
+		'url': "{{ 'blog/posts/get-slug' | link }}",
+		'type':'post',
+		'data':{'title':$(data).val()},
+		'success': function(data) {
+			$('#slug-'+lang).attr('value',data);
+		}
+	});
+}
+</script>
+{% endblock %}

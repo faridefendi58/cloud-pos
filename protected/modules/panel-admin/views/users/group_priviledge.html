@@ -1,0 +1,105 @@
+{% extends "layout.html" %}
+{% block pagetitle %}
+Priviledge Group User - {{ model.name }} - {{ App.name }}
+{% endblock %}
+
+{% block content %}
+<div id="main_wrapper">
+    <div class="page_content">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-lg-12">
+                    <div class="panel panel-default">
+                        <div class="panel-heading">Priviledge for {{ model.name }}</div>
+						<div class="panel-body">
+						{% if message %}
+							<div class="alert {% if success %}alert-success{% else %}alert-warning{% endif %}">{{ message | raw }}</div>
+						{% endif %}
+						<form method="post" name="priviledge-update" class="form-horizontal">
+							<table class="table table-bordered">
+								<thead>
+									<tr>
+										<th rowspan="2" style="vertical-align:middle;"><center>Module</center></th>
+										<th rowspan="2" style="vertical-align:middle;"><center>Controller</center></th>
+										<th colspan="4"><center>Priviledge</center></th>
+									</tr>
+									<tr>
+										<th><center>Create</center></th>
+										<th><center>Read</center></th>
+										<th><center>Update</center></th>
+										<th><center>Delete</center></th>
+									</tr>
+								</thead>
+							{% for i, item in items%}
+								<tr>
+									<td>{{ item.module }}</td>
+									<td>{{ item.controller }}</td>
+									<td>
+										<center>
+											<input type="checkbox" name="Priviledge[{{ item.module }}][{{ item.controller }}][create]" class="action" {% if priviledge[item.module][item.controller]['create'] %} checked="checked" {% endif %}>
+										</center>
+									</td>
+									<td>
+										<center>
+											<input type="checkbox" name="Priviledge[{{ item.module }}][{{ item.controller }}][read]" class="action" {% if priviledge[item.module][item.controller]['read'] %} checked="checked" {% endif %}>
+										</center>
+									</td>
+									<td>
+										<center>
+											<input type="checkbox" name="Priviledge[{{ item.module }}][{{ item.controller }}][update]" class="action" {% if priviledge[item.module][item.controller]['update'] %} checked="checked" {% endif %}>
+										</center>
+									</td>
+									<td>
+										<center>
+											<input type="checkbox" name="Priviledge[{{ item.module }}][{{ item.controller }}][delete]" class="action" {% if priviledge[item.module][item.controller]['delete'] %} checked="checked" {% endif %}>
+										</center>
+									</td>
+								</tr>
+							{% endfor %}
+							</table>
+							<div class="form-group">
+								<div class="col-lg-12">
+									<div class="checkbox">
+										<label>
+											<input type="checkbox" name="check_all">
+											<b>Check All</b>
+										</label>
+									</div>
+								</div>
+							</div>
+							<div class="form-group">
+								<div class="col-lg-12">
+									<input type="submit" name="submit" class="btn btn-info" value="Submit">
+								</div>
+							</div>
+                        </form>
+						</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% include 'partial/right_menu.html' %}
+{% endblock %}
+{% block endbodyjs%}
+<script type="text/javascript">
+	$(function () {
+		$('input[name="check_all"]').click(function () {
+			if ($(this).is(":checked")){
+				$('.action').prop('checked', true);
+			} else {
+				$('.action').prop('checked', false);
+			}
+			return true;
+		});
+
+		var success_message = "{{ message }}";
+		if (success_message && success_message.length > 0) {
+			setTimeout(function () {
+				window.location.href = window.location;
+			}, 3000);
+		}
+	});
+</script>
+{% endblock %}

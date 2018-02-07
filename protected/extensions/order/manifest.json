@@ -1,0 +1,91 @@
+{
+    "id" : "order",
+    "name" : "Order",
+    "description" : "Order module for slightsite 1.0",
+    "icon" : "icon.png",
+    "author" : "farid efendi",
+    "author_url" : "http://jagungbakar.web.id/",
+    "license" : "GPL version 2 or later - http://www.gnu.org/licenses/old-licenses/gpl-2.0.html",
+    "version" : "1.0.0",
+    "config" : [
+        {
+            "title":"Tanggal expired selanjutnya diambil dari",
+            "name":"order_renewal_logic",
+            "value":"from_expiration_date",
+            "type":"number",
+            "options":{
+                "from_expiration_date" : "Tanggal expired terakhir",
+                "from_today" : "Tanggal pembayaran invoice renewal"
+            },
+            "form_type":"radio"
+        },
+        {
+            "title":"Masa tenggang sebelum disuspend (hari)",
+            "name":"batch_grace_period",
+            "value":14,
+            "type":"number",
+            "placeholder":"Order akan disuspend setelah melewati masa tenggang",
+            "form_type":"input"
+        },
+        {
+            "title":"Alasan suspend order secara otomatis",
+            "name":"batch_suspend_reason",
+            "value":"Tagihan tidak dibayar",
+            "type":"text",
+            "form_type":"input"
+        },
+        {
+            "title":"Penghapusan otomatis",
+            "name":"batch_cancel_suspended",
+            "value":0,
+            "type":"number",
+            "options":[
+                "Jangan hapus order yang tersuspend",
+                "Hapus order yang tersuspend"
+            ],
+            "form_type":"select"
+        },
+        {
+            "title":"Penghapusan order tersuspend setelah (hari)",
+            "name":"batch_cancel_suspended_after_days",
+            "value":7,
+            "type":"string",
+            "form_type":"input"
+        },
+        {
+            "title":"Alasan penghapusan order setelah tersuspend",
+            "name":"batch_cancel_suspended_reason",
+            "value":"Tagihan tidak dibayar",
+            "type":"string",
+            "form_type":"input"
+        },
+        {
+            "title":"Website server Domain Name",
+            "name":"server_domain_name",
+            "value":"",
+            "type":"string",
+            "form_type":"input"
+        },
+        {
+            "title":"Website server IP",
+            "name":"server_ip",
+            "value":"",
+            "type":"string",
+            "form_type":"input"
+        },
+        {
+            "title":"Website server username",
+            "name":"server_username",
+            "value":"",
+            "type":"string",
+            "form_type":"input"
+        },
+        {
+            "title":"Website server password",
+            "name":"server_password",
+            "value":"",
+            "type":"password",
+            "form_type":"input"
+        }
+    ]
+}

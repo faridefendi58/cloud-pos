@@ -1,0 +1,10 @@
+{
+    "id" : "blog",
+    "name" : "Blog",
+    "description" : "Blog post module for slightsite 1.0",
+    "icon" : "icon.png",
+    "author" : "farid efendi",
+    "author_url" : "http://jagungbakar.web.id/",
+    "license" : "GPL version 2 or later - http://www.gnu.org/licenses/old-licenses/gpl-2.0.html",
+    "version" : "1.0.0"
+}
