@@ -68,7 +68,7 @@ class BaseController
         $this->_container['response']
             ->withStatus(500)
             ->withHeader('Content-Type', 'text/html')
-            ->write('You are not allowed to do this action!');
+            ->write('Anda tidak diperbolehkan mengakses halaman ini!');
     }
 
     protected function hasAccess($path)

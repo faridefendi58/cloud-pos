@@ -1,0 +1,29 @@
+<!-- right slidebar -->
+<div id="slidebar">
+    <div id="slidebar_content">
+        <div class="panel panel-default">
+            {% set exts = App.optionModel.getInstalledExtensions() %}
+            <div class="panel-heading">Ekstensi <a href="#" id="template_add" class="btn btn-success btn-xs pull-right">{{ exts | length }} Aktif</a></div>
+            <ul class="file_list">
+                {% if exts %}
+                {% for e, ext in exts %}
+                <li>
+                    <div class="btn-group btn-group-xs file_actions pull-right">
+                        {% for em, menu in ext.menu %}
+                            <a href="{{ menu.url | link }}" class="btn btn-default" title="{{ menu.label }}">
+                                <i class="{{ menu.icon }}"></i>
+                            </a>
+                        {% endfor %}
+                    </div>
+                    <i class="fa fa-file-o"></i>
+                    <p class="file_name">
+                        <a href="{% if ext.menu %}{{ ext.menu[0].url | link }}{% else %}#{% endif %}" data-file-name="basic_layout" data-name="Basic Layout">{{ ext.name }}</a>
+                        <small class="text-muted">{{ ext.description }}</small>
+                    </p>
+                </li>
+                {% endfor %}
+                {% endif %}
+            </ul>
+        </div>
+    </div>
+</div>

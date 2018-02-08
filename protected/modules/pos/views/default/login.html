@@ -1,0 +1,39 @@
+{% extends "layout.html" %}
+{% block pagetitle %}
+Login - {{ App.name }}
+{% endblock %}
+
+{% block header %}
+<link href="{{ 'css/login.css' | admin_asset_url }}" rel="stylesheet" media="screen">
+{% endblock %}
+{% block content %}
+<div class="login_container">
+    <form id="login_form" action="" method="post">
+        <h1 class="login_heading">Login </h1>
+        {% if result.error %}
+        <div class="alert alert-danger">
+            {{ result.error.message }}
+        </div>
+        {% endif %}
+
+        <div class="form-group">
+            <label for="login_username">Username</label>
+            <input type="text" name="LoginForm[username]" class="form-control input-lg" id="login_username">
+        </div>
+        <div class="form-group">
+            <label for="login_password">Password</label>
+            <input type="password" name="LoginForm[password]" class="form-control input-lg" id="login_password">
+        </div>
+        <div class="submit_section">
+            <button class="btn btn-lg btn-info btn-block">Continue</button>
+        </div>
+    </form>
+</div>
+{% endblock %}
+{% block endbodyjs %}
+<script type="text/javascript">
+    $(function(){
+       $('#login_username').focus();
+    });
+</script>
+{% endblock %}
