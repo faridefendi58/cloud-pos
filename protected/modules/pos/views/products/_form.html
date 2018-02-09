@@ -1,0 +1,72 @@
+<form method="post" id="product-form" class="mt20" action="{% if model.id %}{{ 'pos/products/update' | link }}/{{ model.id }}{% else %}{{ 'pos/products/create' | link }}{% endif %}">
+    <div class="alert alert-success" style="display: none;"></div>
+    <div class="col-md-4">
+        <div class="form-group">
+            <label for="name">Nama Produk <span class="text-danger">*</span></label>
+            <input type="text" id="name" name="Products[title]" class="form-control" {% if model.title %}value="{{ model.title }}"{% endif %} required>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="form-group">
+            <label for="reg_select">Kategori <span class="text-danger">*</span></label>
+            <select id="reg_select" name="Products[product_category_id]" class="form-control">
+                {% for i, category in categories %}
+                <option value="{{ category.id }}" {% if model.product_category_id and model.product_category_id == category.id %}selected="selected"{% endif %}>{{ category.title }}</option>
+                {% endfor %}
+            </select>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <label>Status <span class="text-danger">*</span></label>
+        <div class="form-group">
+            <label class="radio-inline">
+                <input name="Products[active]" id="inline_optionsRadios1" value="0" type="radio" {% if model and model.active == 0 %}checked="checked"{% endif %}>
+                Tidak Aktif
+            </label>
+            <label class="radio-inline">
+                <input name="Products[active]" id="inline_optionsRadios2" value="1" type="radio" {% if not model or model.active == 1 %}checked=""{% endif %}>
+                Aktif
+            </label>
+        </div>
+    </div>
+    <div class="col-md-12">
+        <div class="form-group">
+            <label for="desc">Deskripsi</label>
+            <textarea name="Products[description]" id="desc" cols="10" rows="3" class="form-control">{% if model and model.description %}{{ model.description }}{% endif %}</textarea>
+        </div>
+        <div class="form-group">
+            <input type="submit" value="Simpan" class="btn btn-info">
+        </div>
+    </div>
+</form>
+
+<script type="text/javascript">
+    $(function () {
+        $('#product-form').submit(function () {
+            var url = $(this).attr('action');
+            $.ajax({
+                'url': url,
+                'type':'post',
+                'data': $('#product-form').serialize(),
+                'success': function(data) {
+                    if (data.status == 'success') {
+                        var alert_success = $('#product-form').find('.alert-success');
+                        alert_success.html(data.message);
+                        alert_success.show();
+                        setTimeout(function () {
+                            if (data.updated == true) {
+                                window.location.reload(true);
+                            } else {
+                                alert_success.hide();
+                                alert_success.empty();
+                                $('#product-form')[0].reset();
+                            }
+                        }, 5000);
+                    }
+                }
+            });
+
+            return false;
+        });
+    });
+</script>

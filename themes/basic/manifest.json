@@ -1,0 +1,10 @@
+{
+    "id" : "basic",
+    "name" : "basic",
+    "description" : "Basic theme for slightsite 1.0",
+    "preview" : "screenshot.png",
+    "author" : "farid efendi",
+    "author_url" : "http://jagungbakar.web.id/",
+    "license" : "GPL version 2 or later - http://www.gnu.org/licenses/old-licenses/gpl-2.0.html",
+    "version" : "1.0.0"
+}

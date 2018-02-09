@@ -1,0 +1,101 @@
+{% extends "layout.html" %}
+{% block pagetitle %}
+Daftar Postingan Blog - {{ App.name }}
+{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" href="{{ 'lib/DataTables/media/css/jquery.dataTables.min.css' | admin_asset_url }}">
+<div id="main_wrapper">
+    <div class="page_bar clearfix">
+        <div class="row">
+            <div class="col-sm-10">
+                <h1 class="page_title">Postingan Blog</h1>
+                <p class="text-muted">Daftar postingan untuk blog</p>
+            </div>
+            <div class="col-sm-2 text-right">
+                <a class="btn btn-default" href="{{ 'blog/posts/create' | link }}">Buat Postingan Baru</a>
+            </div>
+        </div>
+    </div>
+    <div class="page_content">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-lg-12">
+                    <div class="panel panel-default">
+                        <div class="panel-heading">Postingan Blog</div>
+                        <div class="panel-body">
+                            <div id="dt_basic_wrapper" class="dataTables_wrapper form-inline no-footer table-responsive" role="grid">
+                                <table id="dt_basic" class="table table-striped dataTable">
+                                    <thead>
+                                    <tr>
+                                        <th>id</th>
+                                        <th>Title</th>
+                                        <th>Permalink</th>
+                                        <th>Status</th>
+                                        <th>&nbsp;</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    {% for i, post in posts %}
+                                    <tr>
+                                        <td>{{ i + 1 }}</td>
+                                        <td>{{ post.title }}</td>
+                                        <td><a href="{{ 'blog' | link }}/{{ post.slug }}" target="_newtab">{{ 'blog' | link }}/{{ post.slug }}</a></td>
+                                        <td><center>{{ post.status }}</center></td>
+                                        <td>
+                                            <a href="{{ 'blog/posts/update' | link }}/{{ post.post_id }}">
+                                                <i class="fa fa-pencil"></i>
+                                            </a>
+                                            <a href="{{ 'blog/posts/delete' | link }}/{{ post.post_id }}" onclick="return hapus(this);">
+                                                <i class="fa fa-trash-o"></i>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    {% else %}
+                                    <tr>
+                                        <td>No data founds</td>
+                                    </tr>
+                                    {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="row">
+                        <div class="row">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% include 'partial/right_menu.html' %}
+{% endblock %}
+{% block endbodyjs %}
+<script src="{{ 'lib/DataTables/media/js/jquery.dataTables.min.js' | admin_asset_url }}"></script>
+<script src="{{ 'lib/DataTables/media/js/dataTables.bootstrap.js' | admin_asset_url }}"></script>
+<script type="text/javascript">
+function hapus(data) {
+	if (confirm('Are you sure to delete ?')) {
+		var $this =  $(data);
+		var url = $this.attr('href');
+		$.ajax({
+			//'beforeSend': function() { Loading.show(); },
+			//'complete': function() { Loading.hide(); },
+			'url': url,
+			'type':'post',
+			'dataType': 'json',
+			'success': function(data) {
+				if (data) {
+					$this.parent().parent().remove();
+				}
+			}
+		});
+	}
+	return false;
+}
+</script>
+{% endblock %}

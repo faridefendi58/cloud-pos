@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>{% block pagetitle %}{% endblock %}</title>
+    <meta name="viewport" content="initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+
+    <link rel="shortcut icon" type="image/x-icon" href="{{ 'img/favicon.ico' | admin_asset_url }}" />
+
+    <!-- bootstrap framework -->
+    <link href="{{ 'bootstrap/css/bootstrap.min.css' | admin_asset_url }}" rel="stylesheet" media="screen">
+
+    <!-- font awesome icons -->
+    <link href="{{ 'icons/font-awesome/css/font-awesome.min.css' | admin_asset_url }}" rel="stylesheet" media="screen">
+    <!-- ionicons -->
+    <link href="{{ 'icons/ionicons/css/ionicons.min.css' | admin_asset_url }}" rel="stylesheet" media="screen">
+
+    <!-- nvd3 charts -->
+    <link rel="stylesheet" href="{{ 'lib/novus-nvd3/nv.d3.min.css' | admin_asset_url }}">
+
+    <!-- main stylesheet -->
+    <link href="{{ 'css/style.css' | admin_asset_url }}" rel="stylesheet" media="screen">
+
+    <!-- google webfonts -->
+    <link href="{{ 'fonts.googleapis.com/css635e.css?family=Source+Sans+Pro:400&amp;subset=latin-ext,latin' | admin_asset_url }}" rel='stylesheet' type='text/css'>
+
+</head>
+<body>
+{% block header %}
+<!-- top bar -->
+<header class="navbar navbar-fixed-top" role="banner">
+    <div class="container-fluid">
+        <div class="navbar-header pull-left">
+            <a href="{{ '' | alink }}" class="navbar-brand">
+                <img src="{{ 'img/blank.gif' | admin_asset_url }}" alt="Logo">
+            </a>
+        </div>
+        <ul class="top_links l_tinynav1">
+            <li>
+                <a href="{{ '' | alink }}">
+                    <span class="fa fa-home"></span> {{ App.params.site_name }} {% if App.params.tag_line %}- {{ App.params.tag_line }}{% endif %}
+                </a>
+            </li>
+        </ul>
+        <ul class="nav navbar-nav navbar-right">
+            <li class="user_menu">
+                <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+                    <span class="navbar_el_icon ion-person"></span> <span class="caret"></span>
+                </a>
+                <ul class="dropdown-menu dropdown-menu-right">
+                    <li><a href="{{ 'default/change-password' | alink }}">Ubah Password</a></li>
+                    <li class="divider"></li>
+                    <li><a href="{{ 'default/logout' | alink }}">Keluar</a></li>
+                </ul>
+            </li>
+            <li><a href="javascript:void(0)" class="slidebar-toggle"><span class="navbar_el_icon ion-navicon-round"></span></a></li>
+        </ul>
+    </div>
+</header>
+{% endblock %}
+
+{% include 'partial/main_menu.html' %}
+
+{% block content %} {% endblock %}
+
+<!-- jQuery -->
+<script src="{{ 'js/jquery.min.js' | admin_asset_url }}"></script>
+<!-- easing -->
+<script src="{{ 'js/jquery.easing.1.3.min.js' | admin_asset_url }}"></script>
+<!-- bootstrap js plugins -->
+<script src="{{ 'bootstrap/js/bootstrap.min.js' | admin_asset_url }}"></script>
+<!-- top dropdown navigation -->
+<script src="{{ 'js/tinynav.js' | admin_asset_url }}"></script>
+<!-- perfect scrollbar -->
+<script src="{{ 'lib/perfect-scrollbar/min/perfect-scrollbar-0.4.8.with-mousewheel.min.js' | admin_asset_url }}"></script>
+
+<!-- common functions -->
+<script src="{{ 'js/tisa_common.js' | admin_asset_url }}"></script>
+
+<!-- nvd3 charts -->
+<script src="{{ 'lib/d3/d3.min.js' | admin_asset_url }}"></script>
+<script src="{{ 'lib/novus-nvd3/nv.d3.min.js' | admin_asset_url }}"></script>
+
+<!-- iOS-style overlays/notifications -->
+<script src="{{ 'lib/iOS-Overlay/js/iosOverlay.js' | admin_asset_url }}"></script>
+
+{% block endbodyjs %}{% endblock %}
+</body>
+</html>

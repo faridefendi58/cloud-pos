@@ -1,0 +1,334 @@
+{% extends "layout.html" %}
+{% block pagetitle %}
+Perbarui Postingan - {{ App.name }}
+{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" href="{{ 'css/bootstrap-fileupload.min.css' | admin_asset_url }}" />
+<div id="main_wrapper">
+	<div class="page_bar clearfix">
+		<div class="row">
+			<div class="col-sm-8">
+				<h1 class="page_title">{{ post.content[1].title }}</h1>
+				<p class="text-muted">Ubah postingan</p>
+			</div>
+			<div class="col-sm-4 text-right">
+				<a class="btn btn-default" href="{{ 'blog/posts/view' | link }}">Daftar Postingan</a>
+				<a class="btn btn-default" href="{{ 'blog' | link }}/{{ post.content[1].slug }}" target="_newtab">Lihat Postingan</a>
+			</div>
+		</div>
+	</div>
+	<div class="page_content">
+		<div class="container-fluid">
+			<div class="row">
+				<div class="col-lg-12">
+					<div class="panel panel-default">
+						<div class="panel-heading">
+							Kolom bertanda <span class="red">*</span> tidak boleh dikosongi
+						</div>
+						<div class="panel-body">
+							{% if message %}
+							<div class="alert {% if success %}alert-success{% else %}alert-warning{% endif %}">{{ message }}</div>
+							{% endif %}
+							<form method="post" name="page-create">
+								<ul class="nav nav-tabs nav-justified">
+									{% for language in languages %}
+									<li {% if language.is_default %}class="active"{% endif %}>
+										<a data-toggle="tab" href="#language-{{ language.code }}">
+											<i class="glyphicon glyphicon-file"></i> <strong>{{ language.language_name }}</strong>
+										</a>
+									</li>
+									{% endfor %}
+								</ul>
+								<div class="tab-content">
+									{% for language in languages %}
+									<div id="language-{{ language.code }}" class="tab-pane {% if language.is_default %}active{% endif %}">
+										<div class="form-group col-sm-6">
+											<label>Title <span class="red">*</span></label>
+											<input type="text" name="PostContent[title][{{ language.id }}]" class="form-control" value="{{ post.content[language.id].title}}" lang="{{ language.id }}">
+										</div>
+										<div class="form-group col-sm-6">
+											<label>Permalink <span class="red">*</span></label>
+											<input type="text" name="PostContent[slug][{{ language.id }}]" class="form-control" id="slug-{{ language.id }}" value="{{ post.content[language.id].slug}}">
+										</div>
+										<div class="form-group col-sm-12">
+											<label>Content <span class="red">*</span></label>
+											<textarea class="form-control editor" name="PostContent[content][{{ language.id }}]">{{ post.content[language.id].content }}</textarea>
+										</div>
+										<input type="hidden" name="PostContent[language][{{ language.id }}]" value="{{ language.id }}">
+										<div class="form-group col-sm-6">
+											<label>Meta Keywords</label>
+											<input type="text" name="PostContent[meta_keywords][{{ language.id }}]" class="form-control" value="{{ post.content[language.id].meta_keywords }}">
+										</div>
+										<div class="form-group col-sm-6">
+											<label>Meta Description</label>
+											<textarea name="PostContent[meta_description][{{ language.id }}]" class="form-control">{{ post.content[language.id].meta_description }}</textarea>
+										</div>
+									</div>
+									{% endfor %}
+								</div>
+								<input type="hidden" name="Post[post_type]" value="post">
+								<div class="form-group col-sm-6">
+									<label>Category</label>
+									<select name="Post[post_category][]" class="form-control multiple" multiple="true">
+										{% for category in categories %}
+										<option value="{{ category.id }}" {% if category.id in post.category %}selected="selected"{% endif %}>{{ category.category_name }}</option>
+										{% endfor %}
+									</select>
+								</div>
+								<div class="form-group col-sm-6">
+									<label>Tags</label>
+									<input type="text" name="Post[tags]" class="form-control" placeholder="Please separate with ','. Ex : domain, whois" value="{{ post.tags_string }}">
+								</div>
+								<div class="form-group col-sm-6">
+									<div class="checkbox">
+										<label>
+											<input type="checkbox" name="Post[allow_comment]" {% if post.allow_comment %}checked="checked"{% endif %}>
+											<b>Allow Comment</b>
+										</label>
+									</div>
+								</div>
+								<div class="form-group col-sm-6">
+									<label>Status</label>
+									{% for status_code, status_name in status_list %}
+									<label class="radio-inline">
+										<input type="radio" name="Post[status]" id="optionsRadios1" value="{{ status_code }}" {% if status_code == post.status %}checked="checked"{% endif %}>
+										{{ status_name }}
+									</label>
+									{% endfor %}
+								</div>
+								<div class="form-group col-sm-12">
+									<input type="submit" name="Submit" value="Update" class="btn btn-success btn-submit">
+								</div>
+							</form>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<div class="row">
+				<div class="col-lg-6">
+					<div class="panel panel-default">
+						<div class="panel-heading">Add More Images</div>
+						<div class="panel-body">
+							<div class="alert" id="upload-alert" style="display: none;"></div>
+							<form class="form-bordered" id="image-form" action="{{ 'blog/posts/upload-images' | link }}">
+								<div class="form-group">
+									<label class="control-label">Images</label>
+									<div class="fileupload fileupload-new" data-provides="fileupload">
+										<div class="input-append">
+											<div class="uneditable-input">
+												<i class="glyphicon glyphicon-file fileupload-exists"></i>
+												<span class="fileupload-preview"></span>
+											</div>
+											<span class="btn btn-default btn-file">
+											  <span class="fileupload-new">Select file</span>
+											  <span class="fileupload-exists">Change</span>
+											  <input type="file" name="PostImages[file_name]"/>
+											</span>
+											<a href="#" class="btn btn-default fileupload-exists" data-dismiss="fileupload">Remove</a>
+										</div>
+									</div>
+								</div>
+
+								<div class="form-group">
+									<label class="control-label">Image Alt</label>
+									<input type="text" name="PostImages[alt]" class="form-control"/>
+									<span class="help-block">Type the title of the image file</span>
+								</div>
+
+								<div class="form-group">
+									<label>Type</label>
+									<label class="radio-inline">
+										<input type="radio" name="PostImages[type]" id="optionsRadios1" value="open_graft" checked="checked"> Open Graft
+									</label>
+									<label class="radio-inline">
+										<input type="radio" name="PostImages[type]" id="optionsRadios1" value="ilustration"> Ilustration
+									</label>
+									<label class="radio-inline">
+										<input type="radio" name="PostImages[type]" id="optionsRadios1" value="other"> Other
+									</label>
+								</div>
+								<div class="form-group">
+									<label class="control-label">Image Description</label>
+									<textarea name="PostImages[description]" class="form-control"></textarea>
+									<span class="help-block">Type the short description of the image file</span>
+								</div>
+								<input type="hidden" name="PostImages[post_id]" value="{{ post.id }}">
+							</form>
+						</div>
+						<div class="panel-footer">
+							<div class="row">
+								<div class="col-sm-12">
+									<button class="btn btn-primary" id="submit-image-form">Submit</button>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+				<div class="col-lg-6">
+					<div class="panel panel-default">
+						<div class="panel-heading">List Images</div>
+						<div class="panel-body">
+							<table class="table">
+								<thead>
+								<tr>
+									<th>File Name</th>
+									<th>Description</th>
+									<th>Type</th>
+									<th>&nbsp;</th>
+								</tr>
+								</thead>
+								<tbody>
+								{% for i, image in images %}
+								<tr>
+									<td>
+										<img src="{{ image.upload_folder | link }}/{{ image.file_name }}" height="70px"/><br/>
+										{{ image.alt }}
+									</td>
+									<td>{{ image.description | default('-') }}</td>
+									<td>{{ image.type }}</td>
+									<td>
+										<a href="javascript:void(0);" onclick="deleteImage(this);" attr-id="{{ image.id }}">
+											<i class="fa fa-trash-o"></i>
+										</a>
+									</td>
+								</tr>
+								{% endfor %}
+								</tbody>
+							</table>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+{% include 'partial/right_menu.html' %}
+{% endblock %}
+{% block endbodyjs %}
+{#<script type="text/javascript" src="{{ 'lib/wysihtml5/wysihtml5.min.js' | admin_asset_url }}"></script>
+<script type="text/javascript" src="{{ 'lib/wysihtml5/toolbar.js' | admin_asset_url }}"></script>
+<link rel='stylesheet' type='text/css' href="{{ 'lib/wysihtml5/bootstrap-wysihtml5.css' | admin_asset_url }}">#}
+<script src="{{ 'js/bootstrap-fileupload.min.js' | admin_asset_url }}"></script>
+<script type="text/javascript" src="{{ 'lib/tinymce/tinymce.min.js' | admin_asset_url }}"></script>
+<script type="text/javascript">
+	$(function(){
+		/*$('.editor').wysihtml5({
+			"stylesheets": false
+		});*/
+		tinymce.init({
+			selector : '.editor',
+			remove_linebreaks : false,
+			gecko_spellcheck : false,
+			keep_styles : true,
+			accessibility_focus : true,
+			tabfocus_elements : 'major-publishing-actions',
+			media_strict : false,
+			height: 400,
+			plugins : 'code image imagetools paste',
+			menubar : false,
+			toolbar: "undo redo | styleselect | bold italic | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | pastetext image code",
+			images_upload_handler: function (blobInfo, success, failure) {
+				var xhr, formData;
+
+				xhr = new XMLHttpRequest();
+				xhr.withCredentials = false;
+				xhr.open('POST', '{{ "blog/posts/direct-upload" | link }}');
+
+				xhr.onload = function() {
+					var json;
+
+					if (xhr.status != 200) {
+						failure('HTTP Error: ' + xhr.status);
+						return;
+					}
+
+					var json = $.parseJSON(xhr.responseText);
+
+					if (!json || typeof json.location != 'string') {
+						failure('Invalid JSON: ' + xhr.responseText);
+						return;
+					}
+
+					success(json.location);
+				};
+
+				formData = new FormData();
+				formData.append('file', blobInfo.blob(), blobInfo.filename());
+
+				xhr.send(formData);
+			}
+		});
+
+		var success_message = "{{ message }}";
+		if (success_message && success_message.length > 0) {
+			setTimeout(function () {
+				window.location.href = "{{ 'blog/posts/update' | link }}/{{ post.id }}";
+			}, 3000);
+		}
+		$("#submit-image-form").click(function(){
+			var formData = new FormData($('form[id="image-form"]')[0]);
+			$.ajax({
+				//beforeSend: function() { Loading.show(); },
+				//complete: function() { Loading.hide(); },
+				url: $('form[id="image-form"]').attr('action'),
+				type: 'POST',
+				data: formData,
+				dataType: 'json',
+				async: false,
+				success: function (data) {
+					var alert_area = $('#upload-alert');
+					if (data.status == 'success') {
+						alert_area.html(data.message);
+						alert_area.addClass('alert-success');
+						alert_area.removeClass('alert-warning');
+						alert_area.show();
+						setTimeout(function () {
+							window.location.reload(true);
+						}, 3000);
+					} else {
+						alert_area.html(data.message);
+						alert_area.addClass('alert-warning');
+						alert_area.removeClass('alert-success');
+						alert_area.show();
+					}
+				},
+				cache: false,
+				contentType: false,
+				processData: false
+			});
+			return false;
+		});
+	});
+	function getSlug(data){
+		var lang = $(data).attr('lang');
+		$.ajax({
+			'beforeSend': function() {  },
+			'complete': function() {  },
+			'url': "{{ 'blog/posts/get-slug' | link }}",
+			'type':'post',
+			'data':{'title':$(data).val()},
+			'success': function(data) {
+				$('#slug-'+lang).attr('value',data);
+			}
+		});
+	}
+	function deleteImage(data) {
+		var $this = $(data);
+		if (confirm('Are you sure you want to delete this?')) {
+			$.ajax({
+				'beforeSend': function() {  },
+				'complete': function() {  },
+				'url': "{{ 'blog/posts/delete-image' | link }}/"+$this.attr('attr-id'),
+				'type':'post',
+				'data':{'id':$this.attr('attr-id')},
+				'success': function(data) {
+					$this.parent().parent().remove();
+				}
+			});
+		}
+		return false;
+	}
+</script>
+{% endblock %}

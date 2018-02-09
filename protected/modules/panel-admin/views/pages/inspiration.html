@@ -1,0 +1,89 @@
+{% extends "layout.html" %}
+{% block pagetitle %}
+Inspirasi Tema - {{ App.name }}
+{% endblock %}
+
+{% block content %}
+<!-- magnific popup -->
+<link rel="stylesheet" href="{{ 'lib/magnific-popup/magnific-popup.css' | admin_asset_url }}">
+<div id="main_wrapper">
+	<div class="page_bar clearfix">
+		<div class="row">
+			<div class="col-sm-10">
+				<h1 class="page_title">Inspirasi Halaman</h1>
+				<p class="text-muted">Mempersiapkan konten halaman <a href="{{ content.page | link }}" target="_newtab">{{ content.page }}</a></p>
+			</div>
+			<div class="col-sm-2 text-right">
+				<a class="btn btn-default" href="{{ 'pages/view' | alink }}">Daftar Halaman</a>
+			</div>
+		</div>
+	</div>
+    <div class="page_content">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-lg-12">
+                    <div class="panel panel-default">
+                        <div class="panel-heading">Gunakan contoh konten berikut untuk membuat halaman tanpa memulainya dari nol.</div>
+						<div class="panel-body">
+						<form method="post" name="page-inspiration">
+							{#<div class="row">
+								{% set no = 1 %}
+								{% for i, inspiration in inspirations %}
+								<div class="col-lg-4 col-md-4 form-group">
+									<a href="javascript:void(0);" onclick="chooseContent(this);" attr-name="{{ inspiration.info.basename }}">
+										<img src="{{ inspiration.image_thumb | link }}" class="img-responsive img-thumbnail"/>
+									</a>
+									<div class="radio">
+										<label>
+											<input name="Pages[theme]" id="optionsRadios1" value="{{ inspiration.name }}" checked="" type="radio"> {{ inspiration.name }}
+										</label>
+									</div>
+								</div>
+									{% if no is divisible by(3) %}
+										</div><div class="row">
+									{% endif %}
+									{% set no = no + 1 %}
+								{% endfor %}
+							</div>#}
+							<div class="row">
+								<div id="gallery_grid" class="freewall_container clearfix">
+									{% for i, inspiration in inspirations %}
+									<div class="freewall_item filter_1">
+										<img src="{{ inspiration.image_thumb | link }}" alt="">
+										<div class="item_overlay">
+											<a href="{{ inspiration.info.basename }}" class="item_select btn btn-info">
+												<i class="fa  fa-square-o"></i> Pilih Konten
+											</a>
+											<h4>{{ inspiration.name }}</h4>
+											<a href="{{ inspiration.image_thumb | link }}" class="item_preview"><i class="fa fa-search-plus"></i></a>
+										</div>
+									</div>
+									{% endfor %}
+								</div>
+							</div>
+                        	<div class="form-group">
+								<input type="hidden" name="Page[theme]" value="" id="page-theme">
+								<input type="hidden" name="Page[name]" value="{{ page_name }}">
+                                <input type="submit" name="Submit" value="Selanjutnya" class="btn btn-success btn-submit">
+                            </div>
+                        </form>
+						</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% include 'partial/right_menu.html' %}
+{% endblock %}
+{% block endbodyjs %}
+<!-- immagesloaded -->
+<script src="{{ 'js/imagesloaded.pkgd.min.js' | admin_asset_url }}"></script>
+<!-- freewall -->
+<script src="{{ 'lib/freewall/freewall.js' | admin_asset_url }}"></script>
+<!-- magnific popup -->
+<script src="{{ 'lib/magnific-popup/jquery.magnific-popup.min.js' | admin_asset_url }}"></script>
+
+<!-- freewall functions -->
+<script src="{{ 'js/apps/tisa_freewall.js' | admin_asset_url }}"></script>
+{% endblock %}

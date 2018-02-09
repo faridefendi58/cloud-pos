@@ -1,0 +1,110 @@
+{% extends "layout.html" %}
+{% block pagetitle %}
+Landing Pages - {{ App.name }}
+{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" href="{{ 'lib/DataTables/media/css/jquery.dataTables.min.css' | admin_asset_url }}">
+<div id="main_wrapper">
+    <div class="page_bar clearfix">
+        <div class="row">
+            <div class="col-sm-10">
+                <h1 class="page_title">Halaman Website</h1>
+                <p class="text-muted">Daftar semua halaman frontend</p>
+            </div>
+            <div class="col-sm-2 text-right">
+                <a class="btn btn-default" href="{{ 'pages/create' | alink }}">Buat Halaman Baru</a>
+            </div>
+        </div>
+    </div>
+    <div class="page_content">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-lg-12">
+                    <div class="panel panel-default">
+                        <div class="panel-heading">Daftar Halaman</div>
+                        <div class="panel-body">
+                            {% set exts = App.params.extensions | json_decode %}
+                            <div id="dt_basic_wrapper" class="dataTables_wrapper form-inline no-footer table-responsive" role="grid">
+                                <table id="dt_basic" class="table table-striped dataTable">
+                                    <thead>
+                                    <tr>
+                                        <th>id</th>
+                                        <th>Page</th>
+                                        <th>Url</th>
+                                        <th>&nbsp;</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    {% for i, page in pages %}
+                                    <tr>
+                                        <td>{{ i + 1 }}</td>
+                                        <td>{{ page.name }}</td>
+                                        <td><a href="{{ page.slug | link }}" target="_newtab">{{  page.slug | link }}</a></td>
+                                        <td>
+                                            {% if 'texteditor' in exts %}
+                                            <a href="{{ page.slug | link }}?e=1&token={{ session_id }}" target="_newtab" title="Ubah Secara Visual">
+                                                <i class="fa fa-pencil"></i>
+                                            </a>
+                                            {% endif %}
+                                            {% if 'blockeditor' in exts %}
+                                            <a href="{{ 'block-editor/update' | link }}/{{ page.slug }}" target="_newtab" title="Ubah Secara Visual">
+                                                <i class="fa fa-arrows-alt"></i>
+                                            </a>
+                                            {% endif %}
+                                            <a href="{{ 'pages/update' | alink }}/{{ page.slug }}" title="Ubah Kode">
+                                                <i class="fa fa-code"></i>
+                                            </a>
+                                            <a href="{{ 'pages/delete' | alink }}/{{ page.slug }}" onclick="return hapus(this);">
+                                                <i class="fa fa-trash-o"></i>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    {% else %}
+                                    <tr>
+                                        <td>Tidak ditemukan data</td>
+                                    </tr>
+                                    {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="row">
+                        <div class="row">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% include 'partial/right_menu.html' %}
+{% endblock %}
+{% block endbodyjs %}
+<script src="{{ 'lib/DataTables/media/js/jquery.dataTables.min.js' | admin_asset_url }}"></script>
+<script src="{{ 'lib/DataTables/media/js/dataTables.bootstrap.js' | admin_asset_url }}"></script>
+<script type="text/javascript">
+function hapus(data) {
+	if (confirm('Anda yakin ingin menghapus ?')) {
+		var $this =  $(data);
+		var url = $this.attr('href');
+		$.ajax({
+			//'beforeSend': function() { Loading.show(); },
+			//'complete': function() { Loading.hide(); },
+			'url': url,
+			'type':'post',
+			'dataType': 'json',
+			'success': function(data) {
+				if (data) {
+					$this.parent().parent().remove();
+				}
+			}
+		});
+	}
+	return false;
+}
+</script>
+{% endblock %}

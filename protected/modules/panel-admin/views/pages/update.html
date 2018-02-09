@@ -1,0 +1,73 @@
+{% extends "layout.html" %}
+{% block pagetitle %}
+Ubah - {{ data.page }} - {{ App.name }}
+{% endblock %}
+
+{% block content %}
+<div id="main_wrapper">
+	<div class="page_bar clearfix">
+		<div class="row">
+			<div class="col-sm-10">
+				<h1 class="page_title">Halaman {{ data.page | capitalize }}</h1>
+				<p class="text-muted">Perubahan code halaman {{ data.page }}</p>
+			</div>
+			<div class="col-sm-2 text-right">
+				<a class="btn btn-default" href="{{ 'pages/view' | alink }}">Daftar Halaman</a>
+			</div>
+		</div>
+	</div>
+    <div class="page_content">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-lg-12">
+                    <div class="panel panel-default">
+                        <div class="panel-heading">{{ data.page }}</div>
+						<div class="panel-body">
+						{% if message %}
+							<div class="alert {% if success %}alert-success{% else %}alert-warning{% endif %}">{{ message }}</div>
+						{% endif %}
+						<form method="post" name="page-update">
+                            {% for i,val in data %}
+								{% if i != 'content' %}
+                            		<input type="hidden" name="{{ i }}" value="{{ val }}">
+								{% endif %}
+                            {% endfor %}
+							<div class="form-group">
+								<label>Page Content</label>
+	                            <textarea id="page-content" style="height: 350px; width: 100%;" name="content">{{ data.content  }}</textarea>
+							</div>
+                        	<div class="form-group">
+                                <input type="submit" name="Submit" value="Update Content" class="btn btn-success btn-submit">
+                            </div>
+                        </form>
+						</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% include 'partial/right_menu.html' %}
+{% endblock %}
+{% block endbodyjs %}
+<script src="{{ 'lib/editarea/edit_area_full.js' | admin_asset_url }}"></script>
+<script type="text/javascript">
+$(function(){
+	editAreaLoader.init({
+		id: "page-content"	// id of the textarea to transform		
+		,start_highlight: true	// if start with highlight
+		,allow_resize: "both"
+		,allow_toggle: true
+		,word_wrap: true
+		,language: "en"
+		,syntax: "html"	
+	});
+	var success_message = "{{ message }}";
+	if (success_message && success_message.length > 0) {
+		setTimeout(function () {
+			window.location.href = window.location;
+		}, 3000);
+	}
+});
+</script>
+{% endblock %}

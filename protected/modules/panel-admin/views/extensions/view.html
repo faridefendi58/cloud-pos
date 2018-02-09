@@ -1,0 +1,112 @@
+{% extends "layout.html" %}
+{% block pagetitle %}
+Ekstensi - {{ App.name }}
+{% endblock %}
+
+{% block content %}
+<div id="main_wrapper">
+    <div class="page_bar clearfix">
+        <div class="row">
+            <div class="col-sm-12">
+                <h1 class="page_title">Ekstensi</h1>
+                <p class="text-muted">Ekstensi adalah fitur tambahan yang tidak tersedia pada cms <a href="https://www.slightsite.com" target="_newtab">slightsite</a> versi standar.</p>
+            </div>
+        </div>
+    </div>
+    <div class="page_content">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-lg-12">
+                    <div class="panel panel-default">
+                        <div class="panel-heading">Daftar Ekstensi</div>
+                        <div class="panel-body">
+                            <div class="row">
+                                <div class="alert alert-success hide"></div>
+                                <div id="dt_basic_wrapper" class="dataTables_wrapper form-inline no-footer table-responsive" role="grid">
+                                    <table id="dt_basic" class="table table-striped dataTables">
+                                        <thead>
+                                        <tr>
+                                            <th>&nbsp;</th>
+                                            <th>Nama Ekstensi</th>
+                                            <th>Deskripsi</th>
+                                            <th>&nbsp;</th>
+                                        </tr>
+                                        </thead>
+                                        <tbody>
+                                        {% for i, extension in extensions %}
+                                        <tr>
+                                            <td>
+                                                <center>
+                                                    <img src="{{ 'protected' | link }}/{{ extension.icon }}" class="img-responsive"/>
+                                                </center>
+                                            </td>
+                                            <td>{{ extension.name }}</td>
+                                            <td>{{ extension.description | default('-') }}</td>
+                                            <td>
+                                                {% if not installed_exts or extension.id not in installed_exts %}
+                                                    <a href="{{ 'extensions/setup' | alink }}" id="{{ extension.id }}" title="Aktifkan ekstensi {{ extension.name }}" install="1" onclick="return install(this);" class="btnIconLeft">
+                                                        <i class="fa fa-check icon"></i> <span>Aktifkan</span>
+                                                    </a>
+                                                {% else %}
+                                                    <a class="btnIconLeft" href="{{ 'extensions/setup' | alink }}" id="{{ extension.id }}" title="Non aktifkan ekstensi {{ extension.name }}" install="0" onclick="return install(this);">
+                                                        <i class="fa fa-times icon text-danger"></i> <span class="text-danger">Non Aktifkan</span>
+                                                    </a>
+                                                    {% if extension.config %}
+                                                    <a class="btnIconLeft" href="{{ 'extensions/manage' | alink }}/{{ extension.id }}" title="Konfigurasi ekstensi {{ extension.name }}">
+                                                        <i class="fa fa-cog icon"></i> <span>Konfigurasi</span>
+                                                    </a>
+                                                    {% endif %}
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                        {% else %}
+                                        <tr>
+                                            <td>No data founds</td>
+                                        </tr>
+                                        {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="row">
+                        <div class="row">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% include 'partial/right_menu.html' %}
+{% endblock %}
+{% block endbodyjs %}
+<script type="text/javascript">
+function install(data) {
+    var type = ($(data).attr('install') == 0)? 'meng-nonaktifkan' : 'mengaktifkan';
+	if (confirm('Anda yakin ingin '+type+' ekstensi ini ?')) {
+		var $this =  $(data);
+		$.ajax({
+			'url': $this.attr('href'),
+			'type':'post',
+			'dataType': 'json',
+            'data': {'id' : $this.attr('id'), 'install' : $this.attr('install')},
+			'success': function(data) {
+				if (data.success) {
+                    $('.alert-success').html(data.message);
+                    $('.alert-success').removeClass('hide');
+                    setTimeout(function () {
+                        window.location.reload(true);
+                    }, 3000);
+				}
+			}
+		});
+	}
+	return false;
+}
+</script>
+{% endblock %}

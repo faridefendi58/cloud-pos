@@ -1,0 +1,121 @@
+{% extends "layout.html" %}
+{% block pagetitle %}
+Tambah Halaman Baru - {{ App.name }}
+{% endblock %}
+
+{% block content %}
+<div id="main_wrapper">
+	<div class="page_bar clearfix">
+		<div class="row">
+			<div class="col-sm-10">
+				<h1 class="page_title">Halaman Baru</h1>
+				<p class="text-muted">Buat halaman baru</p>
+			</div>
+			<div class="col-sm-2 text-right">
+				<a class="btn btn-default" href="{{ 'pages/view' | alink }}">Daftar Halaman</a>
+			</div>
+		</div>
+	</div>
+    <div class="page_content">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-lg-12">
+                    <div class="panel panel-default">
+                        <div class="panel-heading">Kolom bertanda <span class="red">*</span> tidak boleh dikosongi</div>
+						<div class="panel-body">
+						{% if message %}
+							<div class="alert {% if success %}alert-success{% else %}alert-warning{% endif %}">
+								{% if success %}
+								{{ message }}
+								{% else %}
+									<ul>
+										Silakan perbaiki beberapa kesalahan berikut :
+										{% for msg in message %}
+											<li>{{ msg }}</li>
+										{% endfor %}
+									</ul>
+								{% endif %}
+							</div>
+						{% endif %}
+						<form method="post" name="page-create">
+							<div class="row">
+								<div class="form-group col-md-6 has-info">
+									<label>Judul Halaman <span class="red">*</span></label>
+									<input type="text" name="Page[title]" class="form-control" placeholder="Masukkan judul halaman. contoh: Belajar SEO" value="{{ page_data.title }}" id="page-title">
+									<span class="help-block">Berikan judul yang tepat untuk halaman ini karena akan sangat bermanfaat untuk SEO.</span>
+								</div>
+								<div class="form-group col-md-6 has-info">
+									<label>Meta Keyword</label>
+									<input type="text" name="Page[meta_keyword]" class="form-control" placeholder="Masukkan meta keyword atau kata kunci halaman website" value="{{ page_data.meta_keyword }}">
+									<span class="help-block">Pisahkan dengan tanda koma ",". contoh : <u>Belajar SEO, Panduan SEO, Internet Marketing</u></span>
+								</div>
+							</div>
+							<div class="row">
+								<div class="form-group col-md-6 has-info">
+									<label>Permalink <span class="red">*</span></label>
+									<div class="input-group">
+										<div class="input-group-btn">
+											<button class="btn btn-info" type="button">{{ '' | link }}</button>
+										</div>
+										<input type="text" name="Page[permalink]" class="form-control" placeholder="Masukkan url halaman. contoh : belajar-seo" value="{{ page_data.permalink }}" id="permalink">
+									</div>
+									<span class="help-block">Gunakan tanda '-' untuk memisahkan kata.<br/>Contoh format url yang tepat : <u>{{ 'belajar-seo' | link }}</u></span>
+								</div>
+								<div class="form-group col-md-6 has-info">
+									<label>Meta Description</label>
+									<textarea name="Page[meta_description]" class="form-control">{{ page_data.meta_description }}</textarea>
+									<span class="help-block">Meta description berfungsi untuk memberikan informasi deskripsi website.
+									<br/>Contoh : <u>Belajar SEO dan Panduan internet marketing lengkap untuk pemula.</u></span>
+								</div>
+							</div>
+							{% if not has_blockeditor %}
+							<div class="row">
+								<div class="form-group col-md-12">
+									<label>Page Content</label>
+									<textarea id="page-content" class="form-control" name="Page[content]" style="min-height:200px;">{{ data.content  }}</textarea>
+								</div>
+							</div>
+							{% endif %}
+                        	<div class="form-group">
+                                <input type="submit" name="Submit" value="{% if not has_blockeditor %}Simpan{% else %}Selanjutnya{% endif %}" class="btn btn-success btn-submit">
+                            </div>
+                        </form>
+						</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% include 'partial/right_menu.html' %}
+{% endblock %}
+{% block endbodyjs %}
+{% if not has_blockeditor %}
+<script src="{{ 'lib/editarea/edit_area_full.js' | admin_asset_url }}"></script>
+<script type="text/javascript">
+$(function(){
+	editAreaLoader.init({
+		id: "page-content"	// id of the textarea to transform		
+		,start_highlight: true	// if start with highlight
+		,allow_resize: "both"
+		,allow_toggle: true
+		,word_wrap: true
+		,language: "en"
+		,syntax: "html"	
+	});
+});
+</script>
+{% else %}
+<script type="text/javascript">
+	$(function () {
+		$('#page-title').keyup(function () {
+			var permalink = $(this).val().toLowerCase();
+			if (permalink && permalink.length > 0) {
+				var permalink = permalink.replace(/\s+/g, "-");
+			}
+			$('#permalink').val(permalink);
+		});
+	});
+</script>
+{% endif %}
+{% endblock %}

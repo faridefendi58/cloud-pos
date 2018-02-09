@@ -1,0 +1,89 @@
+{% extends "layout.html" %}
+{% block pagetitle %}
+Update User - {{ model.username }} - {{ App.name }}
+{% endblock %}
+
+{% block content %}
+<div id="main_wrapper">
+	<div class="page_bar clearfix">
+		<div class="row">
+			<div class="col-sm-10">
+				<h1 class="page_title">Ubah User</h1>
+				<p class="text-muted">Formulir perubahan data user</p>
+			</div>
+			<div class="col-sm-2 text-right">
+				<a class="btn btn-default" href="{{ 'users/view' | alink }}">Daftar User</a>
+			</div>
+		</div>
+	</div>
+    <div class="page_content">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-lg-12">
+                    <div class="panel panel-default">
+                        <div class="panel-heading">
+							Kolom bertanda <span class="red">*</span> tidak boleh dikosongi
+						</div>
+						<div class="panel-body">
+						{% if message %}
+							<div class="alert {% if success %}alert-success{% else %}alert-warning{% endif %}">{{ message | raw }}</div>
+						{% endif %}
+						<form method="post" name="user-update" class="form-horizontal">
+							<div class="form-group">
+								<label class="col-sm-2 control-label">Username <span class="red">*</span></label>
+								<div class="col-sm-6">
+	                            	<input name="Admin[username]" type="text" class="form-control" value="{{ model.username }}">
+								</div>
+							</div>
+							<div class="form-group">
+								<label class="col-sm-2 control-label">Email <span class="red">*</span></label>
+								<div class="col-sm-6">
+									<input name="Admin[email]" type="text" class="form-control" value="{{ model.email }}">
+								</div>
+							</div>
+							<div class="form-group">
+								<label class="col-sm-2 control-label">Group</label>
+								<div class="col-sm-4">
+									<select name="Admin[group_id]" class="form-control">
+									{% for gi, group in admin.getListGroup() %}
+										<option value="{{ gi }}" {% if gi == model.group_id %}selected="true"{% endif %}>{{ group }}</option>
+									{% endfor %}
+									</select>
+								</div>
+							</div>
+							<div class="form-group">
+								<label class="col-sm-2 control-label">Status</label>
+								<div class="col-sm-4">
+									{% for si, status in admin.getListStatus() %}
+										<input type="radio" name="Admin[status]" value="{{ si }}" {% if model.status == si %}checked{% endif %}> {{ status }}
+									{% endfor %}
+								</div>
+							</div>
+                        	<div class="form-group">
+								<label class="col-sm-2 control-label">&nbsp;</label>
+								<div class="col-sm-10">
+                                	<input type="submit" name="Submit" value="Ubah" class="btn btn-success btn-submit">
+								</div>
+                            </div>
+                        </form>
+						</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% include 'partial/right_menu.html' %}
+{% endblock %}
+{% block endbodyjs %}
+<script type="text/javascript">
+	$(function () {
+		var success_message = "{{ message }}";
+		if (success_message && success_message.length > 0) {
+			setTimeout(function () {
+				window.location.href = window.location;
+			}, 3000);
+		}
+	});
+</script>
+{% endblock %}
