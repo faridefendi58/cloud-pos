@@ -13,7 +13,7 @@ Produk - {{ App.params.site_name }}
                 <p class="text-muted">Kelola data produk</p>
             </div>
             <div class="col-sm-2 text-right">
-                <a class="btn btn-default" href="{{ 'pos/products/create' | link }}">Buat Produk Baru</a>
+                <a class="btn btn-default" data-toggle="tab" href="#create-new">Buat Produk Baru</a>
             </div>
         </div>
     </div>
@@ -31,7 +31,7 @@ Produk - {{ App.params.site_name }}
                                     <a data-toggle="tab" href="#create-new">Tambah Produk Baru</a>
                                 </li>
                                 <li>
-                                    <a data-toggle="tab" href="#ketegori">Daftar Kategori</a>
+                                    <a data-toggle="tab" href="#kategori">Daftar Kategori</a>
                                 </li>
                                 <li>
                                     <a data-toggle="tab" href="#create-new-category">Tambah Kategori Baru</a>
@@ -76,13 +76,47 @@ Produk - {{ App.params.site_name }}
                                     </div>
                                 </div>
                                 <div id="create-new" class="tab-pane fade">
-                                    <p>Food truck fixie locavore, accusamus mcsweeney's marfa nulla single-origin coffee squid. Exercitation +1 labore velit, blog sartorial PBR leggings next level wes anderson artisan four loko farm-to-table craft beer twee. Qui photo booth letterpress, commodo enim craft beer mlkshk aliquip jean shorts ullamco ad vinyl cillum PBR. Homo nostrud organic, assumenda labore aesthetic magna delectus mollit. Keytar helvetica VHS salvia yr, vero magna velit sapiente labore stumptown. Vegan fanny pack odio cillum wes anderson 8-bit, sustainable jean shorts beard ut DIY ethical culpa terry richardson biodiesel. Art party scenester stumptown, tumblr butcher vero sint qui sapiente accusamus tattooed echo park.</p>
+                                    {% include 'products/_form.html' %}
                                 </div>
                                 <div id="kategori" class="tab-pane fade">
-                                    <p>Trust fund seitan letterpress, keytar raw denim keffiyeh etsy art party before they sold out master cleanse gluten-free squid scenester freegan cosby sweater. Fanny pack portland seitan DIY, art party locavore wolf cliche high life echo park Austin. Cred vinyl keffiyeh DIY salvia PBR, banh mi before they sold out farm-to-table VHS viral locavore cosby sweater. Lomo wolf viral, mustache readymade thundercats keffiyeh craft beer marfa ethical. Wolf salvia freegan, sartorial keffiyeh echo park vegan.</p>
+                                    <div id="dt_basic_wrapper" class="dataTables_wrapper form-inline no-footer table-responsive" role="grid">
+                                        <table id="dt_basic" class="table table-striped dataTable">
+                                            <thead>
+                                            <tr>
+                                                <th>id</th>
+                                                <th>Nama Kategori</th>
+                                                <th>Deskripsi</th>
+                                                <th>Tanggal Dibuat</th>
+                                                <th>&nbsp;</th>
+                                            </tr>
+                                            </thead>
+                                            <tbody>
+                                            {% for i, category in categories %}
+                                            <tr>
+                                                <td><center>{{ category.id }}</center></td>
+                                                <td>{{ category.title }}</td>
+                                                <td>{{ category.description | default('-') }}</td>
+                                                <td>{{ category.created_at }}</td>
+                                                <td>
+                                                    <a href="{{ 'pos/products/update-category' | link }}/{{ category.id }}" title="Ubah Kategori">
+                                                        <i class="fa fa-pencil"></i>
+                                                    </a>
+                                                    <a href="{{ 'pos/products/delete-category' | link }}/{{ category.id }}" onclick="return hapus(this);">
+                                                        <i class="fa fa-trash-o"></i>
+                                                    </a>
+                                                </td>
+                                            </tr>
+                                            {% else %}
+                                            <tr>
+                                                <td>No data founds</td>
+                                            </tr>
+                                            {% endfor %}
+                                            </tbody>
+                                        </table>
+                                    </div>
                                 </div>
                                 <div id="create-new-category" class="tab-pane fade">
-                                    <p>Food truck fixie locavore, accusamus mcsweeney's marfa nulla single-origin coffee squid. Exercitation +1 labore velit, blog sartorial PBR leggings next level wes anderson artisan four loko farm-to-table craft beer twee. Qui photo booth letterpress, commodo enim craft beer mlkshk aliquip jean shorts ullamco ad vinyl cillum PBR. Homo nostrud organic, assumenda labore aesthetic magna delectus mollit. Keytar helvetica VHS salvia yr, vero magna velit sapiente labore stumptown. Vegan fanny pack odio cillum wes anderson 8-bit, sustainable jean shorts beard ut DIY ethical culpa terry richardson biodiesel. Art party scenester stumptown, tumblr butcher vero sint qui sapiente accusamus tattooed echo park.</p>
+                                    {% include 'products/_form_category.html' %}
                                 </div>
                             </div>
                         </div>
@@ -103,13 +137,11 @@ Produk - {{ App.params.site_name }}
             var $this =  $(data);
             var url = $this.attr('href');
             $.ajax({
-                //'beforeSend': function() { Loading.show(); },
-                //'complete': function() { Loading.hide(); },
                 'url': url,
                 'type':'post',
-                'dataType': 'json',
+                //'dataType': 'json',
                 'success': function(data) {
-                    if (data) {
+                    if (data.status == 'success') {
                         $this.parent().parent().remove();
                     }
                 }
