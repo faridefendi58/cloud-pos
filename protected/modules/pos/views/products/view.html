@@ -61,6 +61,9 @@ Produk - {{ App.params.site_name }}
                                                     <a href="{{ 'pos/products/update' | link }}/{{ product.id }}" title="Ubah Product">
                                                         <i class="fa fa-pencil"></i>
                                                     </a>
+                                                    <a href="{{ 'pos/products/update' | link }}/{{ product.id }}#price" title="Ubah Harga">
+                                                        <i class="fa fa-money"></i>
+                                                    </a>
                                                     <a href="{{ 'pos/products/delete' | link }}/{{ product.id }}" onclick="return hapus(this);">
                                                         <i class="fa fa-trash-o"></i>
                                                     </a>
@@ -149,5 +152,12 @@ Produk - {{ App.params.site_name }}
         }
         return false;
     }
+    $(function () {
+       if (window.location.hash) {
+           var hash = window.location.hash.substring(1);
+           if ($('a[href="#'+hash+'"]').length > 0)
+                $('a[href="#'+hash+'"]').click();
+       }
+    });
 </script>
 {% endblock %}

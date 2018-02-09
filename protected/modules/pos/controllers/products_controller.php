@@ -22,6 +22,7 @@ class ProductsController extends BaseController
         $app->map(['POST'], '/create-category', [$this, 'create_category']);
         $app->map(['GET', 'POST'], '/update-category/[{id}]', [$this, 'update_category']);
         $app->map(['POST'], '/delete-category/[{name}]', [$this, 'delete_category']);
+        $app->map(['GET'], '/price/[{id}]', [$this, 'price']);
     }
 
     public function accessRules()
@@ -40,7 +41,7 @@ class ProductsController extends BaseController
                 'expression' => $this->hasAccess('pos/products/create'),
             ],
             ['allow',
-                'actions' => ['update'],
+                'actions' => ['update','price'],
                 'expression' => $this->hasAccess('pos/products/update'),
             ],
             ['allow',
@@ -277,5 +278,26 @@ class ProductsController extends BaseController
                     'message' => 'Data berhasil dihapus.',
                 ], 201);
         }
+    }
+
+    public function price($request, $response, $args)
+    {
+        $isAllowed = $this->isAllowed($request, $response, $args);
+        if ($isAllowed instanceof \Slim\Http\Response)
+            return $isAllowed;
+
+        if(!$isAllowed){
+            return $this->notAllowedAction();
+        }
+
+        if (!isset($args['id'])) {
+            return false;
+        }
+
+        $model = \Model\ProductsModel::model()->findByPk($args['id']);
+        
+        return $this->_container->module->render($response, 'products/price.html', [
+            'model' => $model
+        ]);
     }
 }

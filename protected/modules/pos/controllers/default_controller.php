@@ -32,7 +32,10 @@ class DefaultController extends BaseController
             if ($model instanceof \RedBeanPHP\OODBBean){
                 $has_password = \Model\AdminModel::hasPassword($_POST['LoginForm']['password'], $model->salt);
                 if ($model->password == $has_password){
-                    $login = $this->_user->login($model);
+                    $remember = false;
+                    if ($_POST['LoginForm']['remember'] > 0)
+                        $remember = true;
+                    $login = $this->_user->login($model, $remember);
                     if ($login){
                         if (isset($_GET['r']))
                             return $response->withRedirect( $_GET['r'] );

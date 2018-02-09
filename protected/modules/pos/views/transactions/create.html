@@ -1,0 +1,39 @@
+{% extends "layout.html" %}
+{% block pagetitle %}
+Transaksi Baru - {{ App.params.site_name }}
+{% endblock %}
+
+{% block content %}
+<!-- main content -->
+<div id="main_wrapper">
+    <div class="page_bar clearfix">
+        <div class="row">
+            <div class="col-sm-10">
+                <h1 class="page_title">Transaksi Baru</h1>
+                <p class="text-muted">Halaman formulir transaksi baru</p>
+            </div>
+            <div class="col-sm-2 text-right">
+                <a class="btn btn-default" href="{{ 'pos/transactions/view' | link }}">Daftar Transaksi</a>
+            </div>
+        </div>
+    </div>
+    <div class="page_content">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="panel panel-default">
+                        <div class="panel-body">
+                            {% include 'transactions/_form.html' %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% include 'partial/right_menu.html' %}
+{% endblock %}
+{% block endbodyjs %}
+<script type="text/javascript">
+</script>
+{% endblock %}

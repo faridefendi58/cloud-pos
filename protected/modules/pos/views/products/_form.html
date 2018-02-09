@@ -1,5 +1,8 @@
 <form method="post" id="product-form" class="mt20" action="{% if model.id %}{{ 'pos/products/update' | link }}/{{ model.id }}{% else %}{{ 'pos/products/create' | link }}{% endif %}">
     <div class="alert alert-success" style="display: none;"></div>
+    <div class="col-md-12">
+        <p>Kolom bertanda <span class="red">*</span> tidak boleh dikosongi</p>
+    </div>
     <div class="col-md-4">
         <div class="form-group">
             <label for="name">Nama Produk <span class="text-danger">*</span></label>

@@ -40,6 +40,9 @@ $app->group('/pos', function () use ($user) {
     $this->group('/products', function() use ($user) {
         new Pos\Controllers\ProductsController($this, $user);
     });
+    $this->group('/transactions', function() use ($user) {
+        new Pos\Controllers\TransactionsController($this, $user);
+    });
 });
 
 ?>

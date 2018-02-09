@@ -1,0 +1,454 @@
+<div class="row">
+    <div class="col-sm-9">
+        <div class="row">
+            <div class="col-md-5 col-sm-6" id="list-item">
+                <select data-live-search="1" class="form-control no-margin" name="scan" id="scan">
+                    <option value="" selected="selected">Pilih Nama Barang</option>
+                    <option value="10001 - Kue Cubit">10001 - Kue Cubit</option>
+                    <option value="10002 - Kue Cubit SD">10002 - Kue Cubit SD</option>
+                    <option value="10003 - Kue Cubit Coklat">10003 - Kue Cubit Coklat</option>
+                    <option value="10004 - Kue Cubit Greentea">10004 - Kue Cubit Greentea</option>
+                    <option value="10005 - Kue Cubit Candy">10005 - Kue Cubit Candy</option>
+                    <option value="10006 - Roti Maryam">10006 - Roti Maryam</option>
+                </select>
+            </div>
+            <div class="col-md-7 col-sm-6 text-right">
+                <button class="btn btn-default mar_top1" onclick="listItems();">Advanced Search Item</button>
+                <div class="col-md-4 row">
+                    <select class="form-control" onchange="setCurrency(this);" name="currency" id="currency">
+                        <option value="1" selected="selected">Rupiah</option>
+                        <option value="2">US Dollar</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="table-responsive mar_top1 col-md-12 col-sm-12" id="sales-frame">
+                <table class="table table-striped mb30 items">
+                    <thead>
+                    <tr>
+                        <th>No</th>
+                        <th>Item Code</th>
+                        <th>Item Name</th>
+                        <th>Price</th>
+                        <th>Quantity</th>
+                        <th>Discount</th>
+                        <th>Total</th>
+                        <th>&nbsp;</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {# include 'transactions/_items.html' #}
+                    </tbody>
+                </table>
+            </div>
+            <div class="col-md-6 col-sm-12">
+                <div class="form-group">
+                    <label class="control-label">*) <a onclick="js:$('.promocode').toggle();" href="javascript:void(0);">Gunakan Kode Promosi</a></label>
+                    <input class="form-control promocode" placeholder="Please insert the promotion code" style="display:none;" name="promocode" id="promocode" type="text">
+                </div>
+            </div>
+            <div class="col-md-6 col-sm-12 text-right" id="payment-button" style="display:none">
+                <input onclick="payRequest('/bangido/pos/orders/paymentRequest');" style="min-width:100px;" id="payment-btn" class="btn btn-success btn-primary" name="yt0" value="Pembayaran" type="button">
+                <input onclick="cancelRequest('/bangido/pos/orders/cancelTransaction');" style="min-width:100px;" id="cancel-btn" class="btn btn-default btn-primary" name="yt1" value="Pembatalan Transaksi" type="button">				<div class="row-fluid mt10" id="payment-form"></div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-3">
+        <div class="row">
+            <div class="col-sm-12">
+                <span class="fa fa-group"></span> <b>Select Customer (Optional)</b>
+                <select data-live-search="1" class="form-control no-margin" name="find_customer" id="find_customer">
+                    <option value="" selected="selected">Pilih Pelanggan</option>
+                    <option value="1 - noname">1 - noname</option>
+                    <option value="3 - effendi">3 - effendi</option>
+                </select>
+                <button class="btn btn-info btn-block" onclick="createCustomer();">Add New Customer</button>
+            </div>
+            <div class="col-sm-12">
+                <div class="table-responsive mt10">
+                    <table class="table table-striped mb30">
+                        <tbody>
+                        <tr>
+                            <td><b>Sub Total</b></td>
+                            <td><h3><span id="sub-total" style="font-size:35px;">{# $this->getTotalBelanja() #}</span></h3></td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div><!-- row -->
+{#<script type="text/javascript">
+$('input[id=\"scan\"]').focus();
+$('select[id=\"scan\"]').focus();
+");
+Yii::app()->clientScript->registerScript('tekan',"
+$('#scan').keypress(function(e){
+if (e.which == 13) {
+pushSearch(this.value,'".Yii::app()->createUrl('/'.Yii::app()->controller->module->id.'/orders/scan')."');
+}
+});
+$('select[id=\"scan\"]').change(function(){
+pushSearch(this.value,'".Yii::app()->createUrl('/'.Yii::app()->controller->module->id.'/orders/scan')."');
+});
+$('#find').keypress(function(e){
+if (e.which == 13) {
+pushFindCustomer(this.value,'".Yii::app()->createUrl('/'.Yii::app()->controller->module->id.'/customer/choose')."');
+}
+});
+$('select[id=\"find_customer\"]').change(function(){
+pushFindCustomer(this.value,'".Yii::app()->createUrl('/'.Yii::app()->controller->module->id.'/customer/choose')."');
+});
+$('#promocode').keypress(function(e){
+if (e.which == 13) {
+pushFindPromoCode(this.value,'".Yii::app()->createUrl('/'.Yii::app()->controller->module->id.'/orders/promocode')."');
+}
+});
+</script>#}
+
+<button class="btn btn-primary btn-lg hidden" data-target="#myModal" data-toggle="modal" id="launch-modal"> Launch Modal </button>
+<div id="myModal" class="modal fade" aria-hidden="true" aria-labelledby="myModalLabel" role="dialog" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button class="close" aria-hidden="true" data-dismiss="modal" type="button">×</button>
+                <h4 id="myModalLabel" class="modal-title">Modal title</h4>
+            </div>
+            <div class="modal-body has-padding" id="div-for-items"> Content goes here... </div>
+            <div class="modal-footer hide">
+                <button class="btn btn-default" data-dismiss="modal" type="button">Close</button>
+                <button class="btn btn-primary" id="btn-print" type="button">Print</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script type="text/javascript">
+    function pushSearch(item,action)
+    {
+        $.ajax({
+            'beforeSend': function() { Loading.show(); },
+            'complete': function() { Loading.hide(); },
+            'url': action,
+            'type':'post',
+            'dataType': 'json',
+            'data':{"item":item},
+            'success': function(data){
+                if(data.status=='success'){
+                    $('#sales-frame table.items tbody').html(data.div);
+                    $('span[id="sub-total"]').html(data.subtotal);
+                    $('#payment-button').css('display','block');
+                    $("input[id=\'scan\']").val("");
+                    $('#list-item').find("input.input-block-level").val("");
+                    $('#list-item').find(".filter-option").html('Pilih Nama Barang');
+                }else{
+                    alert(data.message);
+                    $("input[id=\'scan\']").val("");
+                    $("input[id=\'scan\']").focus();
+                }
+            },
+        });
+        return false;
+    }
+    function pushQty(id,data,action)
+    {
+        var $this=$(data);
+        var qty=data.value;
+        if(typeof qty=="undefined")
+            var qty=$this.val();
+        $.ajax({
+            'beforeSend': function() { Loading.show(); },
+            'complete': function() { Loading.hide(); },
+            'url': action,
+            'type':'post',
+            'dataType': 'json',
+            'data':{"id":id,"qty":qty},
+            'success': function(data){
+                if(data.status=='success'){
+                    $('input[id="qty"]').html(data.div);
+                    $('span[id="sub-total"]').html(data.subtotal);
+                    $('#discount-'+id).html(data.discount);
+                    $('#total-item-'+id).html(data.total);
+                    //if($('#promocode').val().length>0)
+                    //window.location.reload(true);
+                    $("input[id=\'scan\']").focus();
+                }else
+                    $this.val(1);
+                //alert(data.message);
+            },
+        });
+        return false;
+    }
+    function checkSearch(data,action)
+    {
+        if(data.value!==''){
+            pushSearch(data.value,action);
+        }
+    }
+    function payRequest(action)
+    {
+        var id="<?php echo $_GET['id'];?>";//when update request
+        $.ajax({
+            'beforeSend': function() { Loading.show(); },
+            'complete': function() { Loading.hide(); },
+            'url': action,
+            'type':'post',
+            'dataType': 'json',
+            'data':{'id':id},
+            'success': function(data){
+                if(data.status=='success'){
+                    $('#payment-form').html(data.div);
+                    $('input[id="PaymentForm_amount_tendered"]').focus();
+                }
+            },
+        });
+        return false;
+    }
+    function changeRequest(amount_tendered,action)
+    {
+        $.ajax({
+            'beforeSend': function() { Loading.show(); },
+            'complete': function() { Loading.hide(); },
+            'url': action,
+            'type':'post',
+            'dataType': 'json',
+            'data':{"amount_tendered":amount_tendered},
+            'success': function(data){
+                if(data.status=='success'){
+                    $('#change').html(data.div);
+                    $('.submit-payment').removeAttr('disabled');
+                    $('#submit-payment-area').css('display','block');
+                    //$('.submit-payment').focus();
+                    $('#payment-btn-help').focus();
+                }else
+                    alert(data.div);
+            },
+        });
+        return false;
+    }
+    function deleteItem(id)
+    {
+        if(confirm('Are you sure to delete this item ?')){
+            $.ajax({
+                'beforeSend': function() { Loading.show(); },
+                'complete': function() { Loading.hide(); },
+                'url': "<?php echo Yii::app()->createUrl('/'.Yii::app()->controller->module->id.'/orders/deleteItem",
+                'type':'post',
+                'dataType': 'json',
+                'data':{"id":id},
+                'success': function(data){
+                    if(data.status=='success'){
+                        $('#sales-frame table.items tbody').html(data.div);
+                        $('span[id="sub-total"]').html(data.subtotal);
+                        if(data.count<=0)
+                            $('#payment-button').css('display','none');
+
+                        $("input[id=\'scan\']").focus();
+                    }
+                },
+            });
+            return false;
+        }
+    }
+    function cancelRequest()
+    {
+        if(confirm('Are you sure to cancel transactions ?')){
+            $.ajax({
+                'beforeSend': function() { Loading.show(); },
+                'complete': function() { Loading.hide(); },
+                'url': "<?php echo Yii::app()->createUrl('/'.Yii::app()->controller->module->id.'/orders/cancelTransaction",
+                'type':'post',
+                'dataType': 'json',
+                'success': function(data){
+                    if(data.status=='success'){
+                        $('#sales-frame table.items tbody').html(data.div);
+                        $('span[id="sub-total"]').html(data.subtotal);
+                        $('#payment-form').empty();
+                        $('#payment-button').css('display','none');
+                        $("input[id=\'scan\']").focus();
+                        $("#promocode").val('');
+                        $("#promocode").hide();
+                        //window.location.reload(true);
+                    }
+                },
+            });
+            return false;
+        }
+    }
+    function listItems()
+    {
+        $.ajax({
+            'beforeSend': function() { Loading.show(); },
+            'complete': function() { Loading.hide(); },
+            'url': "<?php echo Yii::app()->createUrl('/'.Yii::app()->controller->module->id.'/orders/viewItems",
+            'type':'post',
+            'dataType': 'json',
+            'success': function(data){
+                if(data.status=='success'){
+                    $('.modal-content .modal-footer').hide();
+                    $('.modal-content .modal-title').html("List Items");
+                    $('.modal-content #div-for-items').html(data.div);
+                    $('#launch-modal').trigger('click');
+                    $("input[id=\'items_name\']").focus();
+                }
+            },
+        });
+        return false;
+    }
+    function createCustomer()
+    {
+        $.ajax({
+            'beforeSend': function() { Loading.show(); },
+            'complete': function() { Loading.hide(); },
+            'url': "<?php echo Yii::app()->createUrl('/'.Yii::app()->controller->module->id.'/customer/create",
+            'type':'post',
+            'dataType': 'json',
+            'success': function(data){
+                if(data.status=='success'){
+                    $('.modal-content .modal-footer').hide();
+                    $('.modal-content .modal-title').html("Add New Customer");
+                    $('.modal-content #div-for-items').html(data.div);
+                    $('#launch-modal').trigger('click');
+                    $("input[id=\'Customer_name\']").focus();
+                }
+            },
+        });
+        return false;
+    }
+    function lookupCustomer()
+    {
+        $.ajax({
+            'beforeSend': function() { Loading.show(); },
+            'complete': function() { Loading.hide(); },
+            'url': "<?php echo Yii::app()->createUrl('/'.Yii::app()->controller->module->id.'/customers/view",
+            'type':'post',
+            'dataType': 'json',
+            'success': function(data){
+                if(data.status=='success'){
+                    $('#dialogItems #div-for-items').html(data.div);
+                    $('#ui-dialog-title-dialogItems').html('Customers');
+                    $('#dialogItems').dialog('open');
+                }
+            },
+        });
+        return false;
+    }
+    function pushFindCustomer(nama,url)
+    {
+        $.ajax({
+            'beforeSend': function() { Loading.show(); },
+            'complete': function() { Loading.hide(); },
+            'url': url,
+            'type':'post',
+            'data':{'nama':nama},
+            'dataType': 'json',
+            'success': function(data){
+                if(data.status=='success'){
+                    $('#customer-name').html(data.div);
+                    $('#customer-name').css('display','block');
+                    $('#find-customer').css('display','none');
+                    $("input[id=\'scan\']").focus();
+                }
+            },
+        });
+        return false;
+    }
+    function pushFindPromoCode(promocode,url)
+    {
+        $.ajax({
+            'beforeSend': function() { Loading.show(); },
+            'complete': function() { Loading.hide(); },
+            'url': url,
+            'type':'post',
+            'data':{'promocode':promocode},
+            'dataType': 'json',
+            'success': function(data){
+                if(data.status=='success'){
+                    $('#sales-frame table.items tbody').html(data.cart);
+                    $('#sub-total').html(data.subtotal);
+                    $("input[id=\'scan\']").val("");
+                }
+            },
+        });
+        return false;
+    }
+    function pushDiscount(data)
+    {
+        var $this=$(data);
+        $.ajax({
+            'beforeSend': function() { Loading.show(); },
+            'complete': function() { Loading.hide(); },
+            'url': "<?php echo Yii::app()->createUrl('/'.Yii::app()->controller->module->id.'/orders/createDiscount",
+            'type':'post',
+            'data':{'id':$this.attr('rel_id'),'value':$this.val()},
+            'dataType': 'json',
+            'success': function(data){
+                if(data.status=='success'){
+                    var url="<?php echo Yii::app()->createUrl('/'.Yii::app()->controller->module->id.'/orders/updateQty";
+                    pushQty($this.attr('rel_id'),$this.parent().parent().find('#qty'),url);
+                }
+            },
+        });
+        return false;
+    }
+    function setCurrency(data)
+    {
+        var $this=$(data);
+        $.ajax({
+            'beforeSend': function() { Loading.show(); },
+            'complete': function() { Loading.hide(); },
+            'url': "<?php echo Yii::app()->createUrl('/'.Yii::app()->controller->module->id.'/orders/setCurrency",
+            'type':'post',
+            'data':{'value':$this.val()},
+            'dataType': 'json',
+            'success': function(data){
+                if(data.status=='success'){
+                    window.location.reload(true);
+                }
+            },
+        });
+        return false;
+    }
+</script>
+<script type="text/javascript">
+    $(document).ready(function(){
+        function setfocus(){
+            $("input[id=\'items_name\']").focus();
+        }
+
+        document.onkeydown = function(e){
+            setfocus();
+//alert(e.keyCode);
+            if (e.keyCode==17){//--Tombol_CTRL---
+                //$('#find-btn').click();
+                //listItems();
+                $("#list-item").find('button.selectpicker').click();
+            }
+            else if (e.keyCode==9){//--Tombol_TAB---
+                $('#payment-btn').click();
+            }
+            else if (e.keyCode==18){//--Tombol_ALT---
+                $('#cancel-btn').click();
+            }
+            else if (e.keyCode==27){//--Tombol_ESC---
+                //$('#dialogItems').dialog('close');
+                $('button[data-dismiss="modal"]').trigger('click');
+                $('#cancel-btn').click();
+            }
+            else if (e.keyCode==36){//--Tombol_Home---
+                lookupCustomer();
+            }
+            else if (e.keyCode==45){//--Tombol_Ins---
+                createCustomer();
+            }
+            else if (e.keyCode==112){//--Tombol_F1---
+                $('#find-customer').toggle();
+            }
+            else {
+                setfocus();
+            }
+        }
+    });
+</script>

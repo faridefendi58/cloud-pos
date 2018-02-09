@@ -18,13 +18,18 @@ class UserIdentity
     public function isGuest()
     {
         if (!isset($_SESSION[$this->session_id])){
+            if (isset($_COOKIE[$this->session_id])) {
+                // renew session if there is remember cookie
+                $_SESSION[$this->session_id] = json_decode($_COOKIE[$this->session_id], true);
+                return false;
+            }
             return true;
         }
 
         return false;
     }
 
-    public function login($model)
+    public function login($model, $remember = false)
     {
         $_SESSION[$this->session_id]['user'] = [
             'id' => $model->id,
@@ -33,6 +38,11 @@ class UserIdentity
             'group_id' => $model->group_id
         ];
 
+        if ($remember) {
+            //remember for 1 month
+            setcookie( $this->session_id, json_encode($_SESSION[$this->session_id]), strtotime("+1 month", time()), "/");
+        }
+
         return true;
     }
 
@@ -40,6 +50,9 @@ class UserIdentity
     {
         session_unset();
         session_destroy();
+        if (isset($_COOKIE[$this->session_id])) {
+            setcookie( $this->session_id, null, -1, "/" );
+        }
         return true;
     }
 

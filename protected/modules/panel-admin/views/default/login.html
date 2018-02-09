@@ -24,6 +24,11 @@ Login - {{ App.name }}
             <label for="login_password">Password</label>
             <input type="password" name="LoginForm[password]" class="form-control input-lg" id="login_password">
         </div>
+        <div class="form-group">
+            <label class="checkbox-inline">
+                <input id="inlineCheckbox1" name="LoginForm[remember]" value="1" type="checkbox"> Remember me
+            </label>
+        </div>
         <div class="submit_section">
             <button class="btn btn-lg btn-info btn-block">Continue</button>
         </div>
@@ -33,7 +38,7 @@ Login - {{ App.name }}
 {% block endbodyjs %}
 <script type="text/javascript">
     $(function(){
-       $('#login_username').focus();
+        $('#login_username').focus();
     });
 </script>
 {% endblock %}
