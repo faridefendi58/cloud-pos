@@ -30,6 +30,12 @@ Update User - {{ model.username }} - {{ App.name }}
 						{% endif %}
 						<form method="post" name="user-update" class="form-horizontal">
 							<div class="form-group">
+								<label class="col-sm-2 control-label">Nama <span class="red">*</span></label>
+								<div class="col-sm-6">
+									<input name="Admin[name]" type="text" class="form-control {% if errors.name %}error{% endif %}" value="{{ model.name }}">
+								</div>
+							</div>
+							<div class="form-group">
 								<label class="col-sm-2 control-label">Username <span class="red">*</span></label>
 								<div class="col-sm-6">
 	                            	<input name="Admin[username]" type="text" class="form-control" value="{{ model.username }}">

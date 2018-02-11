@@ -1,0 +1,41 @@
+<table class="table table-hover">
+    <tbody>
+    <tr>
+        <td>Id</td>
+        <td>#{{ model.id }}</td>
+    </tr>
+    <tr>
+        <td>Nama Supplier</td>
+        <td>{{ model.name }}</td>
+    </tr>
+    <tr>
+        <td>Alamat</td>
+        <td>{{ model.address }}</td>
+    </tr>
+    <tr>
+        <td>Telepon</td>
+        <td>{{ model.phone }}</td>
+    </tr>
+    <tr>
+        <td>Catatan</td>
+        <td>{{ model.notes | default('-') }}</td>
+    </tr>
+    <tr>
+        <td>Tanggal Input</td>
+        <td>{{ model.created_at }}</td>
+    </tr>
+    <tr>
+        <td>Diinput Oleh</td>
+        <td>{{ detail.created_by_name | default('-') }}</td>
+    </tr>
+    <tr>
+        <td>Tanggal Perubahan Terakhir</td>
+        <td>{{ model.updated_at }}</td>
+    </tr>
+    <tr>
+        <td>Diubah Oleh</td>
+        <td>{{ detail.updated_by_name | default('-') }}</td>
+    </tr>
+    </tbody>
+</table>
+

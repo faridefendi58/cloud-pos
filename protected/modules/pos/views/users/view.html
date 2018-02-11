@@ -32,6 +32,7 @@ Kelola User - {{ App.name }}
                                     <tr>
                                         <th>id</th>
                                         <th>Nama</th>
+                                        <th>Username</th>
                                         <th>Email</th>
                                         <th>Hak Akses</th>
                                         <th>Status</th>
@@ -42,6 +43,7 @@ Kelola User - {{ App.name }}
                                     {% for i, model in models %}
                                     <tr>
                                         <td><center>{{ i + 1 }}</center></td>
+                                        <td>{{ model.name }}</td>
                                         <td>{{ model.username }}</td>
                                         <td>{{ model.email }}</td>
                                         <td>

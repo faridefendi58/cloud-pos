@@ -97,6 +97,7 @@ class ProductsController extends BaseController
             $model->description = $_POST['Products']['description'];
             $model->active = $_POST['Products']['active'];
             $model->created_at = date("Y-m-d H:i:s");
+            $model->created_by = $this->_user->id;
             try {
                 $save = \Model\ProductsModel::model()->save($model);
             } catch (\Exception $e) {
@@ -135,6 +136,7 @@ class ProductsController extends BaseController
             $model->description = $_POST['Products']['description'];
             $model->active = $_POST['Products']['active'];
             $model->updated_at = date("Y-m-d H:i:s");
+            $model->updated_by = $this->_user->id;
             $update = \Model\ProductsModel::model()->update($model);
             if ($update) {
                 return $response->withJson(
@@ -199,6 +201,7 @@ class ProductsController extends BaseController
             $model->title = $_POST['ProductCategories']['title'];
             $model->description = $_POST['ProductCategories']['description'];
             $model->created_at = date("Y-m-d H:i:s");
+            $model->created_by = $this->_user->id;
             try {
                 $save = \Model\ProductCategoriesModel::model()->save($model);
             } catch (\Exception $e) {
@@ -232,6 +235,7 @@ class ProductsController extends BaseController
         if (isset($_POST['ProductCategories'])){
             $model->title = $_POST['ProductCategories']['title'];
             $model->updated_at = date("Y-m-d H:i:s");
+            $model->updated_by = $this->_user->id;
             $update = \Model\ProductCategoriesModel::model()->update($model);
             if ($update) {
                 return $response->withJson(

@@ -85,6 +85,7 @@ class UsersController extends BaseController
         $model = new \Model\AdminModel('create');
 
         if (isset($_POST['Admin'])){
+            $model->name = $_POST['Admin']['name'];
             $model->username = $_POST['Admin']['username'];
             $model->salt = md5(uniqid());
             $model->password = $_POST['Admin']['password'];
@@ -130,6 +131,7 @@ class UsersController extends BaseController
         $model = \Model\AdminModel::model()->findByPk($args['id']);
 
         if (isset($_POST['Admin'])){
+            $model->name = $_POST['Admin']['name'];
             $model->username = $_POST['Admin']['username'];
             $model->email = $_POST['Admin']['email'];
             $model->group_id = $_POST['Admin']['group_id'];

@@ -1,0 +1,60 @@
+{% extends "layout.html" %}
+{% block pagetitle %}
+Kelola Warehouse - {{ App.params.site_name }}
+{% endblock %}
+
+{% block content %}
+<div id="main_wrapper">
+    <div class="page_bar clearfix">
+        <div class="row">
+            <div class="col-sm-10">
+                <h1 class="page_title">Kelola Warehouse #{{ model.name }}</h1>
+                <p class="text-muted">Halaman pengelolaan data Warehouse {{ model.name | lower }}</p>
+            </div>
+            <div class="col-sm-2 text-right">
+                <a class="btn btn-default" href="{{ 'pos/warehouses/view' | link }}">Daftar Warehouse</a>
+            </div>
+        </div>
+    </div>
+    <div class="page_content">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-lg-12">
+                    <div class="panel panel-default">
+                        <div class="panel-body">
+                            <ul class="nav nav-tabs" id="tabs_a">
+                                <li>
+                                    <a data-toggle="tab" href="#detail">Detail Data</a>
+                                </li>
+                                <li class="active">
+                                    <a data-toggle="tab" href="#update">Ubah Data</a>
+                                </li>
+                            </ul>
+                            <div class="tab-content" id="tabs_content_a">
+                                <div id="detail" class="tab-pane fade">
+                                    {% include 'warehouses/_detail.html' with {'model':model,'detail':detail} %}
+                                </div>
+                                <div id="update" class="tab-pane fade in active">
+                                    {% include 'warehouses/_form.html' with {'model':model} %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% include 'partial/right_menu.html' %}
+{% endblock %}
+{% block endbodyjs %}
+<script type="text/javascript">
+    $(function () {
+        if (window.location.hash) {
+            var hash = window.location.hash.substring(1);
+            if ($('a[href="#'+hash+'"]').length > 0)
+                $('a[href="#'+hash+'"]').click();
+        }
+    });
+</script>
+{% endblock %}

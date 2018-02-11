@@ -31,11 +31,11 @@
         <li>
             <a href="#">
                 <span class="fa fa-briefcase"></span>
-                <span class="nav_title">Produk</span>
+                <span class="nav_title">Inventory</span>
             </a>
             <div class="sub_panel">
                 <div class="side_inner">
-                    <h4 class="panel_heading panel_heading_first">Produk</h4>
+                    <h4 class="panel_heading panel_heading_first">Product</h4>
                     <ul>
                         <li>
                             <a href="{{ 'pos/products/view' | link }}">
@@ -45,6 +45,32 @@
                         <li>
                             <a href="{{ 'pos/products/view' | link }}#create-new">
                                 <span class="side_icon ion-ios7-plus-outline"></span> Produk Baru
+                            </a>
+                        </li>
+                    </ul>
+                    <h4 class="panel_heading panel_heading_first">Supplier</h4>
+                    <ul>
+                        <li>
+                            <a href="{{ 'pos/suppliers/view' | link }}">
+                                <span class="side_icon ion-ios7-folder-outline ion-ios7-mon"></span>Daftar Supplier
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{{ 'pos/suppliers/view' | link }}#create-new">
+                                <span class="side_icon ion-ios7-plus-outline"></span> Supplier Baru
+                            </a>
+                        </li>
+                    </ul>
+                    <h4 class="panel_heading panel_heading_first">Warehouse</h4>
+                    <ul>
+                        <li>
+                            <a href="{{ 'pos/warehouses/view' | link }}">
+                                <span class="side_icon ion-ios7-folder-outline ion-ios7-mon"></span>Daftar Warehouse
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{{ 'pos/warehouses/view' | link }}#create-new">
+                                <span class="side_icon ion-ios7-plus-outline"></span> Warehouse Baru
                             </a>
                         </li>
                     </ul>
