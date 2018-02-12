@@ -49,6 +49,9 @@ $app->group('/pos', function () use ($user) {
     $this->group('/warehouses', function() use ($user) {
         new Pos\Controllers\WarehousesController($this, $user);
     });
+    $this->group('/purchases', function() use ($user) {
+        new Pos\Controllers\PurchasesController($this, $user);
+    });
 });
 
 ?>

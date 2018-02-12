@@ -1,0 +1,60 @@
+<table class="table table-hover">
+    <tbody>
+    <tr>
+        <td>Id</td>
+        <td>#{{ model.id }}</td>
+    </tr>
+    <tr>
+        <td>Nomor</td>
+        <td>{{ model.po_number }}</td>
+    </tr>
+    <tr>
+        <td>Quantity</td>
+        <td>{{ model.quantity }}</td>
+    </tr>
+    <tr>
+        <td>Unit</td>
+        <td>{{ model.unit }}</td>
+    </tr>
+    <tr>
+        <td>Price</td>
+        <td>{{ model.price_netto }}</td>
+    </tr>
+    <tr>
+        <td>Supplier</td>
+        <td><a href="{{ 'pos/suppliers/update' | link }}/{{ model.supplier_id }}#detail" target="_blank">{{ detail.supplier_name }}</a></td>
+    </tr>
+    <tr>
+        <td>Tanggal Order</td>
+        <td>{{ model.date_order | date("d F Y") | default('-') }}</td>
+    </tr>
+    <tr>
+        <td>Tanggal Jatuh Tempo</td>
+        <td>{{ model.due_date | date("d F Y") | default('-') }}</td>
+    </tr>
+    <tr>
+        <td>Status</td>
+        <td><b>{{ model.status | title }}</b></td>
+    </tr>
+    <tr>
+        <td>Catatan</td>
+        <td>{{ model.notes | default('-') }}</td>
+    </tr>
+    <tr>
+        <td>Tanggal Input</td>
+        <td>{{ model.created_at }}</td>
+    </tr>
+    <tr>
+        <td>Diinput Oleh</td>
+        <td>{{ detail.created_by_name | default('-') }}</td>
+    </tr>
+    <tr>
+        <td>Tanggal Perubahan Terakhir</td>
+        <td>{{ model.updated_at | default('-') }}</td>
+    </tr>
+    <tr>
+        <td>Diubah Oleh</td>
+        <td>{{ detail.updated_by_name | default('-') }}</td>
+    </tr>
+    </tbody>
+</table>

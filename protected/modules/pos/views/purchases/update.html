@@ -1,6 +1,6 @@
 {% extends "layout.html" %}
 {% block pagetitle %}
-Kelola Warehouse - {{ App.params.site_name }}
+Kelola Purchase Order - {{ App.params.site_name }}
 {% endblock %}
 
 {% block content %}
@@ -8,11 +8,11 @@ Kelola Warehouse - {{ App.params.site_name }}
     <div class="page_bar clearfix">
         <div class="row">
             <div class="col-sm-10">
-                <h1 class="page_title">Kelola Warehouse #{{ model.title }}</h1>
-                <p class="text-muted">Halaman pengelolaan data Warehouse {{ model.title | lower }}</p>
+                <h1 class="page_title">Kelola Purchase Order #{{ model.po_number }}</h1>
+                <p class="text-muted">Halaman pengelolaan data Purchase Order {{ model.po_number | lower }}</p>
             </div>
             <div class="col-sm-2 text-right">
-                <a class="btn btn-default" href="{{ 'pos/warehouses/view' | link }}">Daftar Warehouse</a>
+                <a class="btn btn-default" href="{{ 'pos/purchases/view' | link }}">Daftar Purchase Order</a>
             </div>
         </div>
     </div>
@@ -32,10 +32,10 @@ Kelola Warehouse - {{ App.params.site_name }}
                             </ul>
                             <div class="tab-content" id="tabs_content_a">
                                 <div id="detail" class="tab-pane fade">
-                                    {% include 'warehouses/_detail.html' with {'model':model,'detail':detail} %}
+                                    {% include 'purchases/_detail.html' with {'model':model,'detail':detail} %}
                                 </div>
                                 <div id="update" class="tab-pane fade in active">
-                                    {% include 'warehouses/_form.html' with {'model':model} %}
+                                    {% include 'purchases/_form.html' with {'model':model, 'suppliers':suppliers, 'shipments':shipments} %}
                                 </div>
                             </div>
                         </div>

@@ -1,0 +1,154 @@
+<form method="post" id="purchases-form" class="mt20" action="{% if model.id %}{{ 'pos/purchases/update' | link }}/{{ model.id }}{% else %}{{ 'pos/purchases/create' | link }}{% endif %}">
+    <div class="alert alert-success" style="display: none;"></div>
+    <div class="col-md-12 mb10">
+        <p>Kolom bertanda <span class="red">*</span> tidak boleh dikosongi</p>
+    </div>
+    <div class="col-md-12">
+        <div class="row">
+            <div class="col-md-4">
+                <div class="form-group">
+                    <label for="name">Nomor PO <span class="required">*</span></label>
+                    <input type="text" id="name" name="PurchaseOrders[po_number]" class="form-control" {% if model.po_number %}value="{{ model.po_number }}" required{% endif %}>
+                    <span class="help-block">Kosongi untuk generate nomor PO secara otomatis</span>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="form-group">
+                    <label for="qty">Quantity <span class="required">*</span></label>
+                    <input type="text" id="qty" name="PurchaseOrders[quantity]" class="form-control" {% if model.quantity %}value="{{ model.quantity }}"{% endif %} required>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <label>Unit <span class="text-danger">*</span></label>
+                <select id="unit" name="PurchaseOrders[unit]" class="form-control">
+                    <option value="pcs" {% if model.unit and model.unit == 'pcs' %}selected="selected"{% endif %}>Pcs</option>
+                    <option value="box" {% if model.unit and model.unit == 'box' %}selected="selected"{% endif %}>Box</option>
+                </select>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-12">
+        <div class="row">
+            <div class="col-md-4">
+                <div class="form-group">
+                    <label for="price_netto">Price <span class="required">*</span></label>
+                    <input type="text" id="price_netto" name="PurchaseOrders[price_netto]" class="form-control" {% if model.price_netto %}value="{{ model.price_netto }}"{% endif %} required>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="form-group">
+                    <label for="supplier_id">Supplier <span class="text-danger">*</span></label>
+                    <select id="supplier_id" name="PurchaseOrders[supplier_id]" class="form-control">
+                        <option value="0">-</option>
+                        {% for i, supplier in suppliers %}
+                        <option value="{{ supplier.id }}" {% if model.supplier_id and model.supplier_id == supplier.id %}selected="selected"{% endif %}>{{ supplier.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <label>Tanggal Order <span class="text-danger">*</span></label>
+                <div class="input-group date ts_datepicker" data-date-format="dd-mm-yyyy" data-date-autoclose="true">
+                    <input class="form-control" type="text" name="PurchaseOrders[date_order]" {% if model and model.date_order %}value="{{ model.date_order | date('d-m-Y') }}"{% endif %}>
+                    <span class="input-group-addon"><i class="fa fa-calendar"></i></span>
+                </div>
+                <span class="help-block">dd-mm-yyyy</span>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-12">
+        <div class="row">
+            <div class="col-md-4">
+                <label>Tanggal Jatuh Tempo</label>
+                <div class="input-group date ts_datepicker" data-date-format="dd-mm-yyyy" data-date-autoclose="true">
+                    <input class="form-control" type="text" name="PurchaseOrders[due_date]" {% if model and model.due_date %}value="{{ model.due_date | date('d-m-Y') }}"{% endif %}>
+                    <span class="input-group-addon"><i class="fa fa-calendar"></i></span>
+                </div>
+                <span class="help-block">dd-mm-yyyy</span>
+            </div>
+            <div class="col-md-4">
+                <label>Pengiriman <span class="text-danger">*</span></label>
+                <select id="status" name="PurchaseOrders[shipment_id]" class="form-control">
+                    <option value="0">-</option>
+                    {% for i, shipment in shipments %}
+                    <option value="{{ shipment.id }}" {% if model.shipment_id and model.shipment_id == shipment.id %}selected="selected"{% endif %}>{{ shipment.title }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label>Status <span class="text-danger">*</span></label>
+                <select id="status" name="PurchaseOrders[status]" class="form-control">
+                    <option value="onprocess" {% if model.status and model.status == 'onprocess' %}selected="selected"{% endif %}>On Process</option>
+                    <option value="completed" {% if model.status and model.status == 'completed' %}selected="selected"{% endif %}>Completed</option>
+                    <option value="canceled" {% if model.status and model.status == 'canceled' %}selected="selected"{% endif %}>Canceled</option>
+                </select>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-8">
+        <div class="form-group">
+            <label for="desc">Catatan</label>
+            <textarea name="PurchaseOrders[notes]" id="desc" cols="10" rows="3" class="form-control">{% if model and model.notes %}{{ model.notes }}{% endif %}</textarea>
+        </div>
+    </div>
+    <div class="col-md-12">
+        <div class="form-group">
+            <input type="submit" value="Simpan" class="btn btn-info">
+        </div>
+    </div>
+</form>
+
+<link rel="stylesheet" href="{{ 'lib/bootstrap-datepicker/css/datepicker3.css' | admin_asset_url }}">
+<script src="{{ 'lib/bootstrap-datepicker/js/bootstrap-datepicker.js' | admin_asset_url }}"></script>
+<script type="text/javascript">
+    $(function () {
+        $('#purchases-form').submit(function () {
+            var url = $(this).attr('action');
+            $.ajax({
+                'url': url,
+                'type':'post',
+                'data': $('#purchases-form').serialize(),
+                'success': function(data) {
+                    if (data.status == 'success') {
+                        var alert_success = $('#purchases-form').find('.alert-success');
+                        alert_success.html(data.message);
+                        alert_success.show();
+                        setTimeout(function () {
+                            if (data.updated == true) {
+                                window.location.reload(true);
+                            } else {
+                                alert_success.hide();
+                                alert_success.empty();
+                                $('#purchases-form')[0].reset();
+                            }
+                        }, 5000);
+                    }
+                }
+            });
+
+            return false;
+        });
+        tisa_datepicker.init();
+    });
+    tisa_datepicker = {
+        init: function() {
+            if($('.ts_datepicker').length) {
+                $('.ts_datepicker').datepicker({
+                    todayHighlight: true
+                })
+            }
+            if( ($('#dpStart').length) && ($('#dpEnd').length) ) {
+                $('#dpStart').datepicker({
+                    todayHighlight: true
+                }).on('changeDate', function(e){
+                    $('#dpEnd').datepicker('setStartDate', e.date);
+                });
+                $('#dpEnd').datepicker({
+                    todayHighlight: true
+                }).on('changeDate', function(e){
+                    $('#dpStart').datepicker('setEndDate', e.date)
+                });
+            }
+        }
+    }
+</script>

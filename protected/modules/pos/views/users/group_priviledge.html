@@ -1,6 +1,6 @@
 {% extends "layout.html" %}
 {% block pagetitle %}
-Priviledge Group User - {{ model.name }} - {{ App.name }}
+Hak Akses Group User - {{ model.name }} - {{ App.name }}
 {% endblock %}
 
 {% block content %}
@@ -10,12 +10,12 @@ Priviledge Group User - {{ model.name }} - {{ App.name }}
             <div class="row">
                 <div class="col-lg-12">
                     <div class="panel panel-default">
-                        <div class="panel-heading">Priviledge for {{ model.name }}</div>
+                        <div class="panel-heading">Hak Akses untuk {{ model.name }}</div>
 						<div class="panel-body">
 						{% if message %}
 							<div class="alert {% if success %}alert-success{% else %}alert-warning{% endif %}">{{ message | raw }}</div>
 						{% endif %}
-						<form method="post" name="priviledge-update" class="form-horizontal">
+						<form method="post" name="priviledge-update" class="form-horizontal mt20">
 							<table class="table table-bordered">
 								<thead>
 									<tr>

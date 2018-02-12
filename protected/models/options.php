@@ -101,4 +101,30 @@ class OptionsModel extends \Model\BaseModel
 
         return false;
     }
+
+    /**
+     * @param $option_name
+     * @return bool|mixed
+     */
+    public function getOption($option_name)
+    {
+        $sql = 'SELECT t.option_name, t.option_value  
+          FROM {tablePrefix}options t 
+          WHERE t.option_name =:option_name';
+
+        $sql = str_replace(['{tablePrefix}'], [$this->_tbl_prefix], $sql);
+
+        $row = R::getRow( $sql, ['option_name'=>$option_name] );
+
+        if (!empty($row['option_value'])) {
+            $option_value = json_decode($row['option_value'], true);
+            if (!is_array($option_value)) {
+                return $row['option_value'];
+            } else {
+                return $option_value;
+            }
+        }
+
+        return false;
+    }
 }
