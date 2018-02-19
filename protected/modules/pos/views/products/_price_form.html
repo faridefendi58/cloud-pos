@@ -1,0 +1,26 @@
+<div class="row">
+    <div class="col-md-4">
+        <div class="form-group">
+            <label for="qty">Jumlah <span class="required">*</span></label>
+            <div class="input-group">
+                <input type="text" id="qty" name="ProductPrices[quantity][]" class="form-control" value="0" required>
+                <span class="input-group-addon" id="unit">{{ model.unit }}</span>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="form-group">
+            <label for="price">Harga per Item <span class="required">*</span></label>
+            <input type="text" id="price" name="ProductPrices[price][]" class="form-control" value="0" required>
+        </div>
+    </div>
+    <div class="col-md-1">
+        <div class="form-group">
+            <label>&nbsp;</label>
+            <a href="javascript:void(0);" onclick="removeprice(this);" title="Hapus item ini" {% if not show_delete_btn %}style="display:none;"{% endif %}>
+                <i class="fa fa-trash-o fa-2x"></i>
+            </a>
+            <a href="javascript:void(0);" onclick="addItem(this);"><i class="fa fa-plus fa-2x"></i></a>
+        </div>
+    </div>
+</div>

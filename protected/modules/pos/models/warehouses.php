@@ -37,6 +37,8 @@ class WarehousesModel extends \Model\BaseModel
             LEFT JOIN {tablePrefix}admin a ON a.id = t.created_by 
             WHERE 1';
 
+        $sql .= ' ORDER BY t.id DESC';
+
         $sql = str_replace(['{tablePrefix}'], [$this->_tbl_prefix], $sql);
 
         $rows = R::getAll( $sql );

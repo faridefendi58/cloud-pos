@@ -1,0 +1,32 @@
+<div class="row">
+    <div class="col-md-4">
+        <div class="form-group">
+            <label for="satuan">Satuan Ukuran <span class="required">*</span></label>
+            <input type="text" id="satuan" name="ProductDimensions[satuan][]" class="form-control" value="" required>
+            <span class="help-block">Contoh: Berat, Panjang, Lebar, Tinggi, dll.</span>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="form-group">
+            <label for="nilai">Nilai <span class="required">*</span></label>
+            <input type="text" id="nilai" name="ProductDimensions[nilai][]" class="form-control" value="" required>
+            <span class="help-block">Masukkan nilai hanya dalam format angka. misal 25.</span>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <div class="form-group">
+            <label for="unit">Unit <span class="required">*</span></label>
+            <input type="text" id="unit" name="ProductDimensions[unit][]" class="form-control" value="" required>
+            <span class="help-block">Contoh: kg, cm, mm, dll.</span>
+        </div>
+    </div>
+    <div class="col-md-1">
+        <div class="form-group">
+            <label>&nbsp;</label>
+            <a href="javascript:void(0);" onclick="removedimension(this);" title="Hapus item ini" {% if not show_delete_btn %}style="display:none;"{% endif %}>
+                <i class="fa fa-trash-o fa-2x"></i>
+            </a>
+            <a href="javascript:void(0);" onclick="addDimensionItem(this);"><i class="fa fa-plus fa-2x"></i></a>
+        </div>
+    </div>
+</div>

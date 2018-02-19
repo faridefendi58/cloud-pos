@@ -1,0 +1,100 @@
+<div class="panel-group" id="accordion_a">
+    {% for i, receipt in receipts %}
+    <div class="panel panel-default">
+        <div class="panel-heading">
+            <h4 class="panel-title">
+                <a data-toggle="collapse" data-parent="#accordion_a" href="#accordion_a_{{ i }}">
+                    {{ receipt.pr_number }} [{{ receipt.warehouse_name }}]
+                </a>
+            </h4>
+        </div>
+        <div id="accordion_a_{{ i }}" class="panel-collapse collapse {% if i == 0 %}in{% endif %}">
+            <div class="panel-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <table class="table table-hover mt20">
+                            <tr>
+                            <tr>
+                                <td>Id</td>
+                                <td>#{{ receipt.id }}</td>
+                            </tr>
+                            <tr>
+                                <td>Nomor Receipt</td>
+                                <td>{{ receipt.pr_number }}</td>
+                            </tr>
+                            <tr>
+                                <td>Nomor PO</td>
+                                <td>
+                                    <a href="{{ 'pos/purchases/update' | link }}/{{ receipt.po_id }}#detail" title="Detail Purchase {{ receipt.po_id }}">
+                                        {{ receipt.po_number }}
+                                    </a>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Supplier</td>
+                                <td><a href="{{ 'pos/suppliers/update' | link }}/{{ receipt.supplier_id }}#detail" target="_blank">{{ receipt.supplier_name }}</a></td>
+                            </tr>
+                            <tr>
+                                <td>Warehouse Tujuan</td>
+                                <td><a href="{{ 'pos/warehouses/update' | link }}/{{ receipt.warehouse_id }}#detail">{{ receipt.warehouse_name }}</a></td>
+                            </tr>
+                            <tr>
+                                <td>Tanggal Efektif</td>
+                                <td>{{ receipt.effective_date | date("d F Y") | default('-') }}</td>
+                            </tr>
+                            <tr>
+                                <td>Catatan</td>
+                                <td>{{ receipt.notes | default('-') }}</td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="col-md-6">
+                        <h4 class="no-margin"><i class="fa fa-list-ul"></i> Items</h4>
+                        <table class="table table-hover mt20">
+                            <thead>
+                            <tr>
+                                <th>No</th>
+                                <th>Nama Produk</th>
+                                <th>Jumlah</th>
+                                <th>Harga per Item</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            {% set tot_qty = 0 %}
+                            {% set tot_price = 0 %}
+                            {% set ritems = primodel.getData(receipt.id) %}
+                            {% for i, item in ritems %}
+                            <tr>
+                                <td>{{ i+1 }}</td>
+                                <td>
+                                    {% if item.title %}
+                                    {{ item.title }}
+                                    {% else %}
+                                    {{ item.product_name }}
+                                    {% endif %}
+                                </td>
+                                <td>{{ item.quantity }} {{ item.unit | title }}</td>
+                                <td style="text-align: right;">{{ item.price | number_format(0, ",", ".") | default(0) }}</td>
+                            </tr>
+                            {% set tot_qty = tot_qty + item.quantity %}
+                            {% set tot_price = tot_price + item.price*item.quantity %}
+                            {% else %}
+                            <tr>
+                                <td>Tidak ditemukan data.</td>
+                            </tr>
+                            {% endfor %}
+                            <tr>
+                                <td colspan="2"><center><b>Total</b></center></td>
+                                <td><b>{{ tot_qty }}</b></td>
+                                <td style="text-align: right;"><b>{{ tot_price | number_format(0, ",", ".") | default(0) }}</b></td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>

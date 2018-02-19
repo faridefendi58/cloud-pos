@@ -1,6 +1,6 @@
 <form method="post" id="supplier-form" class="mt20" action="{% if model.id %}{{ 'pos/suppliers/update' | link }}/{{ model.id }}{% else %}{{ 'pos/suppliers/create' | link }}{% endif %}">
     <div class="alert alert-success" style="display: none;"></div>
-    <div class="col-md-12">
+    <div class="col-md-12 mb10">
         <p>Kolom bertanda <span class="red">*</span> tidak boleh dikosongi</p>
     </div>
     <div class="col-md-6">
@@ -11,7 +11,7 @@
     </div>
     <div class="col-md-6">
         <div class="form-group">
-            <label for="name">Nomor Telephone <span class="required">*</span></label>
+            <label for="name">Nomor Telepone <span class="required">*</span></label>
             <input type="text" id="name" name="Suppliers[phone]" class="form-control" {% if model.phone %}value="{{ model.phone }}"{% endif %} required>
         </div>
     </div>

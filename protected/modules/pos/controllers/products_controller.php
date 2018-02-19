@@ -23,13 +23,22 @@ class ProductsController extends BaseController
         $app->map(['GET', 'POST'], '/update-category/[{id}]', [$this, 'update_category']);
         $app->map(['POST'], '/delete-category/[{name}]', [$this, 'delete_category']);
         $app->map(['GET'], '/price/[{id}]', [$this, 'price']);
+        $app->map(['POST'], '/info', [$this, 'info']);
+        $app->map(['GET', 'POST'], '/create-price/[{id}]', [$this, 'create_price']);
+        $app->map(['POST'], '/delete-price/[{id}]', [$this, 'delete_price']);
+        $app->map(['GET', 'POST'], '/create-dimension/[{id}]', [$this, 'create_dimension']);
+        $app->map(['POST'], '/delete-dimension/[{id}]', [$this, 'delete_dimension']);
     }
 
     public function accessRules()
     {
         return [
             ['allow',
-                'actions' => ['view', 'create', 'update', 'delete', 'create-category', 'delete-category'],
+                'actions' => [
+                    'view', 'create', 'update', 'delete', 'create-category',
+                    'delete-category', 'info', 'delete-price', 'create-price',
+                    'create-dimension', 'delete-dimension'
+                ],
                 'users'=> ['@'],
             ],
             ['allow',
@@ -37,7 +46,7 @@ class ProductsController extends BaseController
                 'expression' => $this->hasAccess('pos/products/read'),
             ],
             ['allow',
-                'actions' => ['create','create-category'],
+                'actions' => ['create','create-category', 'create-price', 'create-dimension'],
                 'expression' => $this->hasAccess('pos/products/create'),
             ],
             ['allow',
@@ -45,7 +54,7 @@ class ProductsController extends BaseController
                 'expression' => $this->hasAccess('pos/products/update'),
             ],
             ['allow',
-                'actions' => ['delete', 'delete-category'],
+                'actions' => ['delete', 'delete-category', 'delete-price', 'delete-dimension'],
                 'expression' => $this->hasAccess('pos/products/delete'),
             ],
             ['deny',
@@ -94,6 +103,8 @@ class ProductsController extends BaseController
         if (isset($_POST['Products'])) {
             $model->title = $_POST['Products']['title'];
             $model->product_category_id = $_POST['Products']['product_category_id'];
+            if (!empty($_POST['Products']['unit']))
+                $model->unit = $_POST['Products']['unit'];
             $model->description = $_POST['Products']['description'];
             $model->active = $_POST['Products']['active'];
             $model->created_at = date("Y-m-d H:i:s");
@@ -129,10 +140,14 @@ class ProductsController extends BaseController
         $model = \Model\ProductsModel::model()->findByPk($args['id']);
         $cmodel = new \Model\ProductCategoriesModel();
         $categories = $cmodel->getData();
+        $pmodel = new \Model\ProductPricesModel();
+        $prices = $pmodel->getData($model->id);
 
         if (isset($_POST['Products'])){
             $model->title = $_POST['Products']['title'];
             $model->product_category_id = $_POST['Products']['product_category_id'];
+            if (!empty($_POST['Products']['unit']))
+                $model->unit = $_POST['Products']['unit'];
             $model->description = $_POST['Products']['description'];
             $model->active = $_POST['Products']['active'];
             $model->updated_at = date("Y-m-d H:i:s");
@@ -157,7 +172,8 @@ class ProductsController extends BaseController
 
         return $this->_container->module->render($response, 'products/update.html', [
             'model' => $model,
-            'categories' => $categories
+            'categories' => $categories,
+            'prices' => $prices
         ]);
     }
 
@@ -303,5 +319,187 @@ class ProductsController extends BaseController
         return $this->_container->module->render($response, 'products/price.html', [
             'model' => $model
         ]);
+    }
+
+    public function info($request, $response, $args)
+    {
+        $isAllowed = $this->isAllowed($request, $response, $args);
+        if ($isAllowed instanceof \Slim\Http\Response)
+            return $isAllowed;
+
+        if(!$isAllowed){
+            return $this->notAllowedAction();
+        }
+
+        $model = new \Model\ProductsModel();
+        $result = $model->getDetail($_POST['id']);
+
+        return $response->withJson(
+            [
+                'status' => 'success',
+                'result' => $result,
+            ], 201);
+    }
+
+    public function delete_price($request, $response, $args)
+    {
+        $isAllowed = $this->isAllowed($request, $response, $args);
+        if ($isAllowed instanceof \Slim\Http\Response)
+            return $isAllowed;
+
+        if(!$isAllowed){
+            return $this->notAllowedAction();
+        }
+
+        if (!isset($args['id'])) {
+            return false;
+        }
+
+        $model = \Model\ProductPricesModel::model()->findByPk($_POST['id']);
+        $delete = \Model\ProductPricesModel::model()->delete($model);
+        if ($delete) {
+            return $response->withJson(
+                [
+                    'status' => 'success',
+                    'message' => 'Data berhasil dihapus.',
+                ], 201);
+        }
+    }
+
+    public function create_price($request, $response, $args)
+    {
+        $isAllowed = $this->isAllowed($request, $response, $args);
+        if ($isAllowed instanceof \Slim\Http\Response)
+            return $isAllowed;
+
+        if(!$isAllowed){
+            return $this->notAllowedAction();
+        }
+
+        $model = \Model\ProductsModel::model()->findByPk($args['id']);
+
+        if (isset($_POST['ProductPrices']) && !empty($_POST['ProductPrices']['product_id'])) {
+            foreach ($_POST['ProductPrices']['quantity'] as $i => $quantity) {
+                if (empty($_POST['ProductPrices']['id'][$i])) {
+                    $model[$i] = new \Model\ProductPricesModel();
+                    $model[$i]->product_id = $_POST['ProductPrices']['product_id'];
+                    $model[$i]->quantity = $_POST['ProductPrices']['quantity'][$i];
+                    $model[$i]->price = $_POST['ProductPrices']['price'][$i];
+                    $model[$i]->created_at = date("Y-m-d H:i:s");
+                    $model[$i]->created_by = $this->_user->id;
+                    if ($model[$i]->quantity > 0 && $model[$i]->price > 0) {
+                        $save = \Model\ProductPricesModel::model()->save($model[$i]);
+                    }
+                } else {
+                    $pmodel[$i] = \Model\ProductPricesModel::model()->findByPk($_POST['ProductPrices']['id'][$i]);
+                    $pmodel[$i]->quantity = $_POST['ProductPrices']['quantity'][$i];
+                    $pmodel[$i]->price = $_POST['ProductPrices']['price'][$i];
+                    $pmodel[$i]->updated_at = date("Y-m-d H:i:s");
+                    $pmodel[$i]->updated_by = $this->_user->id;
+                    if ($pmodel[$i]->quantity > 0 && $pmodel[$i]->price > 0) {
+                        try {
+                            $update = \Model\ProductPricesModel::model()->update($pmodel[$i]);
+
+                        } catch (\Exception $e) {
+                            var_dump($e->getMessage()); exit;
+                        }
+                    }
+                }
+            }
+
+            return $response->withJson(
+                [
+                    'status' => 'success',
+                    'message' => 'Data berhasil disimpan.',
+                ], 201);
+        }
+
+        return $this->_container->module->render(
+            $response,
+            'products/_price_form.html',
+            [
+                'show_delete_btn' => true,
+                'model' => $model
+            ]);
+    }
+
+    public function create_dimension($request, $response, $args)
+    {
+        $isAllowed = $this->isAllowed($request, $response, $args);
+        if ($isAllowed instanceof \Slim\Http\Response)
+            return $isAllowed;
+
+        if(!$isAllowed){
+            return $this->notAllowedAction();
+        }
+
+        $model = \Model\ProductsModel::model()->findByPk($args['id']);
+        $dimensions = [];
+        $configs = [];
+        if (!empty($model->config)) {
+            $configs = json_decode($model->config, true);
+            if (!is_array($configs)) {
+                $configs = [];
+            }
+        }
+
+        if (isset($_POST['ProductDimensions']) && !empty($_POST['ProductDimensions']['satuan'])) {
+            foreach ($_POST['ProductDimensions']['satuan'] as $i => $satuan) {
+                $dim_data = [
+                        'id' => $i + 1,
+                        'satuan' => $satuan,
+                        'nilai' => (int)$_POST['ProductDimensions']['nilai'][$i],
+                        'unit' => $_POST['ProductDimensions']['unit'][$i]
+                    ];
+                array_push($dimensions, $dim_data);
+            }
+            $configs['dimension'] = $dimensions;
+
+            $model->config = json_encode($configs);
+            $update = \Model\ProductsModel::model()->update($model);
+
+            return $response->withJson(
+                [
+                    'status' => 'success',
+                    'message' => 'Data berhasil disimpan.',
+                ], 201);
+        }
+
+        return $this->_container->module->render(
+            $response,
+            'products/_dimensi_form.html',
+            [
+                'show_delete_btn' => true,
+                'model' => $model
+            ]);
+    }
+
+    public function delete_dimension($request, $response, $args)
+    {
+        $isAllowed = $this->isAllowed($request, $response, $args);
+        if ($isAllowed instanceof \Slim\Http\Response)
+            return $isAllowed;
+
+        if(!$isAllowed){
+            return $this->notAllowedAction();
+        }
+
+        if (!isset($args['id'])) {
+            return false;
+        }
+
+        $model = \Model\ProductsModel::model()->findByPk($args['id']);
+        $configs = json_decode($model->config, true);
+        unset($configs['dimension'][$_POST['id']]);
+        $model->config = json_encode($configs);
+
+        $update = \Model\ProductsModel::model()->update($model);
+        if ($update) {
+            return $response->withJson(
+                [
+                    'status' => 'success',
+                    'message' => 'Data berhasil dihapus.',
+                ], 201);
+        }
     }
 }

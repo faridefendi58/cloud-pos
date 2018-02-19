@@ -17,6 +17,8 @@
 
     <!-- nvd3 charts -->
     <link rel="stylesheet" href="{{ 'lib/novus-nvd3/nv.d3.min.css' | admin_asset_url }}">
+    <!-- select search -->
+    <link rel="stylesheet" href="{{ 'lib/select2/select2.css' | admin_asset_url }}">
 
     <!-- main stylesheet -->
     <link href="{{ 'css/style.css' | admin_asset_url }}" rel="stylesheet" media="screen">
@@ -84,6 +86,7 @@
 
 <!-- iOS-style overlays/notifications -->
 <script src="{{ 'lib/iOS-Overlay/js/iosOverlay.js' | admin_asset_url }}"></script>
+<script src="{{ 'lib/select2/select2.min.js' | admin_asset_url }}"></script>
 
 {% block endbodyjs %}{% endblock %}
 </body>

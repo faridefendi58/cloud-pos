@@ -37,10 +37,31 @@ class ProductsModel extends \Model\BaseModel
             LEFT JOIN {tablePrefix}ext_product_category c ON c.id = t.product_category_id 
             WHERE 1';
 
+        $sql .= ' ORDER BY t.id DESC';
+        
         $sql = str_replace(['{tablePrefix}'], [$this->_tbl_prefix], $sql);
 
         $rows = R::getAll( $sql );
 
         return $rows;
+    }
+
+    /**
+     * @param $id
+     * @return array
+     */
+    public function getDetail($id)
+    {
+        $sql = 'SELECT t.*, a.name AS created_by_name, ab.name AS updated_by_name  
+            FROM {tablePrefix}ext_product t 
+            LEFT JOIN {tablePrefix}admin a ON a.id = t.created_by 
+            LEFT JOIN {tablePrefix}admin ab ON ab.id = t.updated_by 
+            WHERE t.id =:id';
+
+        $sql = str_replace(['{tablePrefix}'], [$this->_tbl_prefix], $sql);
+
+        $row = R::getRow( $sql, ['id'=>$id] );
+
+        return $row;
     }
 }

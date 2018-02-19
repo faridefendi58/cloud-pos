@@ -1,46 +1,54 @@
-<form method="post" id="product-prices-form" class="mt20" action="{{ 'pos/products/create-price' | link }}/{{ model.id }}">
+<form method="post" id="product-dimension-form" class="mt20" action="{{ 'pos/products/create-dimension' | link }}/{{ model.id }}">
     <div class="alert alert-success" style="display: none;"></div>
-    {% for i, price in prices %}
+    {% set configs = model.config | json_decode %}
+    {% set dimensions = configs.dimension %}
+    {% for i, dimension in dimensions %}
     <div class="col-md-12">
         <div class="row">
             <div class="col-md-4">
                 <div class="form-group">
-                    <label for="qty">Jumlah <span class="required">*</span></label>
-                    <div class="input-group">
-                        <input type="text" id="qty" name="ProductPrices[quantity][]" class="form-control" value="{{ price.quantity }}" required>
-                        <span class="input-group-addon" id="unit">{% if price.unit %}{{ price.unit }}{% else %}unit{% endif %}</span>
-                    </div>
+                    <label for="satuan">Satuan Ukuran <span class="required">*</span></label>
+                    <input type="text" id="satuan" name="ProductDimensions[satuan][]" class="form-control" value="{{ dimension.satuan }}" required>
+                    <span class="help-block">Contoh: Berat, Panjang, Lebar, Tinggi, dll.</span>
                 </div>
             </div>
             <div class="col-md-3">
                 <div class="form-group">
-                    <label for="price">Harga per item<span class="required">*</span></label>
-                    <input type="text" id="price" name="ProductPrices[price][]" class="form-control" value="{{ price.price }}" required>
+                    <label for="nilai">Nilai <span class="required">*</span></label>
+                    <input type="text" id="nilai" name="ProductDimensions[nilai][]" class="form-control" value="{{ dimension.nilai }}" required>
+                    <span class="help-block">Masukkan nilai hanya dalam format angka. misal 25.</span>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <div class="form-group">
+                    <label for="unit">Unit <span class="required">*</span></label>
+                    <input type="text" id="unit" name="ProductDimensions[unit][]" class="form-control" value="{{ dimension.unit }}" required>
+                    <span class="help-block">Contoh: kg, cm, mm, dll.</span>
                 </div>
             </div>
             <div class="col-md-1">
                 <div class="form-group">
                     <label>&nbsp;</label>
-                    <a href="javascript:void(0);" onclick="removeprice(this, true);" attr-id="{{ price.id }}" title="Hapus price ini">
+                    <a href="javascript:void(0);" onclick="removedimension(this, true);" attr-id="{{ dimension.id }}" title="Hapus price ini">
                         <i class="fa fa-trash-o fa-2x"></i>
                     </a>
-                    {% if i + 1 == prices | length %}
-                    <a href="javascript:void(0);" onclick="addItem(this, false);"><i class="fa fa-plus fa-2x"></i></a>
+                    {% if i + 1 == dimensions | length %}
+                    <a href="javascript:void(0);" onclick="addDimensionItem(this, false);"><i class="fa fa-plus fa-2x"></i></a>
                     {% endif %}
                 </div>
             </div>
-            <input type="hidden" name="ProductPrices[id][]" value="{{ price.id }}">
+            <input type="hidden" name="ProductDimensions[id][]" value="{{ dimension.id }}">
         </div>
     </div>
     {% endfor %}
-    <div class="col-md-12" id="price-form">
-        {% if prices | length <= 0 %}
-        {% include 'products/_price_form.html' with {'model':model} %}
+    <div class="col-md-12" id="dimension-form">
+        {% if dimensions | length <= 0 %}
+        {% include 'products/_dimensi_form.html' with {'model':model} %}
         {% endif %}
     </div>
     <div class="col-md-12">
         <div class="form-group">
-            <input name="ProductPrices[product_id]" type="hidden" value="{{ model.id }}">
+            <input name="ProductDimensions[product_id]" type="hidden" value="{{ model.id }}">
             <input type="submit" value="Simpan" class="btn btn-info">
         </div>
     </div>
@@ -50,18 +58,18 @@
     .row + .row {margin-top: 0px;}
 </style>
 <script type="text/javascript">
-    function removeprice(dt, execute = false) {
+    function removedimension(dt, execute = false) {
         if ($(dt).parent().find('.fa-plus').parent().is(':visible')) {
-            alert('price ini tidak dapat dihapus!.');
+            alert('Dimensi ini tidak dapat dihapus!.');
         } else {
-            if (confirm('Anda yakin ingin menghapus price ini?')) {
+            if (confirm('Anda yakin ingin menghapus dimensi ini?')) {
                 if (execute) {
                     $.ajax({
-                        'url': '{{ "pos/products/delete-price" | link }}/'+$(dt).attr('attr-id'),
+                        'url': '{{ "pos/products/delete-dimension" | link }}/{{ model.id }}',
                         'type':'post',
                         'data':{'id':$(dt).attr('attr-id')},
                         'success': function(data) {
-                            //console.log(data);
+                            console.log(data);
                             if (data.status == 'success') {
                                 $(dt).parent().parent().parent().remove();
                             }
@@ -77,13 +85,12 @@
         }
         return false;
     }
-    function addItem(dt, hide = true) {
+    function addDimensionItem(dt, hide = true) {
         $.ajax({
-            'url': '{{ "pos/products/create-price" | link }}/{{ model.id }}',
+            'url': '{{ "pos/products/create-dimension" | link }}/{{ model.id }}',
             'type':'get',
             'success': function(data) {
-                console.log(data);
-                $('#price-form').append(data);
+                $('#dimension-form').append(data);
                 $(dt).hide();
                 if (hide) {
                     $(dt).parent().find('.fa-trash-o').parent().show();
@@ -94,36 +101,17 @@
             }
         });
     }
-    function updateUnit(dt) {
-        var url = $(this).attr('action');
-        $.ajax({
-            'url': '{{ "pos/products/info" | link }}',
-            'type':'post',
-            'data': {'id':$(dt).val()},
-            'success': function(data) {
-                console.log(data);
-                if (data.status == 'success') {
-                    $(dt).parent().parent().parent().find('span[id="unit"]').html(data.result.unit);
-                    $(dt).parent().parent().parent().find('input[id="qty"]').focus();
-                }
-            },
-            error: function(XMLHttpRequest, textStatus, errorThrown) {
-                console.log("Status: " + textStatus + " Message: "+errorThrown);
-            }
-        });
-        return false;
-    }
     $(function () {
-        $('#product-prices-form').submit(function () {
+        $('#product-dimension-form').submit(function () {
             var url = $(this).attr('action');
             $.ajax({
                 'url': url,
                 'type':'post',
-                'data': $('#product-prices-form').serialize(),
+                'data': $('#product-dimension-form').serialize(),
                 'success': function(data) {
                     console.log(data);
                     if (data.status == 'success') {
-                        var alert_success = $('#product-prices-form').find('.alert-success');
+                        var alert_success = $('#product-dimension-form').find('.alert-success');
                         alert_success.html(data.message);
                         alert_success.show();
                         setTimeout(function () {

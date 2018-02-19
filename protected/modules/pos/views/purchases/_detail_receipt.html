@@ -2,34 +2,34 @@
 <div class="col-md-6">
     <h4 class="no-margin"><i class="fa fa-file-o"></i> Purchase Data</h4>
     <table class="table table-hover mt20">
-        <tbody>
+        <tr>
         <tr>
             <td>Id</td>
             <td>#{{ model.id }}</td>
         </tr>
         <tr>
-            <td>Nomor PO</td>
-            <td>{{ model.po_number }}</td>
+            <td>Nomor Receipt</td>
+            <td>{{ model.pr_number }}</td>
         </tr>
         <tr>
-            <td>Total Harga</td>
-            <td>Rp. {{ model.price_netto | number_format(0, ",", ".") }}</td>
+            <td>Nomor PO</td>
+            <td>
+                <a href="{{ 'pos/purchases/update' | link }}/{{ model.po_id }}#detail" title="Detail Purchase {{ model.po_id }}">
+                    {{ detail.po_number }}
+                </a>
+            </td>
         </tr>
         <tr>
             <td>Supplier</td>
-            <td><a href="{{ 'pos/suppliers/update' | link }}/{{ model.supplier_id }}#detail" target="_blank">{{ detail.supplier_name }}</a></td>
+            <td><a href="{{ 'pos/suppliers/update' | link }}/{{ detail.supplier_id }}#detail" target="_blank">{{ detail.supplier_name }}</a></td>
         </tr>
         <tr>
-            <td>Tanggal Order</td>
-            <td>{{ model.date_order | date("d F Y") | default('-') }}</td>
+            <td>Warehouse Tujuan</td>
+            <td><a href="{{ 'pos/warehouses/update' | link }}/{{ detail.warehouse_id }}#detail">{{ detail.warehouse_name }}</a></td>
         </tr>
         <tr>
-            <td>Tanggal Jatuh Tempo</td>
-            <td>{{ model.due_date | date("d F Y") | default('-') }}</td>
-        </tr>
-        <tr>
-            <td>Status</td>
-            <td><b>{{ model.status | title }}</b></td>
+            <td>Tanggal Efektif</td>
+            <td>{{ model.effective_date | date("d F Y") | default('-') }}</td>
         </tr>
         <tr>
             <td>Catatan</td>
@@ -73,7 +73,8 @@
         <tbody>
         {% set tot_qty = 0 %}
         {% set tot_price = 0 %}
-        {% for i, item in items %}
+        {% set ritems = primodel.getData(model.id) %}
+        {% for i, item in ritems %}
         <tr>
             <td>{{ i+1 }}</td>
             <td>
@@ -83,7 +84,7 @@
                     {{ item.product_name }}
                 {% endif %}
             </td>
-            <td>{{ item.quantity }}</td>
+            <td>{{ item.quantity }} {{ item.unit | title }}</td>
             <td style="text-align: right;">{{ item.price | number_format(0, ",", ".") | default(0) }}</td>
         </tr>
         {% set tot_qty = tot_qty + item.quantity %}

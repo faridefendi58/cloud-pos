@@ -1,6 +1,6 @@
 {% extends "layout.html" %}
 {% block pagetitle %}
-Supplier - {{ App.params.site_name }}
+Purchase Receipt - {{ App.params.site_name }}
 {% endblock %}
 
 {% block content %}
@@ -9,11 +9,11 @@ Supplier - {{ App.params.site_name }}
     <div class="page_bar clearfix">
         <div class="row">
             <div class="col-sm-10">
-                <h1 class="page_title">Supplier</h1>
-                <p class="text-muted">Kelola data supplier</p>
+                <h1 class="page_title">Purchase Receipt</h1>
+                <p class="text-muted">Kelola data Purchase Receipt</p>
             </div>
             <div class="col-sm-2 text-right">
-                <a class="btn btn-default" data-toggle="tab" href="#create-new">Tambah Supplier Baru</a>
+                <a class="btn btn-default" data-toggle="tab" href="#create-new">Purchase Receipt Baru</a>
             </div>
         </div>
     </div>
@@ -25,41 +25,57 @@ Supplier - {{ App.params.site_name }}
                         <div class="panel-body">
                             <ul class="nav nav-tabs" id="tabs_a">
                                 <li class="active">
-                                    <a data-toggle="tab" href="#daftar">Daftar Supplier</a>
+                                    <a data-toggle="tab" href="#daftar">Daftar Purchase Receipt</a>
                                 </li>
                                 <li>
-                                    <a data-toggle="tab" href="#create-new">Tambah Supplier Baru</a>
+                                    <a data-toggle="tab" href="#create-new">Purchase Receipt Baru</a>
                                 </li>
                             </ul>
                             <div class="tab-content" id="tabs_content_a">
                                 <div id="daftar" class="tab-pane fade in active">
                                     <div id="dt_basic_wrapper" class="dataTables_wrapper form-inline no-footer table-responsive mt20" role="grid">
-                                        <table id="dt_basic" class="table table-striped dataTable">
+                                        <table id="dt_basic" class="table table-striped dataTable" attr-sort="5" attr-sort-type="desc">
                                             <thead>
                                             <tr>
                                                 <th>No</th>
-                                                <th>Nama Supplier</th>
-                                                <th>Alamat</th>
-                                                <th>Telepon</th>
-                                                <th>Tanggal Input</th>
-                                                <th>Diinput Oleh</th>
+                                                <th>Nomor Receipt</th>
+                                                <th>Nomor PO</th>
+                                                <th>Supplier</th>
+                                                <th>Warehouse</th>
+                                                <th>Tanggal Efektif</th>
                                                 <th>&nbsp;</th>
                                             </tr>
                                             </thead>
                                             <tbody>
-                                            {% for i, supplier in suppliers %}
+                                            {% for i, receipt in receipts %}
                                             <tr>
-                                                <td><center>{{ i + 1 }}</center></td>
-                                                <td>{{ supplier.name }}</td>
-                                                <td>{{ supplier.address }}</td>
-                                                <td>{{ supplier.phone }}</td>
-                                                <td>{{ supplier.created_at }}</td>
-                                                <td>{{ supplier.admin_name | default('-') }}</td>
+                                                <td><center>{{ i+1 }}</center></td>
                                                 <td>
-                                                    <a href="{{ 'pos/suppliers/update' | link }}/{{ supplier.id }}" title="Ubah Supplier">
+                                                    <a href="{{ 'pos/purchases/update-receipt' | link }}/{{ receipt.id }}#update" title="Update Receipt {{ receipt.id }}">
+                                                        {{ receipt.pr_number }}
+                                                    </a>
+                                                </td>
+                                                <td>
+                                                    <a href="{{ 'pos/purchases/update' | link }}/{{ receipt.po_id }}#detail" title="Detail Purchase {{ receipt.po_id }}">
+                                                        {{ receipt.po_number }}
+                                                    </a>
+                                                </td>
+                                                <td>
+                                                    <a href="{{ 'pos/suppliers/update' | link }}/{{ receipt.supplier_id }}#detail" title="Detail Supplier {{ receipt.supplier_id }}">
+                                                        {{ receipt.supplier_name }}
+                                                    </a>
+                                                </td>
+                                                <td><a href="{{ 'pos/warehouses/update' | link }}/{{ receipt.warehouse_id }}#detail">{{ receipt.warehouse_name }}</a></td>
+                                                <td><center>{{ purchase.effective_date | date("Y-m-d") }}</center></td>
+                                                <td>{{ purchase.status | title }}</td>
+                                                <td>
+                                                    <a href="{{ 'pos/purchases/update-receipt' | link }}/{{ receipt.id }}" title="Ubah Purchase Receipt">
                                                         <i class="fa fa-pencil"></i>
                                                     </a>
-                                                    <a href="{{ 'pos/suppliers/delete' | link }}/{{ supplier.id }}" onclick="return hapus(this);">
+                                                    <a href="{{ 'pos/purchases/update-receipt' | link }}/{{ receipt.id }}#detail" title="Detail Purchase Receipt">
+                                                        <i class="fa fa-search"></i>
+                                                    </a>
+                                                    <a href="{{ 'pos/purchases/delete-receipt' | link }}/{{ receipt.id }}" onclick="return hapus(this);">
                                                         <i class="fa fa-trash-o"></i>
                                                     </a>
                                                 </td>
@@ -74,7 +90,7 @@ Supplier - {{ App.params.site_name }}
                                     </div>
                                 </div>
                                 <div id="create-new" class="tab-pane fade">
-                                    {% include 'suppliers/_form.html' %}
+                                    {% include 'purchases/_form_receipt.html' with {'purchases':purchases, 'warehouses':warehouses} %}
                                 </div>
                             </div>
                         </div>

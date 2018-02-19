@@ -39,13 +39,14 @@ Produk - {{ App.params.site_name }}
                             </ul>
                             <div class="tab-content" id="tabs_content_a">
                                 <div id="daftar" class="tab-pane fade in active">
-                                    <div id="dt_basic_wrapper" class="dataTables_wrapper form-inline no-footer table-responsive" role="grid">
+                                    <div id="dt_basic_wrapper" class="dataTables_wrapper form-inline no-footer table-responsive mt20" role="grid">
                                         <table id="dt_basic" class="table table-striped dataTable">
                                             <thead>
                                             <tr>
-                                                <th>id</th>
+                                                <th>No</th>
                                                 <th>Nama Produk</th>
                                                 <th>Kategori</th>
+                                                <th>Unit</th>
                                                 <th>Deskripsi</th>
                                                 <th>&nbsp;</th>
                                             </tr>
@@ -53,9 +54,14 @@ Produk - {{ App.params.site_name }}
                                             <tbody>
                                             {% for i, product in products %}
                                             <tr>
-                                                <td><center>{{ product.id }}</center></td>
-                                                <td>{{ product.title }}</td>
+                                                <td><center>{{ i + 1 }}</center></td>
+                                                <td>
+                                                    <a href="{{ 'pos/products/update' | link }}/{{ product.id }}" title="Ubah Product">
+                                                        {{ product.title }}
+                                                    </a>
+                                                </td>
                                                 <td>{{ product.category_name }}</td>
+                                                <td>{{ product.unit }}</td>
                                                 <td>{{ product.description | default('-') }}</td>
                                                 <td>
                                                     <a href="{{ 'pos/products/update' | link }}/{{ product.id }}" title="Ubah Product">
@@ -82,11 +88,11 @@ Produk - {{ App.params.site_name }}
                                     {% include 'products/_form.html' %}
                                 </div>
                                 <div id="kategori" class="tab-pane fade">
-                                    <div id="dt_basic_wrapper" class="dataTables_wrapper form-inline no-footer table-responsive" role="grid">
+                                    <div id="dt_basic_wrapper" class="dataTables_wrapper form-inline no-footer table-responsive mt20" role="grid">
                                         <table id="dt_basic" class="table table-striped dataTable">
                                             <thead>
                                             <tr>
-                                                <th>id</th>
+                                                <th>No</th>
                                                 <th>Nama Kategori</th>
                                                 <th>Deskripsi</th>
                                                 <th>Tanggal Dibuat</th>
@@ -96,7 +102,7 @@ Produk - {{ App.params.site_name }}
                                             <tbody>
                                             {% for i, category in categories %}
                                             <tr>
-                                                <td><center>{{ category.id }}</center></td>
+                                                <td><center>{{ i+1 }}</center></td>
                                                 <td>{{ category.title }}</td>
                                                 <td>{{ category.description | default('-') }}</td>
                                                 <td>{{ category.created_at }}</td>

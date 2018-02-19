@@ -1,6 +1,6 @@
 <form method="post" id="product-form" class="mt20" action="{% if model.id %}{{ 'pos/products/update' | link }}/{{ model.id }}{% else %}{{ 'pos/products/create' | link }}{% endif %}">
     <div class="alert alert-success" style="display: none;"></div>
-    <div class="col-md-12">
+    <div class="col-md-12 mb10">
         <p>Kolom bertanda <span class="red">*</span> tidak boleh dikosongi</p>
     </div>
     <div class="col-md-4">
@@ -20,6 +20,11 @@
         </div>
     </div>
     <div class="col-md-4">
+        <label>Unit <span class="text-danger">*</span></label>
+        <input type="text" id="unit" name="Products[unit]" class="form-control" {% if model.unit %}value="{{ model.unit }}"{% endif %} required>
+        <span class="help-block">Contoh: box, pcs, gram, kilogram, dll.</span>
+    </div>
+    <div class="col-md-4 hide">
         <label>Status <span class="text-danger">*</span></label>
         <div class="form-group">
             <label class="radio-inline">

@@ -34,13 +34,12 @@ Purchase Order - {{ App.params.site_name }}
                             <div class="tab-content" id="tabs_content_a">
                                 <div id="daftar" class="tab-pane fade in active">
                                     <div id="dt_basic_wrapper" class="dataTables_wrapper form-inline no-footer table-responsive mt20" role="grid">
-                                        <table id="dt_basic" class="table table-striped dataTable">
+                                        <table id="dt_basic" class="table table-striped dataTable" attr-sort="4" attr-sort-type="desc">
                                             <thead>
                                             <tr>
-                                                <th>id</th>
+                                                <th>No</th>
                                                 <th>Nomor PO</th>
-                                                <th>Quantity</th>
-                                                <th>Harga</th>
+                                                <th>Total Harga</th>
                                                 <th>Supplier</th>
                                                 <th>Tanggal Order</th>
                                                 <th>Status</th>
@@ -50,9 +49,12 @@ Purchase Order - {{ App.params.site_name }}
                                             <tbody>
                                             {% for i, purchase in purchases %}
                                             <tr>
-                                                <td><center>{{ purchase.id }}</center></td>
-                                                <td>{{ purchase.po_number }}</td>
-                                                <td>{{ purchase.quantity | number_format(0, ",", ".") }}</td>
+                                                <td><center>{{ i+1 }}</center></td>
+                                                <td>
+                                                    <a href="{{ 'pos/purchases/update' | link }}/{{ purchase.id }}#detail" title="Detail Purchase {{ purchase.po_number }}">
+                                                        {{ purchase.po_number }}
+                                                    </a>
+                                                </td>
                                                 <td style="text-align: right;">{{ purchase.price_netto | number_format(0, ",", ".") }}</td>
                                                 <td><a href="{{ 'pos/suppliers/update' | link }}/{{ purchase.supplier_id }}#detail">{{ purchase.supplier_name }}</a></td>
                                                 <td><center>{{ purchase.date_order | date("Y-m-d") }}</center></td>
@@ -60,6 +62,9 @@ Purchase Order - {{ App.params.site_name }}
                                                 <td>
                                                     <a href="{{ 'pos/purchases/update' | link }}/{{ purchase.id }}" title="Ubah Purchase Order">
                                                         <i class="fa fa-pencil"></i>
+                                                    </a>
+                                                    <a href="{{ 'pos/purchases/update' | link }}/{{ purchase.id }}#detail" title="Detail Purchase Order">
+                                                        <i class="fa fa-search"></i>
                                                     </a>
                                                     <a href="{{ 'pos/purchases/delete' | link }}/{{ purchase.id }}" onclick="return hapus(this);">
                                                         <i class="fa fa-trash-o"></i>

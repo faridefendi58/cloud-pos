@@ -33,14 +33,14 @@ Warehouse - {{ App.params.site_name }}
                             </ul>
                             <div class="tab-content" id="tabs_content_a">
                                 <div id="daftar" class="tab-pane fade in active">
-                                    <div id="dt_basic_wrapper" class="dataTables_wrapper form-inline no-footer table-responsive" role="grid">
+                                    <div id="dt_basic_wrapper" class="dataTables_wrapper form-inline no-footer table-responsive mt20" role="grid">
                                         <table id="dt_basic" class="table table-striped dataTable">
                                             <thead>
                                             <tr>
                                                 <th>id</th>
                                                 <th>Nama Warehouse</th>
                                                 <th>Alamat</th>
-                                                <th>Catatan</th>
+                                                <th>Telepon</th>
                                                 <th>Tanggal Input</th>
                                                 <th>Diinput Oleh</th>
                                                 <th>&nbsp;</th>
@@ -52,7 +52,7 @@ Warehouse - {{ App.params.site_name }}
                                                 <td><center>{{ warehouse.id }}</center></td>
                                                 <td>{{ warehouse.title }}</td>
                                                 <td>{{ warehouse.address }}</td>
-                                                <td>{{ warehouse.notes | default('-') }}</td>
+                                                <td>{{ warehouse.phone | default('-') }}</td>
                                                 <td>{{ warehouse.created_at }}</td>
                                                 <td>{{ warehouse.admin_name | default('-') }}</td>
                                                 <td>

@@ -24,18 +24,30 @@ Kelola Produk - {{ App.params.site_name }}
                         <div class="panel-body">
                             <ul class="nav nav-tabs" id="tabs_a">
                                 <li class="active">
-                                    <a data-toggle="tab" href="#update">Ubah Data</a>
+                                    <a data-toggle="tab" href="#update">Informasi Dasar</a>
                                 </li>
                                 <li>
-                                    <a data-toggle="tab" href="#price">Harga Produk</a>
+                                    <a data-toggle="tab" href="#dimension">Ukuran Produk</a>
+                                </li>
+                                <li>
+                                    <a data-toggle="tab" href="#price">Harga Jual</a>
+                                </li>
+                                <li>
+                                    <a data-toggle="tab" href="#persediaan">Persediaan</a>
                                 </li>
                             </ul>
                             <div class="tab-content" id="tabs_content_a">
                                 <div id="update" class="tab-pane fade in active">
                                     {% include 'products/_form.html' with {'model':model, 'categories':categories} %}
                                 </div>
+                                <div id="dimension" class="tab-pane fade">
+                                    {% include 'products/_dimensi.html' with {'model':model} %}
+                                </div>
                                 <div id="price" class="tab-pane fade">
-                                    {% include 'products/_price.html' with {'model':model} %}
+                                    {% include 'products/_price.html' with {'model':model, 'prices':prices} %}
+                                </div>
+                                <div id="persediaan" class="tab-pane fade">
+                                    {# include 'products/_stock.html' with {'model':model} #}
                                 </div>
                             </div>
                         </div>

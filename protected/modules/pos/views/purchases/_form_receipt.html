@@ -1,0 +1,127 @@
+<form method="post" id="receipt-form" class="mt20" action="{% if model.id %}{{ 'pos/purchases/update-receipt' | link }}/{{ model.id }}{% else %}{{ 'pos/purchases/create-receipt' | link }}{% endif %}">
+    <div class="alert alert-success" style="display: none;"></div>
+    <div class="col-md-12">
+        <div class="row">
+            <div class="col-md-4">
+                <div class="form-group">
+                    <label for="po_number">Nomor PO <span class="required">*</span></label>
+                    {% if not model.id %}
+                    <select id="po_number" name="PurchaseReceipts[po_id]" class="form-control select2">
+                        {% for g, purchase in purchases %}
+                        <option value="{{ purchase.id }}" {% if model.po_id and purchase.id == model.po_id %}selected="selected"{% endif %}>
+                            {{ purchase.po_number }} [{{ purchase.supplier_name | title }}]
+                        </option>
+                        {% endfor %}
+                    </select>
+                    {% else %}
+                    <input type="text" name="PurchaseReceipts[po_id]" class="form-control" value="{{ detail.po_number }}" readonly="readonly">
+                    {% endif %}
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="form-group">
+                    <label for="supplier_id">Warehouse <span class="text-danger">*</span></label>
+                    <select id="supplier_id" name="PurchaseReceipts[warehouse_id]" class="form-control select2">
+                        {% for i, warehouse in warehouses %}
+                        <option value="{{ warehouse.id }}" {% if model.warehouse_id and warehouse.id == model.warehouse_id %}selected="selected"{% endif %}>{{ warehouse.title }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <label>Tanggal Efektif <span class="text-danger">*</span></label>
+                <div class="input-group date ts_datepicker" data-date-format="dd-mm-yyyy" data-date-autoclose="true">
+                    <input class="form-control" type="text" name="PurchaseReceipts[effective_date]"
+                           {% if model and model.effective_date %}
+                           value="{{ model.effective_date | date('d-m-Y') }}"
+                           {% else %}
+                           value="{{ now | date('d-m-Y') }}"
+                           {% endif %}>
+                    <span class="input-group-addon"><i class="fa fa-calendar"></i></span>
+                </div>
+                <span class="help-block">Format: dd-mm-yyyy</span>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-8 mt10">
+        <div class="form-group">
+            <label for="desc">Catatan</label>
+            <textarea name="PurchaseReceipts[notes]" id="desc" cols="10" rows="3" class="form-control">{% if model and model.notes %}{{ model.notes }}{% endif %}</textarea>
+        </div>
+    </div>
+    <div class="col-md-12">
+        <div class="form-group">
+            <input type="submit" value="Simpan" class="btn btn-info">
+        </div>
+    </div>
+</form>
+
+<link rel="stylesheet" href="{{ 'lib/bootstrap-datepicker/css/datepicker3.css' | admin_asset_url }}">
+<script src="{{ 'lib/bootstrap-datepicker/js/bootstrap-datepicker.js' | admin_asset_url }}"></script>
+{% block endbodyjs %}
+<script type="text/javascript">
+    $(function () {
+        $('#receipt-form').submit(function () {
+            var url = $(this).attr('action');
+            $.ajax({
+                'url': url,
+                'type':'post',
+                'data': $('#receipt-form').serialize(),
+                'success': function(data) {
+                    console.log(data);
+                    if (data.status == 'success') {
+                        var alert_success = $('#receipt-form').find('.alert-success');
+                        alert_success.html(data.message);
+                        alert_success.show();
+                        setTimeout(function () {
+                            if (data.updated == true) {
+                                window.location.reload(true);
+                            } else {
+                                alert_success.hide();
+                                alert_success.empty();
+                                $('#receipt-form')[0].reset();
+                                window.location.href = "{{ 'pos/purchases/update-receipt' | link }}/"+data.id+"#items";
+                            }
+                        }, 4000);
+                    }
+                }
+            });
+
+            return false;
+        });
+        tisa_datepicker.init();
+        tisa_enhanced_select.init();
+    });
+    tisa_datepicker = {
+        init: function() {
+            if($('.ts_datepicker').length) {
+                $('.ts_datepicker').datepicker({
+                    todayHighlight: true
+                })
+            }
+            if( ($('#dpStart').length) && ($('#dpEnd').length) ) {
+                $('#dpStart').datepicker({
+                    todayHighlight: true
+                }).on('changeDate', function(e){
+                    $('#dpEnd').datepicker('setStartDate', e.date);
+                });
+                $('#dpEnd').datepicker({
+                    todayHighlight: true
+                }).on('changeDate', function(e){
+                    $('#dpStart').datepicker('setEndDate', e.date)
+                });
+            }
+        }
+    }
+    tisa_enhanced_select = {
+        init: function() {
+            if($('.select2').length) {
+                $('.select2').select2({
+                    allowClear: true,
+                    placeholder: "Select..."
+                });
+            }
+        }
+    }
+</script>
+{% endblock %}
