@@ -1,0 +1,115 @@
+<form method="post" id="receipt-items-form" class="mt20" action="{{ 'pos/transfers/create-receipt-item' | link }}">
+    <div class="alert alert-info">
+        Masukkan jumlah item masing - masing produk yang masuk ke warehouse {{ detail.warehouse_name }}
+    </div>
+    <div class="alert alert-success" style="display: none;"></div>
+    {% for i, item in items %}
+    {% set tri_data = trimodel.getDataByProduct({'tr_id':model.id,'product_id':item.product_id}) %}
+    <div class="col-md-12">
+        <div class="row">
+            <div class="col-md-4">
+                <div class="form-group">
+                    {% if i == 0 %}
+                    <label>Nama Produk <span class="required">*</span></label>
+                    {% endif %}
+                    <input type="text" name="TransferReceiptItems[product_id][{{ item.id }}]" class="form-control"
+                           value="{{ item.title }}"
+                           id="product"/>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="form-group">
+                    {% if i == 0 %}
+                    <label for="qty">Jumlah <span class="required">*</span></label>
+                    {% endif %}
+                    <div class="input-group">
+                        <input type="text" id="qty" name="TransferReceiptItems[quantity][{{ item.id }}]"
+                               class="form-control"
+                               {% if tri_data.quantity %}value="{{ tri_data.quantity }}"{% else %}value="0" readonly="readonly" {% endif %}
+                               onblur="checkStock(this)"
+                               required>
+                        {% set count_sisa = primodel.getCountStockByPOItem(item.id) %}
+                        {% set sisa_stock = item.quantity - count_sisa %}
+                        {% if tri_data.quantity_max %}
+                            {% set sisa_stock = tri_data.quantity_max %}
+                        {% endif %}
+                        <span class="input-group-addon">
+                            dari {{ sisa_stock }}
+                            <i id="unit">{% if item.unit %}{{ item.unit }}{% else %}unit{% endif %}</i>
+                        </span>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-1">
+                <div class="form-group">
+                    {% if i == 0 %}
+                    <label>&nbsp;</label>
+                    {% endif %}
+                    <input type="checkbox" name="TransferReceiptItems[item_id][{{ item.id }}]" attr-id="{{ item.id }}" onchange="checkThis(this);" {% if tri_data %}checked="checked"{% endif %}>
+                </div>
+            </div>
+            <input type="hidden" name="TransferReceiptItems[product_id][{{ item.id }}]" value="{{ item.product_id }}">
+            <input type="hidden" name="TransferReceiptItems[unit][{{ item.id }}]" value="{{ item.unit }}">
+            <input type="hidden" name="TransferReceiptItems[price][{{ item.id }}]" value="{{ item.price }}">
+            <input type="hidden" name="TransferReceiptItems[quantity_max][{{ item.id }}]" value="{{ sisa_stock }}" id="sisa-stok">
+        </div>
+    </div>
+    {% endfor %}
+    <div class="col-md-12">
+        <div class="form-group">
+            <input name="TransferReceiptItems[tr_id]" type="hidden" value="{{ model.id }}">
+            <input type="submit" value="Simpan" class="btn btn-info">
+        </div>
+    </div>
+</form>
+
+<style>
+    .row + .row {margin-top: 0px;}
+</style>
+<script type="text/javascript">
+    function checkThis(dt) {
+        var qty = $(dt).parent().parent().parent().find('#qty');
+        if ($(dt).is(':checked')) {
+            qty.removeAttr('readonly');
+            qty.focus();
+        } else {
+            $(dt).val(0);
+            qty.attr('readonly', 'readonly');
+        }
+        return false;
+    }
+    function checkStock(dt) {
+        var sisa_stock = $(dt).parent().parent().parent().parent().find('#sisa-stok').val();
+        if ($(dt).val() > sisa_stock) {
+            alert('Jumlah maksimal tidak boleh melebihi '+sisa_stock);
+            $(dt).val(sisa_stock);
+        }
+        return false;
+    }
+    $(function () {
+        $('#receipt-items-form').submit(function () {
+            var url = $(this).attr('action');
+            $.ajax({
+                'url': url,
+                'type':'post',
+                'data': $('#receipt-items-form').serialize(),
+                'success': function(data) {
+                    console.log(data);
+                    if (data.status == 'success') {
+                        var alert_success = $('#receipt-items-form').find('.alert-success');
+                        alert_success.html(data.message);
+                        alert_success.show();
+                        setTimeout(function () {
+                            window.location.reload(true);
+                        }, 5000);
+                    }
+                },
+                error: function(XMLHttpRequest, textStatus, errorThrown) {
+                    console.log("Status: " + textStatus + " Message: "+errorThrown);
+                }
+            });
+
+            return false;
+        });
+    });
+</script>

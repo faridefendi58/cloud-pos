@@ -1,0 +1,151 @@
+<form method="post" id="purchase-items-form" class="mt20" action="{{ 'pos/transfers/create-item' | link }}">
+    <div class="alert alert-info">
+        Tambahkan item untuk Transfer Issue {{ model.ti_number }}<br/>
+        Pastikan pilih salah satu produk, serta nilai Jumlah item lebih dari 0 agar data dapat disimpan.
+    </div>
+    <div class="alert alert-success" style="display: none;"></div>
+    {% for i, item in items %}
+    <div class="col-md-12">
+        <div class="row">
+            <div class="col-md-4">
+                <div class="form-group">
+                    <label for="product_id">Nama Produk <span class="required">*</span></label>
+                    <select id="product_id" name="TransferIssueItems[product_id][]" class="form-control" onchange="updateUnit(this);">
+                        {% for i, product in products %}
+                        <option value="{{ product.id }}" {% if item.product_id == product.id %}selected=""{% endif %}>{{ product.title }}</option>
+                        {% endfor %}
+                        <option value="0">Lainnya</option>
+                    </select>
+                    {#<span class="help-block"><a href="{{ 'pos/products/view' | link }}#create-new" target="_blank">Tambahkan Produk Baru</a></span>#}
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="form-group">
+                    <label for="qty">Jumlah <span class="required">*</span></label>
+                    <div class="input-group">
+                        <input type="text" id="qty" name="TransferIssueItems[quantity][]" class="form-control" value="{{ item.quantity }}" required>
+                        <span class="input-group-addon" id="unit">{% if item.unit %}{{ item.unit }}{% else %}unit{% endif %}</span>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-1">
+                <div class="form-group">
+                    <label>&nbsp;</label>
+                    <a href="javascript:void(0);" onclick="removeItem(this, true);" attr-id="{{ item.id }}" title="Hapus item ini">
+                        <i class="fa fa-trash-o fa-2x"></i>
+                    </a>
+                    {% if i + 1 == items | length %}
+                    <a href="javascript:void(0);" onclick="addItem(this, false);"><i class="fa fa-plus fa-2x"></i></a>
+                    {% endif %}
+                </div>
+            </div>
+            <input type="hidden" name="TransferIssueItems[id][]" value="{{ item.id }}">
+        </div>
+    </div>
+    {% endfor %}
+    <div class="col-md-12" id="item-form">
+        {% if items | length <= 0 %}
+        {% include 'transfers/_items_form.html' %}
+        {% endif %}
+    </div>
+    <div class="col-md-12">
+        <div class="form-group">
+            <input name="TransferIssueItems[ti_id]" type="hidden" value="{{ model.id }}">
+            <input type="submit" value="Simpan" class="btn btn-info">
+        </div>
+    </div>
+</form>
+
+<style>
+    .row + .row {margin-top: 0px;}
+</style>
+<script type="text/javascript">
+    function removeItem(dt, execute = false) {
+        if ($(dt).parent().find('.fa-plus').parent().is(':visible') && !execute) {
+            alert('Item ini tidak dapat dihapus!.');
+        } else {
+            if (confirm('Anda yakin ingin menghapus item ini?')) {
+                if (execute) {
+                    $.ajax({
+                        'url': '{{ "pos/transfers/delete-item" | link }}/'+$(dt).attr('attr-id'),
+                        'type':'post',
+                        'data':{'id':$(dt).attr('attr-id')},
+                        'success': function(data) {
+                            console.log(data);
+                            if (data.status == 'success') {
+                                $(dt).parent().parent().parent().remove();
+                            }
+                        },
+                        error: function(XMLHttpRequest, textStatus, errorThrown) {
+                            console.log("Status: " + textStatus + " Message: "+errorThrown);
+                        }
+                    });
+                } else {
+                    $(dt).parent().parent().parent().remove();
+                }
+            }
+        }
+        return false;
+    }
+    function addItem(dt, hide = true) {
+        $.ajax({
+            'url': '{{ "pos/transfers/create-item" | link }}',
+            'type':'get',
+            'success': function(data) {
+                $('#item-form').append(data);
+                $(dt).hide();
+                if (hide) {
+                    $(dt).parent().find('.fa-trash-o').parent().show();
+                }
+            },
+            error: function(XMLHttpRequest, textStatus, errorThrown) {
+                console.log("Status: " + textStatus + " Message: "+errorThrown);
+            }
+        });
+    }
+    function updateUnit(dt) {
+        var url = $(this).attr('action');
+        $.ajax({
+            'url': '{{ "pos/products/info" | link }}',
+            'type':'post',
+            'data': {'id':$(dt).val()},
+            'success': function(data) {
+                console.log(data);
+                if (data.status == 'success') {
+                    $(dt).parent().parent().parent().find('span[id="unit"]').html(data.result.unit);
+                    $(dt).parent().parent().parent().find('input[id="qty"]').focus();
+                }
+            },
+            error: function(XMLHttpRequest, textStatus, errorThrown) {
+                console.log("Status: " + textStatus + " Message: "+errorThrown);
+            }
+        });
+        return false;
+    }
+    $(function () {
+        $('#purchase-items-form').submit(function () {
+            var url = $(this).attr('action');
+            $.ajax({
+                'url': url,
+                'type':'post',
+                'data': $('#purchase-items-form').serialize(),
+                'success': function(data) {
+                    console.log(data);
+                    if (data.status == 'success') {
+                        var alert_success = $('#purchase-items-form').find('.alert-success');
+                        alert_success.html(data.message);
+                        alert_success.show();
+                        setTimeout(function () {
+                            window.location.reload(true);
+                        }, 5000);
+                    }
+                },
+                error: function(XMLHttpRequest, textStatus, errorThrown) {
+                    console.log("Status: " + textStatus + " Message: "+errorThrown);
+                }
+            });
+
+            return false;
+        });
+    });
+</script>

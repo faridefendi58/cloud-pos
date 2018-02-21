@@ -1,0 +1,138 @@
+{% extends "layout.html" %}
+{% block pagetitle %}
+Transfer Receipt - {{ App.params.site_name }}
+{% endblock %}
+
+{% block content %}
+<!-- main content -->
+<div id="main_wrapper">
+    <div class="page_bar clearfix">
+        <div class="row">
+            <div class="col-sm-10">
+                <h1 class="page_title">Transfer Receipt</h1>
+                <p class="text-muted">Transfer Receipt adalah bukti penerimaan stok setelah dipindahkan dari gudang atau warehouse lain</p>
+            </div>
+            <div class="col-sm-2 text-right">
+                <a class="btn btn-default" data-toggle="tab" href="#create-new">Transfer Receipt Baru</a>
+            </div>
+        </div>
+    </div>
+    <div class="page_content">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="panel panel-default">
+                        <div class="panel-body">
+                            <ul class="nav nav-tabs" id="tabs_a">
+                                <li class="active">
+                                    <a data-toggle="tab" href="#daftar">Daftar Transfer Receipt</a>
+                                </li>
+                                <li>
+                                    <a data-toggle="tab" href="#create-new">Transfer Receipt Baru</a>
+                                </li>
+                            </ul>
+                            <div class="tab-content" id="tabs_content_a">
+                                <div id="daftar" class="tab-pane fade in active">
+                                    <div id="dt_basic_wrapper" class="dataTables_wrapper form-inline no-footer table-responsive mt20" role="grid">
+                                        <table id="dt_basic" class="table table-striped dataTable" attr-sort="5" attr-sort-type="desc">
+                                            <thead>
+                                            <tr>
+                                                <th>No</th>
+                                                <th>Nomor Receipt</th>
+                                                <th>Nomor Issue</th>
+                                                <th>Warehouse Asal</th>
+                                                <th>Warehouse Tujuan</th>
+                                                <th>Tanggal Efektif</th>
+                                                <th>&nbsp;</th>
+                                            </tr>
+                                            </thead>
+                                            <tbody>
+                                            {% for i, receipt in receipts %}
+                                            <tr>
+                                                <td><center>{{ i+1 }}</center></td>
+                                                <td>
+                                                    <a href="{{ 'pos/transfers/update-receipt' | link }}/{{ receipt.id }}#update" title="Update Receipt {{ receipt.id }}">
+                                                        {{ receipt.tr_number }}
+                                                    </a>
+                                                </td>
+                                                <td>
+                                                    <a href="{{ 'pos/transfers/update' | link }}/{{ receipt.po_id }}#detail" title="Detail Purchase {{ receipt.po_id }}">
+                                                        {{ receipt.ti_number }}
+                                                    </a>
+                                                </td>
+                                                <td>
+                                                    <a href="{{ 'pos/warehouses/update' | link }}/{{ receipt.warehouse_from }}#detail" title="Detail warehouse {{ receipt.warehouse_from }}" target="_blank">
+                                                        {{ receipt.warehouse_from_name }}
+                                                    </a>
+                                                </td>
+                                                <td>
+                                                    <a href="{{ 'pos/warehouses/update' | link }}/{{ receipt.warehouse_to }}#detail" title="Detail warehouse {{ receipt.warehouse_to }}" target="_blank">
+                                                        {{ receipt.warehouse_to_name }}
+                                                    </a>
+                                                </td>
+                                                <td><center>{{ receipt.effective_date | date("Y-m-d") }}</center></td>
+                                                <td>{{ receipt.status | title }}</td>
+                                                <td>
+                                                    <a href="{{ 'pos/transfers/update-receipt' | link }}/{{ receipt.id }}" title="Ubah Transfer Receipt">
+                                                        <i class="fa fa-pencil"></i>
+                                                    </a>
+                                                    <a href="{{ 'pos/transfers/update-receipt' | link }}/{{ receipt.id }}#detail" title="Detail Transfer Receipt">
+                                                        <i class="fa fa-search"></i>
+                                                    </a>
+                                                    <a href="{{ 'pos/transfers/delete-receipt' | link }}/{{ receipt.id }}" onclick="return hapus(this);">
+                                                        <i class="fa fa-trash-o"></i>
+                                                    </a>
+                                                </td>
+                                            </tr>
+                                            {% else %}
+                                            <tr class="no-data">
+                                                <td>No data founds</td>
+                                            </tr>
+                                            {% endfor %}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                                <div id="create-new" class="tab-pane fade">
+                                    {% include 'transfers/_form_receipt.html' with {'transfers':transfers, 'warehouses':warehouses} %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% include 'partial/right_menu.html' %}
+{% endblock %}
+{% block endbodyjs %}
+<script src="{{ 'lib/DataTables/media/js/jquery.dataTables.min.js' | admin_asset_url }}"></script>
+<script src="{{ 'lib/DataTables/media/js/dataTables.bootstrap.js' | admin_asset_url }}"></script>
+<script type="text/javascript">
+    function hapus(data) {
+        if (confirm('Anda yakin ingin menghapus item ini ?')) {
+            var $this =  $(data);
+            var url = $this.attr('href');
+            $.ajax({
+                'url': url,
+                'type':'post',
+                //'dataType': 'json',
+                'success': function(data) {
+                    if (data.status == 'success') {
+                        $this.parent().parent().remove();
+                    }
+                }
+            });
+        }
+        return false;
+    }
+    $(function () {
+       if (window.location.hash) {
+           var hash = window.location.hash.substring(1);
+           if ($('a[href="#'+hash+'"]').length > 0)
+                $('a[href="#'+hash+'"]').click();
+       }
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,125 @@
+{% extends "layout.html" %}
+{% block pagetitle %}
+Transfer Issue - {{ App.params.site_name }}
+{% endblock %}
+
+{% block content %}
+<!-- main content -->
+<div id="main_wrapper">
+    <div class="page_bar clearfix">
+        <div class="row">
+            <div class="col-sm-10">
+                <h1 class="page_title">Transfer Issue</h1>
+                <p class="text-muted">Transfer Issue adalah perpindahan stok antar gudang atau warehouse</p>
+            </div>
+            <div class="col-sm-2 text-right">
+                <a class="btn btn-default" data-toggle="tab" href="#create-new">Transfer Issue Baru</a>
+            </div>
+        </div>
+    </div>
+    <div class="page_content">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="panel panel-default">
+                        <div class="panel-body">
+                            <ul class="nav nav-tabs" id="tabs_a">
+                                <li class="active">
+                                    <a data-toggle="tab" href="#daftar">Daftar Transfer Issue</a>
+                                </li>
+                                <li>
+                                    <a data-toggle="tab" href="#create-new">Transfer Issue Baru</a>
+                                </li>
+                            </ul>
+                            <div class="tab-content" id="tabs_content_a">
+                                <div id="daftar" class="tab-pane fade in active">
+                                    <div id="dt_basic_wrapper" class="dataTables_wrapper form-inline no-footer table-responsive mt20" role="grid">
+                                        <table id="dt_basic" class="table table-striped dataTable" attr-sort="4" attr-sort-type="desc">
+                                            <thead>
+                                            <tr>
+                                                <th>No</th>
+                                                <th>Nomor Issue</th>
+                                                <th>Warehouse Asal</th>
+                                                <th>Warehouse Tujuan</th>
+                                                <th>Tanggal Transfer</th>
+                                                <th>Status</th>
+                                                <th>&nbsp;</th>
+                                            </tr>
+                                            </thead>
+                                            <tbody>
+                                            {% for i, transfer in transfers %}
+                                            <tr>
+                                                <td><center>{{ i+1 }}</center></td>
+                                                <td>
+                                                    <a href="{{ 'pos/transfers/update' | link }}/{{ transfer.id }}#detail" title="Detail transfer {{ transfer.po_number }}">
+                                                        {{ transfer.ti_number }}
+                                                    </a>
+                                                </td>
+                                                <td><a href="{{ 'pos/warehouses/update' | link }}/{{ transfer.warehouse_from }}#detail">{{ transfer.warehouse_from_name }}</a></td>
+                                                <td><a href="{{ 'pos/warehouses/update' | link }}/{{ transfer.warehouse_to }}#detail">{{ transfer.warehouse_to_name }}</a></td>
+                                                <td><center>{{ transfer.date_transfer | date("Y-m-d") }}</center></td>
+                                                <td>{{ transfer.status | title }}</td>
+                                                <td>
+                                                    <a href="{{ 'pos/transfers/update' | link }}/{{ transfer.id }}" title="Ubah Transfer Issue">
+                                                        <i class="fa fa-pencil"></i>
+                                                    </a>
+                                                    <a href="{{ 'pos/transfers/update' | link }}/{{ transfer.id }}#detail" title="Detail Transfer Issue">
+                                                        <i class="fa fa-search"></i>
+                                                    </a>
+                                                    <a href="{{ 'pos/transfers/delete' | link }}/{{ transfer.id }}" onclick="return hapus(this);">
+                                                        <i class="fa fa-trash-o"></i>
+                                                    </a>
+                                                </td>
+                                            </tr>
+                                            {% else %}
+                                            <tr class="no-data">
+                                                <td colspan="7">No data founds</td>
+                                            </tr>
+                                            {% endfor %}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                                <div id="create-new" class="tab-pane fade">
+                                    {% include 'transfers/_form.html' with {'warehouses':warehouses} %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% include 'partial/right_menu.html' %}
+{% endblock %}
+{% block endbodyjs %}
+<script src="{{ 'lib/DataTables/media/js/jquery.dataTables.min.js' | admin_asset_url }}"></script>
+<script src="{{ 'lib/DataTables/media/js/dataTables.bootstrap.js' | admin_asset_url }}"></script>
+<script type="text/javascript">
+    function hapus(data) {
+        if (confirm('Anda yakin ingin menghapus item ini ?')) {
+            var $this =  $(data);
+            var url = $this.attr('href');
+            $.ajax({
+                'url': url,
+                'type':'post',
+                //'dataType': 'json',
+                'success': function(data) {
+                    if (data.status == 'success') {
+                        $this.parent().parent().remove();
+                    }
+                }
+            });
+        }
+        return false;
+    }
+    $(function () {
+       if (window.location.hash) {
+           var hash = window.location.hash.substring(1);
+           if ($('a[href="#'+hash+'"]').length > 0)
+                $('a[href="#'+hash+'"]').click();
+       }
+    });
+</script>
+{% endblock %}
