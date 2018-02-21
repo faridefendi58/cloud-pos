@@ -231,7 +231,7 @@ class TransfersController extends BaseController
         }
 
         $wmodel = new \Model\TransferIssuesModel();
-        $max_nr = $wmodel->getLastPoNumber($prefiks);
+        $max_nr = $wmodel->getLastTiNumber($prefiks);
         
         if (empty($max_nr['max_nr'])) {
             $next_nr = 1;
