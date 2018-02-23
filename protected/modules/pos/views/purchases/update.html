@@ -1,6 +1,6 @@
 {% extends "layout.html" %}
 {% block pagetitle %}
-Kelola Purchase Order - {{ App.params.site_name }}
+Kelola Pengadaan Barang - {{ App.params.site_name }}
 {% endblock %}
 
 {% block content %}
@@ -8,11 +8,11 @@ Kelola Purchase Order - {{ App.params.site_name }}
     <div class="page_bar clearfix">
         <div class="row">
             <div class="col-sm-10">
-                <h1 class="page_title">Kelola Purchase Order #{{ model.po_number }}</h1>
-                <p class="text-muted">Halaman pengelolaan data Purchase Order {{ model.po_number | lower }}</p>
+                <h1 class="page_title">Pengadaan Barang #{{ model.po_number }}</h1>
+                <p class="text-muted">Halaman pengelolaan data Pengadaan Barang {{ model.po_number | lower }}</p>
             </div>
             <div class="col-sm-2 text-right">
-                <a class="btn btn-default" href="{{ 'pos/purchases/view' | link }}">Daftar Purchase Order</a>
+                <a class="btn btn-default" href="{{ 'pos/purchases/view' | link }}">Daftar Pengadaan Barang</a>
             </div>
         </div>
     </div>
@@ -30,10 +30,10 @@ Kelola Purchase Order - {{ App.params.site_name }}
                                     <a data-toggle="tab" href="#update">Ubah Data</a>
                                 </li>
                                 <li>
-                                    <a data-toggle="tab" href="#items">Purchase Items</a>
+                                    <a data-toggle="tab" href="#items">Detail Item</a>
                                 </li>
                                 <li {% if not receipts %}style="display:none"{% endif %}>
-                                    <a data-toggle="tab" href="#receipt">Purchase Receipt</a>
+                                    <a data-toggle="tab" href="#receipt">Penerimaan Barang</a>
                                 </li>
                             </ul>
                             <div class="tab-content" id="tabs_content_a">

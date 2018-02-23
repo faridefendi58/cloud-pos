@@ -3,6 +3,7 @@
         Tambahkan item untuk Purchase Order {{ model.po_number }}<br/>
         Pastikan pilih salah satu produk, serta nilai Jumlah dan Harga item lebih dari 0 agar data dapat disimpan.
     </div>
+    <div class="alert alert-warning" style="display: none;"></div>
     <div class="alert alert-success" style="display: none;"></div>
     {% for i, item in items %}
     <div class="col-md-12">
@@ -10,11 +11,10 @@
             <div class="col-md-4">
                 <div class="form-group">
                     <label for="product_id">Nama Produk <span class="required">*</span></label>
-                    <select id="product_id" name="PurchaseOrderItems[product_id][]" class="form-control" onchange="updateUnit(this);">
+                    <select id="product_id" name="PurchaseOrderItems[product_id][]" class="form-control select2" onchange="updateUnit(this);">
                         {% for i, product in products %}
                         <option value="{{ product.id }}" {% if item.product_id == product.id %}selected=""{% endif %}>{{ product.title }}</option>
                         {% endfor %}
-                        <option value="0">Lainnya</option>
                     </select>
                     {#<span class="help-block"><a href="{{ 'pos/products/view' | link }}#create-new" target="_blank">Tambahkan Produk Baru</a></span>#}
                 </div>
@@ -131,6 +131,9 @@
     $(function () {
         $('#purchase-items-form').submit(function () {
             var url = $(this).attr('action');
+            $('#purchases-items-form').find('.alert-warning').hide();
+            $('#purchases-items-form').find('.alert-warning').empty();
+
             $.ajax({
                 'url': url,
                 'type':'post',
@@ -143,7 +146,11 @@
                         alert_success.show();
                         setTimeout(function () {
                             window.location.reload(true);
-                        }, 5000);
+                        }, 3000);
+                    } else {
+                        var alert_warning = $('#purchase-items-form').find('.alert-warning');
+                        alert_warning.html(data.message);
+                        alert_warning.show();
                     }
                 },
                 error: function(XMLHttpRequest, textStatus, errorThrown) {

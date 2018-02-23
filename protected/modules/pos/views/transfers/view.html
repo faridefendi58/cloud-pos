@@ -1,6 +1,6 @@
 {% extends "layout.html" %}
 {% block pagetitle %}
-Transfer Issue - {{ App.params.site_name }}
+Pindah Persediaan - {{ App.params.site_name }}
 {% endblock %}
 
 {% block content %}
@@ -9,11 +9,11 @@ Transfer Issue - {{ App.params.site_name }}
     <div class="page_bar clearfix">
         <div class="row">
             <div class="col-sm-10">
-                <h1 class="page_title">Transfer Issue</h1>
-                <p class="text-muted">Transfer Issue adalah perpindahan stok antar gudang atau warehouse</p>
+                <h1 class="page_title">Pindah Persediaan</h1>
+                <p class="text-muted">Pindah Persediaan adalah perpindahan stok antar gudang atau warehouse</p>
             </div>
             <div class="col-sm-2 text-right">
-                <a class="btn btn-default" data-toggle="tab" href="#create-new">Transfer Issue Baru</a>
+                <a class="btn btn-default" data-toggle="tab" href="#create-new">Pindah Persediaan Baru</a>
             </div>
         </div>
     </div>
@@ -25,10 +25,10 @@ Transfer Issue - {{ App.params.site_name }}
                         <div class="panel-body">
                             <ul class="nav nav-tabs" id="tabs_a">
                                 <li class="active">
-                                    <a data-toggle="tab" href="#daftar">Daftar Transfer Issue</a>
+                                    <a data-toggle="tab" href="#daftar">Daftar Pindah Persediaan</a>
                                 </li>
                                 <li>
-                                    <a data-toggle="tab" href="#create-new">Transfer Issue Baru</a>
+                                    <a data-toggle="tab" href="#create-new">Pindah Persediaan Baru</a>
                                 </li>
                             </ul>
                             <div class="tab-content" id="tabs_content_a">
@@ -60,10 +60,10 @@ Transfer Issue - {{ App.params.site_name }}
                                                 <td><center>{{ transfer.date_transfer | date("Y-m-d") }}</center></td>
                                                 <td>{{ transfer.status | title }}</td>
                                                 <td>
-                                                    <a href="{{ 'pos/transfers/update' | link }}/{{ transfer.id }}" title="Ubah Transfer Issue">
+                                                    <a href="{{ 'pos/transfers/update' | link }}/{{ transfer.id }}" title="Ubah Pindah Persediaan">
                                                         <i class="fa fa-pencil"></i>
                                                     </a>
-                                                    <a href="{{ 'pos/transfers/update' | link }}/{{ transfer.id }}#detail" title="Detail Transfer Issue">
+                                                    <a href="{{ 'pos/transfers/update' | link }}/{{ transfer.id }}#detail" title="Detail Pindah Persediaan">
                                                         <i class="fa fa-search"></i>
                                                     </a>
                                                     <a href="{{ 'pos/transfers/delete' | link }}/{{ transfer.id }}" onclick="return hapus(this);">

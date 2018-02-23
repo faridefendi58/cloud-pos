@@ -1,6 +1,6 @@
 {% extends "layout.html" %}
 {% block pagetitle %}
-Transfer Receipt - {{ App.params.site_name }}
+Penerimaan Persediaan - {{ App.params.site_name }}
 {% endblock %}
 
 {% block content %}
@@ -8,12 +8,12 @@ Transfer Receipt - {{ App.params.site_name }}
 <div id="main_wrapper">
     <div class="page_bar clearfix">
         <div class="row">
-            <div class="col-sm-10">
-                <h1 class="page_title">Transfer Receipt</h1>
-                <p class="text-muted">Transfer Receipt adalah bukti penerimaan stok setelah dipindahkan dari gudang atau warehouse lain</p>
+            <div class="col-sm-9">
+                <h1 class="page_title">Penerimaan Persediaan</h1>
+                <p class="text-muted">Penerimaan Persediaan adalah bukti penerimaan stok setelah dipindahkan dari gudang atau warehouse lain</p>
             </div>
-            <div class="col-sm-2 text-right">
-                <a class="btn btn-default" data-toggle="tab" href="#create-new">Transfer Receipt Baru</a>
+            <div class="col-sm-3 text-right">
+                <a class="btn btn-default" data-toggle="tab" href="#create-new">Penerimaan Persediaan Baru</a>
             </div>
         </div>
     </div>
@@ -25,10 +25,10 @@ Transfer Receipt - {{ App.params.site_name }}
                         <div class="panel-body">
                             <ul class="nav nav-tabs" id="tabs_a">
                                 <li class="active">
-                                    <a data-toggle="tab" href="#daftar">Daftar Transfer Receipt</a>
+                                    <a data-toggle="tab" href="#daftar">Daftar Penerimaan Persediaan</a>
                                 </li>
                                 <li>
-                                    <a data-toggle="tab" href="#create-new">Transfer Receipt Baru</a>
+                                    <a data-toggle="tab" href="#create-new">Penerimaan Persediaan Baru</a>
                                 </li>
                             </ul>
                             <div class="tab-content" id="tabs_content_a">
@@ -73,10 +73,10 @@ Transfer Receipt - {{ App.params.site_name }}
                                                 <td><center>{{ receipt.effective_date | date("Y-m-d") }}</center></td>
                                                 <td>{{ receipt.status | title }}</td>
                                                 <td>
-                                                    <a href="{{ 'pos/transfers/update-receipt' | link }}/{{ receipt.id }}" title="Ubah Transfer Receipt">
+                                                    <a href="{{ 'pos/transfers/update-receipt' | link }}/{{ receipt.id }}" title="Ubah Penerimaan Persediaan">
                                                         <i class="fa fa-pencil"></i>
                                                     </a>
-                                                    <a href="{{ 'pos/transfers/update-receipt' | link }}/{{ receipt.id }}#detail" title="Detail Transfer Receipt">
+                                                    <a href="{{ 'pos/transfers/update-receipt' | link }}/{{ receipt.id }}#detail" title="Detail Penerimaan Persediaan">
                                                         <i class="fa fa-search"></i>
                                                     </a>
                                                     <a href="{{ 'pos/transfers/delete-receipt' | link }}/{{ receipt.id }}" onclick="return hapus(this);">

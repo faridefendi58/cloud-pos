@@ -3,6 +3,7 @@
         Tambahkan item untuk Transfer Issue {{ model.ti_number }}<br/>
         Pastikan pilih salah satu produk, serta nilai Jumlah item lebih dari 0 agar data dapat disimpan.
     </div>
+    <div class="alert alert-warning" style="display: none;"></div>
     <div class="alert alert-success" style="display: none;"></div>
     {% for i, item in items %}
     <div class="col-md-12">
@@ -51,7 +52,11 @@
     <div class="col-md-12">
         <div class="form-group">
             <input name="TransferIssueItems[ti_id]" type="hidden" value="{{ model.id }}">
-            <input type="submit" value="Simpan" class="btn btn-info">
+            <input
+                    type="submit"
+                    value="Simpan"
+                    class="btn btn-info"
+                    {% if model and model.status in ['processed', 'completed', 'canceled'] %}style="display:none"{% endif %}>
         </div>
     </div>
 </form>
@@ -125,6 +130,9 @@
     $(function () {
         $('#purchase-items-form').submit(function () {
             var url = $(this).attr('action');
+            $('#purchases-items-form').find('.alert-warning').hide();
+            $('#purchases-items-form').find('.alert-warning').empty();
+
             $.ajax({
                 'url': url,
                 'type':'post',
@@ -137,7 +145,14 @@
                         alert_success.show();
                         setTimeout(function () {
                             window.location.reload(true);
-                        }, 5000);
+                        }, 3000);
+                    } else {
+                        var alert_warning = $('#purchase-items-form').find('.alert-warning');
+                        alert_warning.html(data.message);
+                        alert_warning.show();
+                        setTimeout(function () {
+                            window.location.reload(true);
+                        }, 3000);
                     }
                 },
                 error: function(XMLHttpRequest, textStatus, errorThrown) {

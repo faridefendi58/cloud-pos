@@ -1,57 +1,57 @@
 <form method="post" id="receipt-form" class="mt20" action="{% if model.id %}{{ 'pos/purchases/update-receipt' | link }}/{{ model.id }}{% else %}{{ 'pos/purchases/create-receipt' | link }}{% endif %}">
     <div class="alert alert-success" style="display: none;"></div>
-    <div class="col-md-12">
-        <div class="row">
-            <div class="col-md-4">
-                <div class="form-group">
-                    <label for="po_number">Nomor PO <span class="required">*</span></label>
-                    {% if not model.id %}
-                    <select id="po_number" name="PurchaseReceipts[po_id]" class="form-control select2">
-                        {% for g, purchase in purchases %}
-                        <option value="{{ purchase.id }}" {% if model.po_id and purchase.id == model.po_id %}selected="selected"{% endif %}>
-                            {{ purchase.po_number }} [{{ purchase.supplier_name | title }}]
-                        </option>
-                        {% endfor %}
-                    </select>
-                    {% else %}
-                    <input type="text" name="PurchaseReceipts[po_id]" class="form-control" value="{{ detail.po_number }}" readonly="readonly">
-                    {% endif %}
-                </div>
+    <div class="col-md-6">
+        <div class="form-group">
+            <label for="po_number">Nomor PO <span class="required">*</span></label>
+            {% if not model.id %}
+            <select id="po_number" name="PurchaseReceipts[po_id]" class="form-control select2">
+                {% for g, purchase in purchases %}
+                <option value="{{ purchase.id }}" {% if model.po_id and purchase.id == model.po_id %}selected="selected"{% endif %}>
+                    {{ purchase.po_number }} [{{ purchase.supplier_name | title }}]
+                </option>
+                {% endfor %}
+            </select>
+            {% else %}
+            <input type="text" name="PurchaseReceipts[po_id]" class="form-control" value="{{ detail.po_number }}" readonly="readonly">
+            {% endif %}
+        </div>
+        <div class="form-group">
+            <label for="supplier_id">Warehouse Penerima <span class="text-danger">*</span></label>
+            <select id="supplier_id" name="PurchaseReceipts[warehouse_id]" class="form-control select2">
+                {% for i, warehouse in warehouses %}
+                <option value="{{ warehouse.id }}" {% if model.warehouse_id and warehouse.id == model.warehouse_id %}selected="selected"{% endif %}>{{ warehouse.title }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="form-group">
+            <label>Tanggal Penerimaan <span class="text-danger">*</span></label>
+            <div class="input-group date ts_datepicker" data-date-format="dd-mm-yyyy" data-date-autoclose="true">
+                <input class="form-control" type="text" name="PurchaseReceipts[effective_date]"
+                       {% if model and model.effective_date %}
+                       value="{{ model.effective_date | date('d-m-Y') }}"
+                       {% else %}
+                       value="{{ now | date('d-m-Y') }}"
+                       {% endif %}>
+                <span class="input-group-addon"><i class="fa fa-calendar"></i></span>
             </div>
-            <div class="col-md-4">
-                <div class="form-group">
-                    <label for="supplier_id">Warehouse <span class="text-danger">*</span></label>
-                    <select id="supplier_id" name="PurchaseReceipts[warehouse_id]" class="form-control select2">
-                        {% for i, warehouse in warehouses %}
-                        <option value="{{ warehouse.id }}" {% if model.warehouse_id and warehouse.id == model.warehouse_id %}selected="selected"{% endif %}>{{ warehouse.title }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <label>Tanggal Efektif <span class="text-danger">*</span></label>
-                <div class="input-group date ts_datepicker" data-date-format="dd-mm-yyyy" data-date-autoclose="true">
-                    <input class="form-control" type="text" name="PurchaseReceipts[effective_date]"
-                           {% if model and model.effective_date %}
-                           value="{{ model.effective_date | date('d-m-Y') }}"
-                           {% else %}
-                           value="{{ now | date('d-m-Y') }}"
-                           {% endif %}>
-                    <span class="input-group-addon"><i class="fa fa-calendar"></i></span>
-                </div>
-                <span class="help-block">Format: dd-mm-yyyy</span>
-            </div>
+            <span class="help-block">Format: dd-mm-yyyy</span>
         </div>
     </div>
-    <div class="col-md-8 mt10">
+    <div class="col-md-6">
         <div class="form-group">
             <label for="desc">Catatan</label>
-            <textarea name="PurchaseReceipts[notes]" id="desc" cols="10" rows="3" class="form-control">{% if model and model.notes %}{{ model.notes }}{% endif %}</textarea>
+            <textarea name="PurchaseReceipts[notes]" id="desc" cols="10" rows="5" class="form-control">{% if model and model.notes %}{{ model.notes }}{% endif %}</textarea>
         </div>
-    </div>
-    <div class="col-md-12">
         <div class="form-group">
-            <input type="submit" value="Simpan" class="btn btn-info">
+            {% if not model or model.status not in ['completed', 'canceled'] %}
+            <input type="submit" value="{% if model.id %}Ubah Data{% else %}Selanjutnya{% endif %}" class="btn btn-info">
+            {% endif %}
+            {% if model and model.status not in ['completed', 'canceled'] %}
+            <input type="button" value="Mark as complete" class="btn btn-success" id="mark-as-complete" attr-id="{{ model.id }}">
+            {% endif %}
+            {% if model and model.status not in ['canceled'] %}
+            <input type="button" value="Cancel" class="btn btn-warning" id="cancel" attr-id="{{ model.id }}">
+            {% endif %}
         </div>
     </div>
 </form>
@@ -82,7 +82,7 @@
                                 $('#receipt-form')[0].reset();
                                 window.location.href = "{{ 'pos/purchases/update-receipt' | link }}/"+data.id+"#items";
                             }
-                        }, 4000);
+                        }, 1000);
                     }
                 }
             });
@@ -91,6 +91,8 @@
         });
         tisa_datepicker.init();
         tisa_enhanced_select.init();
+        complete_receipt.init();
+        cancel_receipt.init();
     });
     tisa_datepicker = {
         init: function() {
@@ -121,6 +123,60 @@
                     placeholder: "Select..."
                 });
             }
+        }
+    }
+    complete_receipt = {
+        init : function () {
+            $('#mark-as-complete').click(function () {
+                var $this = $(this);
+                if (confirm('Anda yakin barang sudah diterima semua?')) {
+                    $.ajax({
+                        'url': '{{ "pos/purchases/complete-receipt" | link }}/'+$this.attr('attr-id'),
+                        'type':'post',
+                        'data': {'id':$this.attr('attr-id')},
+                        'success': function(data) {
+                            console.log(data);
+                            if (data.status == 'success') {
+                                var alert_success = $('#receipt-form').find('.alert-success');
+                                alert_success.html(data.message);
+                                alert_success.show();
+                                $this.hide();
+                                setTimeout(function () {
+                                    window.location.reload(true);
+                                }, 2000);
+                            }
+                        }
+                    });
+                }
+                return false;
+            });
+        }
+    }
+    cancel_receipt = {
+        init : function () {
+            $('#cancel').click(function () {
+                var $this = $(this);
+                if (confirm('Apakah benar-benar terjadi kesalahan dengan penerimaan ini?')) {
+                    $.ajax({
+                        'url': '{{ "pos/purchases/cancel-receipt" | link }}/'+$this.attr('attr-id'),
+                        'type':'post',
+                        'data': {'id':$this.attr('attr-id')},
+                        'success': function(data) {
+                            console.log(data);
+                            if (data.status == 'success') {
+                                var alert_success = $('#receipt-form').find('.alert-success');
+                                alert_success.html(data.message);
+                                alert_success.show();
+                                $this.hide();
+                                setTimeout(function () {
+                                    window.location.reload(true);
+                                }, 2000);
+                            }
+                        }
+                    });
+                }
+                return false;
+            });
         }
     }
 </script>

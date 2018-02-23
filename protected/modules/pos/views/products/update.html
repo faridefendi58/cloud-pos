@@ -47,7 +47,7 @@ Kelola Produk - {{ App.params.site_name }}
                                     {% include 'products/_price.html' with {'model':model, 'prices':prices} %}
                                 </div>
                                 <div id="persediaan" class="tab-pane fade">
-                                    {# include 'products/_stock.html' with {'model':model} #}
+                                    {% include 'products/_stock.html' with {'model':model, 'stocks':stocks} %}
                                 </div>
                             </div>
                         </div>

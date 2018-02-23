@@ -5,6 +5,10 @@ require_once __DIR__ . '/../../../models/base.php';
 
 class TransferReceiptsModel extends \Model\BaseModel
 {
+    const STATUS_PENDING = 'pending';
+    const STATUS_COMPLETED = 'completed';
+    const STATUS_CANCELED = 'canceled';
+    
     public static function model($className=__CLASS__)
     {
         return parent::model($className);

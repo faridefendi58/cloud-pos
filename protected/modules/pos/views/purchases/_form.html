@@ -1,84 +1,75 @@
 <form method="post" id="purchases-form" class="mt20" action="{% if model.id %}{{ 'pos/purchases/update' | link }}/{{ model.id }}{% else %}{{ 'pos/purchases/create' | link }}{% endif %}">
+    <div class="alert alert-warning" style="display: none;"></div>
     <div class="alert alert-success" style="display: none;"></div>
     <div class="col-md-12 mb10">
         <p>Kolom bertanda <span class="red">*</span> tidak boleh dikosongi</p>
     </div>
-    <div class="col-md-12">
-        <div class="row">
-            <div class="col-md-4 {% if not model.po_number %}hide{% endif %}">
-                <div class="form-group">
-                    <label for="name">Nomor PO {% if model.po_number %}<span class="required">*</span>{% endif %}</label>
-                    <input type="text" id="name" name="PurchaseOrders[po_number]" class="form-control" {% if model.po_number %}value="{{ model.po_number }}" readonly="true" required{% endif %}>
-                    <span class="help-block hide">Kosongi untuk generate nomor PO secara otomatis</span>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="form-group">
-                    <label for="supplier_id">Supplier <span class="text-danger">*</span></label>
-                    <select id="supplier_id" name="PurchaseOrders[supplier_id]" class="form-control select2">
-                        <option value="0">-</option>
-                        {% for i, supplier in suppliers %}
-                        <option value="{{ supplier.id }}" {% if model.supplier_id and model.supplier_id == supplier.id %}selected="selected"{% endif %}>{{ supplier.name }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <label>Cara Pengiriman <span class="text-danger">*</span></label>
-                <select id="status" name="PurchaseOrders[shipment_id]" class="form-control select2">
-                    <option value="0">-</option>
-                    {% for i, shipment in shipments %}
-                    <option value="{{ shipment.id }}" {% if model.shipment_id and model.shipment_id == shipment.id %}selected="selected"{% endif %}>{{ shipment.title }}</option>
-                    {% endfor %}
-                </select>
-            </div>
+    <div class="col-md-6">
+        <div class="form-group hide">
+            <label for="name">Nomor PO {% if model.po_number %}<span class="required">*</span>{% endif %}</label>
+            <input type="text" id="name" name="PurchaseOrders[po_number]" class="form-control" {% if model.po_number %}value="{{ model.po_number }}" readonly="true" required{% endif %}>
+            <span class="help-block hide">Kosongi untuk generate nomor PO secara otomatis</span>
         </div>
-    </div>
-    <div class="col-md-12 mt10">
-        <div class="row">
-            <div class="col-md-4">
-                <label>Tanggal Order <span class="text-danger">*</span></label>
-                <div class="input-group date ts_datepicker" data-date-format="dd-mm-yyyy" data-date-autoclose="true">
-                    <input class="form-control" type="text" name="PurchaseOrders[date_order]"
-                           {% if model and model.date_order %}
-                           value="{{ model.date_order | date('d-m-Y') }}"
-                           {% else %}
-                           value="{{ now | date('d-m-Y') }}"
-                           {% endif %}>
-                    <span class="input-group-addon"><i class="fa fa-calendar"></i></span>
-                </div>
-                <span class="help-block">Format: dd-mm-yyyy</span>
-            </div>
-            <div class="col-md-4">
-                <label>Tanggal Jatuh Tempo</label>
-                <div class="input-group date ts_datepicker" data-date-format="dd-mm-yyyy" data-date-autoclose="true">
-                    <input class="form-control" type="text" name="PurchaseOrders[due_date]" {% if model and model.due_date %}value="{{ model.due_date | date('d-m-Y') }}"{% endif %}>
-                    <span class="input-group-addon"><i class="fa fa-calendar"></i></span>
-                </div>
-                <span class="help-block">Format: dd-mm-yyyy. Kosongkan jika tidak ada batasan jatuh tempo</span>
-            </div>
-            {% if model.status %}
-            <div class="col-md-4">
-                <label>Status <span class="text-danger">*</span></label>
-                <select id="status" name="PurchaseOrders[status]" class="form-control">
-                    <option value="onprocess" {% if model.status and model.status == 'onprocess' %}selected="selected"{% endif %}>On Process</option>
-                    <option value="completed" {% if model.status and model.status == 'completed' %}selected="selected"{% endif %}>Completed</option>
-                    <option value="canceled" {% if model.status and model.status == 'canceled' %}selected="selected"{% endif %}>Canceled</option>
-                </select>
-            </div>
-            {% endif %}
+        <div class="form-group">
+            <label for="supplier_id">Supplier <span class="text-danger">*</span></label>
+            <select id="supplier_id" name="PurchaseOrders[supplier_id]" class="form-control select2">
+                <option value="0">-</option>
+                {% for i, supplier in suppliers %}
+                <option value="{{ supplier.id }}" {% if model.supplier_id and model.supplier_id == supplier.id %}selected="selected"{% endif %}>{{ supplier.name }}</option>
+                {% endfor %}
+            </select>
         </div>
+        <div class="form-group">
+            <label>Cara Pengiriman <span class="text-danger">*</span></label>
+            <select id="shipment_id" name="PurchaseOrders[shipment_id]" class="form-control select2">
+                <option value="0">-</option>
+                {% for i, shipment in shipments %}
+                <option value="{{ shipment.id }}" {% if model.shipment_id and model.shipment_id == shipment.id %}selected="selected"{% endif %}>{{ shipment.title }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="form-group">
+            <label>Tanggal Order <span class="text-danger">*</span></label>
+            <div class="input-group date ts_datepicker" data-date-format="dd-mm-yyyy" data-date-autoclose="true">
+                <input class="form-control" type="text" name="PurchaseOrders[date_order]"
+                       {% if model and model.date_order %}
+                       value="{{ model.date_order | date('d-m-Y') }}"
+                       {% else %}
+                       value="{{ now | date('d-m-Y') }}"
+                       {% endif %}>
+                <span class="input-group-addon"><i class="fa fa-calendar"></i></span>
+            </div>
+            <span class="help-block">Format: dd-mm-yyyy</span>
+        </div>
+        <div class="form-group hide">
+            <label>Tanggal Jatuh Tempo</label>
+            <div class="input-group date ts_datepicker" data-date-format="dd-mm-yyyy" data-date-autoclose="true">
+                <input class="form-control" type="text" name="PurchaseOrders[due_date]" {% if model and model.due_date %}value="{{ model.due_date | date('d-m-Y') }}"{% endif %}>
+                <span class="input-group-addon"><i class="fa fa-calendar"></i></span>
+            </div>
+            <span class="help-block">Format: dd-mm-yyyy. Kosongkan jika tidak ada batasan jatuh tempo</span>
+        </div>
+        {% if model.status %}
+        <div class="form-group">
+            <label>Status <span class="text-danger">*</span></label>
+            <select id="status" name="PurchaseOrders[status]" class="form-control">
+                <option value="onprocess" {% if model.status and model.status == 'onprocess' %}selected="selected"{% endif %}>On Process</option>
+                <option value="completed" {% if model.status and model.status == 'completed' %}selected="selected"{% endif %}>Completed</option>
+                <option value="canceled" {% if model.status and model.status == 'canceled' %}selected="selected"{% endif %}>Canceled</option>
+            </select>
+        </div>
+        {% endif %}
     </div>
-    <div class="col-md-8 mt10">
+    <div class="col-md-6">
         <div class="form-group">
             <label for="desc">Catatan</label>
-            <textarea name="PurchaseOrders[notes]" id="desc" cols="10" rows="3" class="form-control">{% if model and model.notes %}{{ model.notes }}{% endif %}</textarea>
+            <textarea name="PurchaseOrders[notes]" id="desc" cols="10" rows="5" class="form-control">{% if model and model.notes %}{{ model.notes }}{% endif %}</textarea>
+        </div>
+        <div class="form-group mt20">
+            <input type="submit" value="Simpan" class="btn btn-info">
         </div>
     </div>
     <div class="col-md-12">
-        <div class="form-group">
-            <input type="submit" value="Simpan" class="btn btn-info">
-        </div>
     </div>
 </form>
 
@@ -89,6 +80,29 @@
     $(function () {
         $('#purchases-form').submit(function () {
             var url = $(this).attr('action');
+            $('#purchases-form').find('.alert-warning').hide();
+            $('#purchases-form').find('.alert-warning').empty();
+
+            var supplier_id = $('#purchases-form').find('select[id="supplier_id"]').val();
+            var shipment_id = $('#purchases-form').find('select[id="shipment_id"]').val();
+            var has_error = 0;
+            if (supplier_id <= 0) {
+                $('#purchases-form').find('.alert-warning').html('Supplier tidak boleh dikosongi.');
+                var has_error = has_error + 1;
+            }
+            if (shipment_id <= 0) {
+                if (has_error == 0) {
+                    $('#purchases-form').find('.alert-warning').html('Cara pengiriman tidak boleh dikosongi.');
+                } else {
+                    $('#purchases-form').find('.alert-warning').append('<br/>Cara pengiriman tidak boleh dikosongi.');
+                }
+                var has_error = has_error + 1;
+            }
+            if (has_error > 0) {
+                $('#purchases-form').find('.alert-warning').show();
+                return false;
+            }
+
             $.ajax({
                 'url': url,
                 'type':'post',
@@ -107,7 +121,7 @@
                                 $('#purchases-form')[0].reset();
                                 window.location.href = "{{ 'pos/purchases/update' | link }}/"+data.id+"#items";
                             }
-                        }, 4000);
+                        }, 3000);
                     }
                 }
             });

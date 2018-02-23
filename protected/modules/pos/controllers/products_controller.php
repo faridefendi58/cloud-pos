@@ -79,12 +79,15 @@ class ProductsController extends BaseController
         $cmodel = new \Model\ProductCategoriesModel();
         $categories = $cmodel->getData();
 
+        $stmodel = new \Model\ProductStocksModel();
+
         return $this->_container->module->render(
             $response, 
             'products/view.html', 
             [
                 'products' => $products,
-                'categories' => $categories
+                'categories' => $categories,
+                'stmodel' => $stmodel
             ]
         );
     }
@@ -143,6 +146,9 @@ class ProductsController extends BaseController
         $pmodel = new \Model\ProductPricesModel();
         $prices = $pmodel->getData($model->id);
 
+        $stmodel = new \Model\ProductStocksModel();
+        $stocks = $stmodel->getData($model->id);
+
         if (isset($_POST['Products'])){
             $model->title = $_POST['Products']['title'];
             $model->product_category_id = $_POST['Products']['product_category_id'];
@@ -170,10 +176,13 @@ class ProductsController extends BaseController
             }
         }
 
+        //var_dump($stmodel->getLastReceipt($model->id)); exit;
         return $this->_container->module->render($response, 'products/update.html', [
             'model' => $model,
             'categories' => $categories,
-            'prices' => $prices
+            'prices' => $prices,
+            'stocks' => $stocks,
+            'stmodel' => $stmodel
         ]);
     }
 

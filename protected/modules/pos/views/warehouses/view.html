@@ -49,7 +49,7 @@ Warehouse - {{ App.params.site_name }}
                                             <tbody>
                                             {% for i, warehouse in warehouses %}
                                             <tr>
-                                                <td><center>{{ warehouse.id }}</center></td>
+                                                <td><center>{{ i + 1 }}</center></td>
                                                 <td>{{ warehouse.title }}</td>
                                                 <td>{{ warehouse.address }}</td>
                                                 <td>{{ warehouse.phone | default('-') }}</td>

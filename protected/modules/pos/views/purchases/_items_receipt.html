@@ -58,7 +58,9 @@
     <div class="col-md-12">
         <div class="form-group">
             <input name="PurchaseReceiptItems[pr_id]" type="hidden" value="{{ model.id }}">
+            {% if model.status not in ['completed', 'canceled'] %}
             <input type="submit" value="Simpan" class="btn btn-info">
+            {% endif %}
         </div>
     </div>
 </form>
@@ -80,7 +82,7 @@
     }
     function checkStock(dt) {
         var sisa_stock = $(dt).parent().parent().parent().parent().find('#sisa-stok').val();
-        if ($(dt).val() > sisa_stock) {
+        if (parseInt($(dt).val()) > parseInt(sisa_stock)) {
             alert('Jumlah maksimal tidak boleh melebihi '+sisa_stock);
             $(dt).val(sisa_stock);
         }
@@ -101,7 +103,7 @@
                         alert_success.show();
                         setTimeout(function () {
                             window.location.reload(true);
-                        }, 5000);
+                        }, 3000);
                     }
                 },
                 error: function(XMLHttpRequest, textStatus, errorThrown) {

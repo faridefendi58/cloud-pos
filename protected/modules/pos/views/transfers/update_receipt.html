@@ -1,18 +1,18 @@
 {% extends "layout.html" %}
 {% block pagetitle %}
-Kelola Transfer Receipt - {{ App.params.site_name }}
+Kelola Penerimaan Persediaan - {{ App.params.site_name }}
 {% endblock %}
 
 {% block content %}
 <div id="main_wrapper">
     <div class="page_bar clearfix">
         <div class="row">
-            <div class="col-sm-10">
-                <h1 class="page_title">Transfer Receipt #{{ model.tr_number }}</h1>
-                <p class="text-muted">Halaman pengelolaan data Transfer Receipt {{ model.tr_number | lower }}</p>
+            <div class="col-sm-9">
+                <h1 class="page_title">Penerimaan Persediaan #{{ model.tr_number }}</h1>
+                <p class="text-muted">Halaman pengelolaan data Penerimaan Persediaan {{ model.tr_number | lower }}</p>
             </div>
-            <div class="col-sm-2 text-right">
-                <a class="btn btn-default" href="{{ 'pos/transfers/view-receipt' | link }}">Daftar Transfer Receipt</a>
+            <div class="col-sm-3 text-right">
+                <a class="btn btn-default" href="{{ 'pos/transfers/view-receipt' | link }}">Daftar Penerimaan Persediaan</a>
             </div>
         </div>
     </div>
@@ -30,7 +30,7 @@ Kelola Transfer Receipt - {{ App.params.site_name }}
                                     <a data-toggle="tab" href="#update">Ubah Data</a>
                                 </li>
                                 <li>
-                                    <a data-toggle="tab" href="#items">Receipt Items</a>
+                                    <a data-toggle="tab" href="#items">Detail Item</a>
                                 </li>
                             </ul>
                             <div class="tab-content" id="tabs_content_a">

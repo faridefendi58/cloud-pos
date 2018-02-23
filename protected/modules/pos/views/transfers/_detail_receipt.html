@@ -24,6 +24,18 @@
             <td>{{ model.effective_date | date("d F Y") | default('-') }}</td>
         </tr>
         <tr>
+            <td>Dikirim Oleh</td>
+            <td>{{ detail.warehouse_from_name }}</td>
+        </tr>
+        <tr>
+            <td>Diterima Oleh</td>
+            <td>{{ detail.warehouse_to_name }}</td>
+        </tr>
+        <tr>
+            <td>Status</td>
+            <td>{{ model.status | title }}</td>
+        </tr>
+        <tr>
             <td>Catatan</td>
             <td>{{ model.notes | default('-') }}</td>
         </tr>

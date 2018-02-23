@@ -1,6 +1,6 @@
 {% extends "layout.html" %}
 {% block pagetitle %}
-Purchase Order - {{ App.params.site_name }}
+Pengadaan Barang - {{ App.params.site_name }}
 {% endblock %}
 
 {% block content %}
@@ -9,11 +9,11 @@ Purchase Order - {{ App.params.site_name }}
     <div class="page_bar clearfix">
         <div class="row">
             <div class="col-sm-10">
-                <h1 class="page_title">Purchase Order</h1>
-                <p class="text-muted">Kelola data Purchase Order</p>
+                <h1 class="page_title">Pengadaan Barang</h1>
+                <p class="text-muted">Kelola data Pengadaan Barang</p>
             </div>
             <div class="col-sm-2 text-right">
-                <a class="btn btn-default" data-toggle="tab" href="#create-new">Purchase Order Baru</a>
+                <a class="btn btn-default" data-toggle="tab" href="#create-new">Pengadaan Barang Baru</a>
             </div>
         </div>
     </div>
@@ -25,10 +25,10 @@ Purchase Order - {{ App.params.site_name }}
                         <div class="panel-body">
                             <ul class="nav nav-tabs" id="tabs_a">
                                 <li class="active">
-                                    <a data-toggle="tab" href="#daftar">Daftar Purchase Order</a>
+                                    <a data-toggle="tab" href="#daftar">Daftar Pengadaan Barang</a>
                                 </li>
                                 <li>
-                                    <a data-toggle="tab" href="#create-new">Purchase Order Baru</a>
+                                    <a data-toggle="tab" href="#create-new">Pengadaan Barang Baru</a>
                                 </li>
                             </ul>
                             <div class="tab-content" id="tabs_content_a">
@@ -60,10 +60,10 @@ Purchase Order - {{ App.params.site_name }}
                                                 <td><center>{{ purchase.date_order | date("Y-m-d") }}</center></td>
                                                 <td>{{ purchase.status | title }}</td>
                                                 <td>
-                                                    <a href="{{ 'pos/purchases/update' | link }}/{{ purchase.id }}" title="Ubah Purchase Order">
+                                                    <a href="{{ 'pos/purchases/update' | link }}/{{ purchase.id }}" title="Ubah Pengadaan Barang">
                                                         <i class="fa fa-pencil"></i>
                                                     </a>
-                                                    <a href="{{ 'pos/purchases/update' | link }}/{{ purchase.id }}#detail" title="Detail Purchase Order">
+                                                    <a href="{{ 'pos/purchases/update' | link }}/{{ purchase.id }}#detail" title="Detail Pengadaan Barang">
                                                         <i class="fa fa-search"></i>
                                                     </a>
                                                     <a href="{{ 'pos/purchases/delete' | link }}/{{ purchase.id }}" onclick="return hapus(this);">

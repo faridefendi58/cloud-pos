@@ -47,7 +47,8 @@ Produk - {{ App.params.site_name }}
                                                 <th>Nama Produk</th>
                                                 <th>Kategori</th>
                                                 <th>Unit</th>
-                                                <th>Deskripsi</th>
+                                                <th>Total Stok</th>
+                                                <th>Current Cost</th>
                                                 <th>&nbsp;</th>
                                             </tr>
                                             </thead>
@@ -62,13 +63,17 @@ Produk - {{ App.params.site_name }}
                                                 </td>
                                                 <td>{{ product.category_name }}</td>
                                                 <td>{{ product.unit }}</td>
-                                                <td>{{ product.description | default('-') }}</td>
+                                                <td style="text-align: left;">{{ stmodel.getTotalStock(product.id) | number_format(0, ',', '.') | default(0) }}</td>
+                                                <td style="text-align: left;">{{ product.current_cost | number_format(0, ',', '.') }}</td>
                                                 <td>
                                                     <a href="{{ 'pos/products/update' | link }}/{{ product.id }}" title="Ubah Product">
                                                         <i class="fa fa-pencil"></i>
                                                     </a>
                                                     <a href="{{ 'pos/products/update' | link }}/{{ product.id }}#price" title="Ubah Harga">
                                                         <i class="fa fa-money"></i>
+                                                    </a>
+                                                    <a href="{{ 'pos/products/update' | link }}/{{ product.id }}#persediaan" title="Detail Persediaan">
+                                                        <i class="fa fa-briefcase"></i>
                                                     </a>
                                                     <a href="{{ 'pos/products/delete' | link }}/{{ product.id }}" onclick="return hapus(this);">
                                                         <i class="fa fa-trash-o"></i>

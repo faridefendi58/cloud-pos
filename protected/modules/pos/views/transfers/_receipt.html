@@ -43,6 +43,10 @@
                                 <td>{{ receipt.effective_date | date("d F Y") | default('-') }}</td>
                             </tr>
                             <tr>
+                                <td>Status</td>
+                                <td><b>{{ receipt.status | title }}</b></td>
+                            </tr>
+                            <tr>
                                 <td>Catatan</td>
                                 <td>{{ receipt.notes | default('-') }}</td>
                             </tr>

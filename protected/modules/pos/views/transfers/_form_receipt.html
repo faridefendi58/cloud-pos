@@ -32,12 +32,18 @@
     <div class="col-md-6">
         <div class="form-group">
             <label for="desc">Catatan</label>
-            <textarea name="TransferReceipts[notes]" id="desc" cols="10" rows="3" class="form-control">{% if model and model.notes %}{{ model.notes }}{% endif %}</textarea>
+            <textarea name="TransferReceipts[notes]" id="desc" cols="10" rows="2" class="form-control">{% if model and model.notes %}{{ model.notes }}{% endif %}</textarea>
         </div>
-    </div>
-    <div class="col-md-12">
         <div class="form-group">
-            <input type="submit" value="Simpan" class="btn btn-info">
+            {% if not model or model.status not in ['completed', 'canceled'] %}
+            <input type="submit" value="{% if model.id %}Ubah Data{% else %}Selanjutnya{% endif %}" class="btn btn-info">
+            {% endif %}
+            {% if model and model.status not in ['completed', 'canceled'] %}
+            <input type="button" value="Mark as complete" class="btn btn-success" id="mark-as-complete" attr-id="{{ model.id }}">
+            {% endif %}
+            {% if model and model.status not in ['canceled'] %}
+            <input type="button" value="Cancel" class="btn btn-warning" id="cancel" attr-id="{{ model.id }}">
+            {% endif %}
         </div>
     </div>
 </form>
@@ -68,7 +74,7 @@
                                 $('#receipt-form')[0].reset();
                                 window.location.href = "{{ 'pos/transfers/update-receipt' | link }}/"+data.id+"#items";
                             }
-                        }, 4000);
+                        }, 1000);
                     }
                 }
             });
@@ -77,6 +83,8 @@
         });
         tisa_datepicker.init();
         tisa_enhanced_select.init();
+        complete_receipt.init();
+        cancel_receipt.init();
     });
     tisa_datepicker = {
         init: function() {
@@ -107,6 +115,60 @@
                     placeholder: "Select..."
                 });
             }
+        }
+    }
+    complete_receipt = {
+        init : function () {
+            $('#mark-as-complete').click(function () {
+                var $this = $(this);
+                if (confirm('Anda yakin barang sudah diterima semua?')) {
+                    $.ajax({
+                        'url': '{{ "pos/transfers/complete-receipt" | link }}/'+$this.attr('attr-id'),
+                        'type':'post',
+                        'data': {'id':$this.attr('attr-id')},
+                        'success': function(data) {
+                            console.log(data);
+                            if (data.status == 'success') {
+                                var alert_success = $('#receipt-form').find('.alert-success');
+                                alert_success.html(data.message);
+                                alert_success.show();
+                                $this.hide();
+                                setTimeout(function () {
+                                    window.location.reload(true);
+                                }, 2000);
+                            }
+                        }
+                    });
+                }
+                return false;
+            });
+        }
+    }
+    cancel_receipt = {
+        init : function () {
+            $('#cancel').click(function () {
+                var $this = $(this);
+                if (confirm('Apakah benar-benar terjadi kesalahan dengan penerimaan ini?')) {
+                    $.ajax({
+                        'url': '{{ "pos/transfers/cancel-receipt" | link }}/'+$this.attr('attr-id'),
+                        'type':'post',
+                        'data': {'id':$this.attr('attr-id')},
+                        'success': function(data) {
+                            console.log(data);
+                            if (data.status == 'success') {
+                                var alert_success = $('#receipt-form').find('.alert-success');
+                                alert_success.html(data.message);
+                                alert_success.show();
+                                $this.hide();
+                                setTimeout(function () {
+                                    window.location.reload(true);
+                                }, 2000);
+                            }
+                        }
+                    });
+                }
+                return false;
+            });
         }
     }
 </script>

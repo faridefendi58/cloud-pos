@@ -1,6 +1,6 @@
 <div class="col-md-12">&nbsp;</div>
 <div class="col-md-6">
-    <h4 class="no-margin"><i class="fa fa-file-o"></i> Purchase Data</h4>
+    <h4 class="no-margin"><i class="fa fa-file-o"></i> Data Penerimaan</h4>
     <table class="table table-hover mt20">
         <tr>
         <tr>
@@ -8,7 +8,7 @@
             <td>#{{ model.id }}</td>
         </tr>
         <tr>
-            <td>Nomor Receipt</td>
+            <td>Kode Penerimaan</td>
             <td>{{ model.pr_number }}</td>
         </tr>
         <tr>
@@ -28,8 +28,12 @@
             <td><a href="{{ 'pos/warehouses/update' | link }}/{{ detail.warehouse_id }}#detail">{{ detail.warehouse_name }}</a></td>
         </tr>
         <tr>
-            <td>Tanggal Efektif</td>
+            <td>Tanggal Penerimaan</td>
             <td>{{ model.effective_date | date("d F Y") | default('-') }}</td>
+        </tr>
+        <tr>
+            <td>Status</td>
+            <td>{{ model.status | title }}</td>
         </tr>
         <tr>
             <td>Catatan</td>

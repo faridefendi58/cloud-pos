@@ -64,4 +64,41 @@ class ProductsModel extends \Model\BaseModel
 
         return $row;
     }
+
+    /**
+     * @param $id
+     * @return float|int
+     */
+    public function getCurrentCost($id)
+    {
+        $sql = 'SELECT SUM(t.added_value) AS tot_qty, SUM(t.added_value * t.price) AS tot_price  
+            FROM {tablePrefix}ext_purchase_receipt_item t 
+            WHERE t.product_id =:product_id AND t.added_in_stock = 1 AND t.removed_value = 0';
+
+        $params = ['product_id' => $id];
+
+        $sql = str_replace(['{tablePrefix}'], [$this->_tbl_prefix], $sql);
+
+        $row_purchase = R::getRow( $sql, $params );
+
+        $sql2 = 'SELECT SUM(t.added_value) AS tot_qty, SUM(t.added_value * t.price) AS tot_price  
+            FROM {tablePrefix}ext_transfer_receipt_item t 
+            WHERE t.product_id =:product_id AND t.added_in_stock = 1 AND t.removed_value = 0';
+
+        $params2 = ['product_id' => $id];
+
+        $sql2 = str_replace(['{tablePrefix}'], [$this->_tbl_prefix], $sql2);
+
+        $row_transfer = R::getRow( $sql2, $params2 );
+
+        $tot_qty = $row_purchase['tot_qty'] + $row_transfer['tot_qty'];
+        $tot_price = $row_purchase['tot_price'] + $row_transfer['tot_price'];
+
+        $result = 0;
+        if ($tot_qty > 0) {
+            $result = $tot_price / $tot_qty;
+        }
+
+        return round($result, 2);
+    }
 }

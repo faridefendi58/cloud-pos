@@ -1,0 +1,40 @@
+<table class="table table-hover mt20">
+    <thead>
+    <tr>
+        <th>No</th>
+        <th>Warehouse</th>
+        <th>Jumlah Stock</th>
+        <th>Pengadaan Terakhir</th>
+        <td>&nbsp;</td>
+    </tr>
+    </thead>
+    <tbody>
+    {% for i, stock in stocks %}
+    <tr>
+        <td>{{ i+1 }}</td>
+        <td>
+            <a href="{{ 'pos/warehouses/update' | link }}/{{ stock.warehouse_id }}#detail" target="_blank">
+                {{ stock.warehouse_name }}
+            </a>
+        </td>
+        <td>{{ stock.quantity }} {{ stock.unit | title }}</td>
+        <td>
+            {% if stock.updated_at %}
+                {{ stock.updated_at }}
+            {% else %}
+                {{ stock.created_at }}
+            {% endif %}
+        </td>
+        <td>
+            <a href="{{ 'pos/products/stock' | link }}/{{ stock.product_id }}" title="Detail stock">
+                <i class="fa fa-search"></i>
+            </a>
+        </td>
+    </tr>
+    {% else %}
+    <tr class="no-data">
+        <td>Tidak ditemukan data.</td>
+    </tr>
+    {% endfor %}
+    </tbody>
+</table>

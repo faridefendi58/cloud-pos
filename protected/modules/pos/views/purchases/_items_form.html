@@ -2,12 +2,11 @@
     <div class="col-md-4">
         <div class="form-group">
             <label for="product_id">Nama Produk <span class="required">*</span></label>
-            <select id="product_id" name="PurchaseOrderItems[product_id][]" class="form-control" onchange="updateUnit(this);">
+            <select id="product_id" name="PurchaseOrderItems[product_id][]" class="form-control select2-again" onchange="updateUnit(this);">
                 <option value="0">-</option>
                 {% for i, product in products %}
                 <option value="{{ product.id }}">{{ product.title }}</option>
                 {% endfor %}
-                <option value="0">Lainnya</option>
             </select>
             <span class="help-block"><a href="{{ 'pos/products/view' | link }}#create-new" target="_blank">Tambahkan Produk Baru</a></span>
         </div>
@@ -46,3 +45,13 @@
         </div>
     </div>
 </div>
+<script type="text/javascript">
+    $(function () {
+        if($('.select2-again').length) {
+            $('.select2-again').select2({
+                allowClear: true,
+                placeholder: "Select..."
+            });
+        }
+    });
+</script>

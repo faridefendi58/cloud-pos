@@ -27,6 +27,9 @@ class TransfersController extends BaseController
         $app->map(['GET', 'POST'], '/update-receipt/[{id}]', [$this, 'update_receipt']);
         $app->map(['POST'], '/delete-receipt/[{id}]', [$this, 'delete_receipt']);
         $app->map(['POST'], '/create-receipt-item', [$this, 'create_receipt_item']);
+        $app->map(['POST'], '/complete-receipt/[{id}]', [$this, 'complete_receipt']);
+        $app->map(['POST'], '/cancel-receipt/[{id}]', [$this, 'cancel_receipt']);
+        $app->map(['POST'], '/proceed-transfer/[{id}]', [$this, 'proceed_transfer']);
     }
 
     public function accessRules()
@@ -36,7 +39,7 @@ class TransfersController extends BaseController
                 'actions' => [
                     'view', 'create', 'update', 'delete', 'delete-item',
                     'view-receipt', 'create-receipt', 'update-receipt', 'delete-receipt',
-                    'create-receipt-item'
+                    'create-receipt-item', 'complete-receipt', 'cancel-receipt', 'proceed_transfer'
                 ],
                 'users'=> ['@'],
             ],
@@ -309,11 +312,19 @@ class TransfersController extends BaseController
                 $update = \Model\TransferIssuesModel::model()->update($pomodel);
             }
 
-            return $response->withJson(
-                [
-                    'status' => 'success',
-                    'message' => 'Data berhasil disimpan.',
-                ], 201);
+            if ($tot_price > 0)  {
+                return $response->withJson(
+                    [
+                        'status' => 'success',
+                        'message' => 'Data berhasil disimpan.',
+                    ], 201);
+            } else {
+                return $response->withJson(
+                    [
+                        'status' => 'failed',
+                        'message' => 'Tidak ada data yang berhasil disimpan. Pastikan pilih produk dan isi jumlah itemnya.',
+                    ], 201);
+            }
         } else {
             return $this->_container->module->render(
                 $response,
@@ -364,7 +375,7 @@ class TransfersController extends BaseController
         $receipts = $model->getData();
 
         $pomodel = new \Model\TransferIssuesModel();
-        $transfers = $pomodel->getData(['status'=>'onprocess']);
+        $transfers = $pomodel->getData(['status' => \Model\TransferIssuesModel::STATUS_ON_PROCESS]);
 
         $wmodel = new \Model\WarehousesModel();
         $warehouses = $wmodel->getData();
@@ -580,14 +591,14 @@ class TransfersController extends BaseController
                 $quantity_max = $quantity_max + $_POST['TransferReceiptItems']['quantity_max'][$item_id];
             }
 
-            $timodel = \Model\TransferIssuesModel::model()->findByPk($model->ti_id);
+            /*$timodel = \Model\TransferIssuesModel::model()->findByPk($model->ti_id);
             if ($timodel->status !== \Model\TransferIssuesModel::STATUS_COMPLETED && $quantity == $quantity_max) {
                 $timodel->status = \Model\TransferIssuesModel::STATUS_COMPLETED;
                 $timodel->updated_at = date("Y-m-d H:i:s");
                 $timodel->updated_by = $this->_user->id;
 
                 $update_status = \Model\TransferIssuesModel::model()->update($timodel);
-            }
+            }*/
 
             return $response->withJson(
                     [
@@ -595,5 +606,273 @@ class TransfersController extends BaseController
                         'message' => 'Data berhasil disimpan.',
                     ], 201);
         }
+    }
+
+    public function complete_receipt($request, $response, $args)
+    {
+        $isAllowed = $this->isAllowed($request, $response);
+        if ($isAllowed instanceof \Slim\Http\Response)
+            return $isAllowed;
+
+        if(!$isAllowed){
+            return $this->notAllowedAction();
+        }
+
+        if (!isset($args['id'])) {
+            return false;
+        }
+
+        $status = 'failed'; $message = 'Request gagal dieksekusi.';
+        if (isset($_POST['id']) && $_POST['id'] == $args['id']) {
+            $add_to_stock = $this->_add_to_stock(['tr_id' => $_POST['id']]);
+            if ($add_to_stock) {
+                $status = 'success';
+                $message = 'Request berhasil dieksekusi.';
+            }
+        }
+
+        return $response->withJson(
+            [
+                'status' => $status,
+                'message' => $message,
+            ], 201);
+    }
+
+    public function cancel_receipt($request, $response, $args)
+    {
+        $isAllowed = $this->isAllowed($request, $response);
+        if ($isAllowed instanceof \Slim\Http\Response)
+            return $isAllowed;
+
+        if(!$isAllowed){
+            return $this->notAllowedAction();
+        }
+
+        if (!isset($args['id'])) {
+            return false;
+        }
+
+        $status = 'failed'; $message = 'Request gagal dieksekusi.';
+        if (isset($_POST['id']) && $_POST['id'] == $args['id']) {
+            $remove_from_stock = $this->_remove_from_stock(['tr_id' => $_POST['id']]);
+            if ($remove_from_stock) {
+                $status = 'success';
+                $message = 'Request berhasil dieksekusi.';
+            }
+        }
+
+        return $response->withJson(
+            [
+                'status' => $status,
+                'message' => $message,
+            ], 201);
+    }
+
+    public function proceed_transfer($request, $response, $args)
+    {
+        $isAllowed = $this->isAllowed($request, $response);
+        if ($isAllowed instanceof \Slim\Http\Response)
+            return $isAllowed;
+
+        if(!$isAllowed){
+            return $this->notAllowedAction();
+        }
+
+        if (!isset($args['id'])) {
+            return false;
+        }
+
+        $status = 'failed'; $message = 'Request gagal dieksekusi.';
+        if (isset($_POST['id']) && $_POST['id'] == $args['id']) {
+            $substract_stock = $this->_substract_stock(['ti_id' => $_POST['id']]);
+            if ($substract_stock) {
+                $status = 'success';
+                $message = 'Request berhasil dieksekusi.';
+            }
+        }
+
+        return $response->withJson(
+            [
+                'status' => $status,
+                'message' => $message,
+            ], 201);
+    }
+
+    /**
+     * Adding stock on receiving purchase order
+     * @param $data : tr_id
+     * @return bool
+     */
+    protected function _add_to_stock($data)
+    {
+        if (!isset($data['tr_id']))
+            return false;
+
+        $model = \Model\TransferReceiptsModel::model()->findByPk($data['tr_id']);
+        $timodel = \Model\TransferIssuesModel::model()->findByPk($model->ti_id);
+        $receipt_items = \Model\TransferReceiptItemsModel::model()->findAllByAttributes(['tr_id' => $data['tr_id'], 'added_in_stock' => 0]);
+        if (is_array($receipt_items)) {
+            foreach ($receipt_items as $item_id => $item_data) {
+                // add to stok
+                $stock_params = ['product_id' => $item_data['product_id'], 'warehouse_id' => $timodel->warehouse_to];
+                $stock = \Model\ProductStocksModel::model()->findByAttributes($stock_params);
+                $update_stock = false;
+                if ($stock instanceof \RedBeanPHP\OODBBean) {
+                    $stock->quantity = $stock->quantity + $item_data->quantity;
+                    $stock->updated_at = date("Y-m-d H:i:s");
+                    $stock->updated_by = $this->_user->id;
+                    $update_stock = \Model\ProductStocksModel::model()->update($stock);
+                } else {
+                    $new_stock = new \Model\ProductStocksModel();
+                    $new_stock->product_id = $item_data['product_id'];
+                    $new_stock->warehouse_id = $timodel->warehouse_to;
+                    $new_stock->quantity = $item_data->quantity;
+                    $new_stock->created_at = date("Y-m-d H:i:s");
+                    $new_stock->created_by = $this->_user->id;
+                    $update_stock = \Model\ProductStocksModel::model()->save($new_stock);
+                }
+                if ($update_stock) {
+                    // make a history
+                    $item_data->added_in_stock = 1;
+                    $item_data->added_value = $item_data->quantity;
+                    $item_data->added_at = date("Y-m-d H:i:s");
+                    $item_data->updated_at = date("Y-m-d H:i:s");
+                    $item_data->updated_by = $this->_user->id;
+                    $update = \Model\TransferReceiptItemsModel::model()->update($item_data);
+                    if ($update) {
+                        // also update current price
+                        $pmodel = new \Model\ProductsModel();
+                        $current_cost = $pmodel->getCurrentCost($item_data['product_id']);
+                        $product = \Model\ProductsModel::model()->findByPk($item_data['product_id']);
+                        $product->current_cost = $current_cost;
+                        $product->updated_at = date("Y-m-d H:i:s");
+                        $product->updated_by = $this->_user->id;
+                        $update_product = \Model\ProductsModel::model()->update($product);
+                    }
+                }
+            }
+            // also update the receipt status
+            if ($model->status != \Model\TransferReceiptsModel::STATUS_COMPLETED) {
+                $model->status = \Model\TransferReceiptsModel::STATUS_COMPLETED;
+                $model->completed_at = date("Y-m-d H:i:s");
+                $model->updated_at = date("Y-m-d H:i:s");
+                $model->updated_by = $this->_user->id;
+                $update_receipt = \Model\TransferReceiptsModel::model()->update($model);
+                if ($update_receipt) {
+                    $timodel = \Model\TransferIssuesModel::model()->findByPk($model->ti_id);
+                    $timodel->status = \Model\TransferIssuesModel::STATUS_COMPLETED;
+                    $timodel->completed_at = date("Y-m-d H:i:s");
+                    $timodel->updated_at = date("Y-m-d H:i:s");
+                    $timodel->updated_by = $this->_user->id;
+                    $update_issue = \Model\TransferIssuesModel::model()->update($timodel);
+                }
+            }
+
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * Removing stock on cancel purchase receipt
+     * @param $data : tr_id
+     * @return bool
+     */
+    protected function _remove_from_stock($data)
+    {
+        if (!isset($data['tr_id']))
+            return false;
+
+        $model = \Model\TransferReceiptsModel::model()->findByPk($data['tr_id']);
+        $receipt_items = \Model\TransferReceiptItemsModel::model()->findAllByAttributes(['tr_id' => $data['tr_id'], 'added_in_stock' => 1]);
+        if (is_array($receipt_items)) {
+            foreach ($receipt_items as $item_id => $item_data) {
+                // add to stok
+                $stock_params = ['product_id' => $item_data['product_id'], 'warehouse_id' => $model->warehouse_id];
+                $stock = \Model\ProductStocksModel::model()->findByAttributes($stock_params);
+                $update_stock = false;
+                if ($stock instanceof \RedBeanPHP\OODBBean) {
+                    $stock->quantity = $stock->quantity - $item_data->added_value;
+                    $stock->updated_at = date("Y-m-d H:i:s");
+                    $stock->updated_by = $this->_user->id;
+                    $update_stock = \Model\ProductStocksModel::model()->update($stock);
+                }
+                if ($update_stock) {
+                    // make a history
+                    $item_data->removed_value = $item_data->quantity;
+                    $item_data->removed_at = date("Y-m-d H:i:s");
+                    $item_data->updated_at = date("Y-m-d H:i:s");
+                    $item_data->updated_by = $this->_user->id;
+                    $update = \Model\TransferReceiptItemsModel::model()->update($item_data);
+                    if ($update) {
+                        // also update current price
+                        $pmodel = new \Model\ProductsModel();
+                        $current_cost = $pmodel->getCurrentCost($item_data['product_id']);
+                        $product = \Model\ProductsModel::model()->findByPk($item_data['product_id']);
+                        $product->current_cost = $current_cost;
+                        $product->updated_at = date("Y-m-d H:i:s");
+                        $product->updated_by = $this->_user->id;
+                        $update_product = \Model\ProductsModel::model()->update($product);
+                    }
+                }
+            }
+            // also update the receipt status
+            if ($model->status != \Model\TransferReceiptsModel::STATUS_CANCELED) {
+                $model->status = \Model\TransferReceiptsModel::STATUS_CANCELED;
+                $model->canceled_at = date("Y-m-d H:i:s");
+                $model->updated_at = date("Y-m-d H:i:s");
+                $model->updated_by = $this->_user->id;
+                $update_receipt = \Model\TransferReceiptsModel::model()->update($model);
+            }
+
+            return true;
+        }
+
+        return false;
+    }
+
+    protected function _substract_stock($data)
+    {
+        if (!isset($data['ti_id']))
+            return false;
+
+        $model = \Model\TransferIssuesModel::model()->findByPk($data['ti_id']);
+        $transfer_items = \Model\TransferIssueItemsModel::model()->findAllByAttributes(['ti_id' => $data['ti_id'], 'substract_stock' => 0]);
+        if (is_array($transfer_items)) {
+            foreach ($transfer_items as $item_id => $item_data) {
+                // add to stok
+                $stock_params = ['product_id' => $item_data['product_id'], 'warehouse_id' => $model->warehouse_from];
+                $stock = \Model\ProductStocksModel::model()->findByAttributes($stock_params);
+                $update_stock = false;
+                if ($stock instanceof \RedBeanPHP\OODBBean) {
+                    $stock->quantity = $stock->quantity - $item_data->quantity;
+                    $stock->updated_at = date("Y-m-d H:i:s");
+                    $stock->updated_by = $this->_user->id;
+                    $update_stock = \Model\ProductStocksModel::model()->update($stock);
+                }
+                if ($update_stock) {
+                    // make a history
+                    $item_data->substract_stock = 1;
+                    $item_data->substract_value = $item_data->quantity;
+                    $item_data->substracted_at = date("Y-m-d H:i:s");
+                    $item_data->updated_at = date("Y-m-d H:i:s");
+                    $item_data->updated_by = $this->_user->id;
+                    $update = \Model\TransferIssueItemsModel::model()->update($item_data);
+                }
+            }
+            // also update the receipt status
+            if ($model->status != \Model\TransferIssuesModel::STATUS_ON_PROCESS) {
+                $model->status = \Model\TransferIssuesModel::STATUS_ON_PROCESS;
+                $model->processed_at = date("Y-m-d H:i:s");
+                $model->updated_at = date("Y-m-d H:i:s");
+                $model->updated_by = $this->_user->id;
+                $update_issue = \Model\TransferIssuesModel::model()->update($model);
+            }
+
+            return true;
+        }
+
+        return false;
     }
 }
