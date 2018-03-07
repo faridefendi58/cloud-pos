@@ -28,6 +28,7 @@ class ProductsController extends BaseController
         $app->map(['POST'], '/delete-price/[{id}]', [$this, 'delete_price']);
         $app->map(['GET', 'POST'], '/create-dimension/[{id}]', [$this, 'create_dimension']);
         $app->map(['POST'], '/delete-dimension/[{id}]', [$this, 'delete_dimension']);
+        $app->map(['GET'], '/stock/[{id}]', [$this, 'stock']);
     }
 
     public function accessRules()
@@ -37,12 +38,12 @@ class ProductsController extends BaseController
                 'actions' => [
                     'view', 'create', 'update', 'delete', 'create-category',
                     'delete-category', 'info', 'delete-price', 'create-price',
-                    'create-dimension', 'delete-dimension'
+                    'create-dimension', 'delete-dimension', 'stock'
                 ],
                 'users'=> ['@'],
             ],
             ['allow',
-                'actions' => ['view'],
+                'actions' => ['view', 'stock'],
                 'expression' => $this->hasAccess('pos/products/read'),
             ],
             ['allow',
@@ -176,7 +177,6 @@ class ProductsController extends BaseController
             }
         }
 
-        //var_dump($stmodel->getLastReceipt($model->id)); exit;
         return $this->_container->module->render($response, 'products/update.html', [
             'model' => $model,
             'categories' => $categories,
@@ -510,5 +510,88 @@ class ProductsController extends BaseController
                     'message' => 'Data berhasil dihapus.',
                 ], 201);
         }
+    }
+
+    public function stock($request, $response, $args)
+    {
+        $isAllowed = $this->isAllowed($request, $response, $args);
+        if ($isAllowed instanceof \Slim\Http\Response)
+            return $isAllowed;
+
+        if(!$isAllowed){
+            return $this->notAllowedAction();
+        }
+
+        $model = \Model\ProductsModel::model()->findByPk($args['id']);
+        if (!$model instanceof \RedBeanPHP\OODBBean) {
+            return false;
+        }
+
+        $whmodel = \Model\WarehousesModel::model()->findByPk($_GET['wh']);
+        if (!$whmodel instanceof \RedBeanPHP\OODBBean) {
+            return false;
+        }
+        
+        if (isset($_GET['wh'])) {
+            if (isset($_GET['start'])) {
+                $date_start = date("Y-m-d", $_GET['start']/1000);
+            } else {
+                $date_start = date("Y-m-").'01';
+            }
+
+            if (isset($_GET['end'])) {
+                $date_end = date("Y-m-d", $_GET['end']/1000);
+            } else {
+                $date_end = date("Y-m-d");
+            }
+
+            $params = [
+                'date_from' => $date_start,
+                'date_to' => $date_end
+            ];
+
+            $prmodel = new \Model\PurchaseReceiptsModel();
+            $purchases = $prmodel->getHistory([
+                'product_id' => $model->id,
+                'warehouse_id' => $_GET['wh'],
+                'status' => \Model\PurchaseReceiptsModel::STATUS_COMPLETED,
+                'date_start' => $date_start,
+                'date_end' => $date_end
+            ]);
+            $trmodel = new \Model\TransferReceiptsModel();
+            $transfers = $trmodel->getHistory([
+                'product_id' => $model->id,
+                'warehouse_id' => $_GET['wh'],
+                'status' => \Model\TransferReceiptsModel::STATUS_COMPLETED,
+                'date_start' => $date_start,
+                'date_end' => $date_end
+            ]);
+            $irmodel = new \Model\InventoryReceiptsModel();
+            $inventories = $irmodel->getHistory([
+                'product_id' => $model->id,
+                'warehouse_id' => $_GET['wh'],
+                'status' => \Model\InventoryReceiptsModel::STATUS_COMPLETED,
+                'date_start' => $date_start,
+                'date_end' => $date_end
+            ]);
+            $iimodel = new \Model\InventoryIssuesModel();
+            $iissues = $iimodel->getHistory([
+                'product_id' => $model->id,
+                'warehouse_id' => $_GET['wh'],
+                'status' => \Model\InventoryIssuesModel::STATUS_COMPLETED,
+                'date_start' => $date_start,
+                'date_end' => $date_end
+            ]);
+        }
+
+        return $this->_container->module->render($response, 'products/stock.html', [
+            'model' => $model,
+            'whmodel' => $whmodel,
+            'purchases' => $purchases,
+            'transfers' => $transfers,
+            'inventories' => $inventories,
+            'iissues' => $iissues,
+            'params' => $params
+        ]);
     }
 }

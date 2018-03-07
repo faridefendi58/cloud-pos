@@ -26,7 +26,7 @@
             {% endif %}
         </td>
         <td>
-            <a href="{{ 'pos/products/stock' | link }}/{{ stock.product_id }}" title="Detail stock">
+            <a href="{{ 'pos/products/stock' | link }}/{{ stock.product_id }}?wh={{ stock.warehouse_id }}" title="Detail stock">
                 <i class="fa fa-search"></i>
             </a>
         </td>

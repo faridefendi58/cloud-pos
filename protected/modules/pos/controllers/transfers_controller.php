@@ -80,12 +80,15 @@ class TransfersController extends BaseController
         $wmodel = new \Model\WarehousesModel();
         $warehouses = $wmodel->getData();
 
+        $rmodel = new \Model\TransferReceiptsModel();
+
         return $this->_container->module->render(
             $response, 
             'transfers/view.html',
             [
                 'transfers' => $transfers,
-                'warehouses' => $warehouses
+                'warehouses' => $warehouses,
+                'rmodel' => $rmodel
             ]
         );
     }
@@ -386,7 +389,8 @@ class TransfersController extends BaseController
             [
                 'receipts' => $receipts,
                 'transfers' => $transfers,
-                'warehouses' => $warehouses
+                'warehouses' => $warehouses,
+                'model' => $model
             ]
         );
     }
@@ -408,6 +412,7 @@ class TransfersController extends BaseController
             $model->tr_serie = $tr_number['serie'];
             $model->tr_nr = $tr_number['nr'];
             $model->ti_id = $_POST['TransferReceipts']['ti_id'];
+            $model->warehouse_id = $_POST['TransferReceipts']['warehouse_id'];
             $model->effective_date = date("Y-m-d H:i:s", strtotime($_POST['TransferReceipts']['effective_date']));
             $model->notes = $_POST['TransferReceipts']['notes'];
             $model->created_at = date("Y-m-d H:i:s");
@@ -483,7 +488,7 @@ class TransfersController extends BaseController
         if (isset($_POST['PurchaseReceipts'])){
             $model->warehouse_id = $_POST['PurchaseReceipts']['warehouse_id'];
             $model->effective_date = date("Y-m-d H:i:s", strtotime($_POST['PurchaseReceipts']['effective_date']));
-            $model->notes = $_POST['TransferIssues']['notes'];
+            $model->notes = $_POST['PurchaseReceipts']['notes'];
             $model->updated_at = date("Y-m-d H:i:s");
             $model->updated_by = $this->_user->id;
             $update = \Model\TransferReceiptsModel::model()->update($model);
@@ -725,7 +730,7 @@ class TransfersController extends BaseController
                 } else {
                     $new_stock = new \Model\ProductStocksModel();
                     $new_stock->product_id = $item_data['product_id'];
-                    $new_stock->warehouse_id = $timodel->warehouse_to;
+                    $new_stock->warehouse_id = $model->warehouse_id; //$timodel->warehouse_to;
                     $new_stock->quantity = $item_data->quantity;
                     $new_stock->created_at = date("Y-m-d H:i:s");
                     $new_stock->created_by = $this->_user->id;
@@ -755,16 +760,22 @@ class TransfersController extends BaseController
             if ($model->status != \Model\TransferReceiptsModel::STATUS_COMPLETED) {
                 $model->status = \Model\TransferReceiptsModel::STATUS_COMPLETED;
                 $model->completed_at = date("Y-m-d H:i:s");
+                $model->completed_by = $this->_user->id;
                 $model->updated_at = date("Y-m-d H:i:s");
                 $model->updated_by = $this->_user->id;
                 $update_receipt = \Model\TransferReceiptsModel::model()->update($model);
                 if ($update_receipt) {
-                    $timodel = \Model\TransferIssuesModel::model()->findByPk($model->ti_id);
-                    $timodel->status = \Model\TransferIssuesModel::STATUS_COMPLETED;
-                    $timodel->completed_at = date("Y-m-d H:i:s");
-                    $timodel->updated_at = date("Y-m-d H:i:s");
-                    $timodel->updated_by = $this->_user->id;
-                    $update_issue = \Model\TransferIssuesModel::model()->update($timodel);
+                    $trmodel = new \Model\TransferReceiptsModel();
+                    $hasInCompleteReceipt = $trmodel->hasInCompleteReceipt($model->ti_id);
+                    if (!$hasInCompleteReceipt) {
+                        $timodel = \Model\TransferIssuesModel::model()->findByPk($model->ti_id);
+                        $timodel->status = \Model\TransferIssuesModel::STATUS_COMPLETED;
+                        $timodel->completed_at = date("Y-m-d H:i:s");
+                        $timodel->completed_by = $this->_user->id;
+                        $timodel->updated_at = date("Y-m-d H:i:s");
+                        $timodel->updated_by = $this->_user->id;
+                        $update_issue = \Model\TransferIssuesModel::model()->update($timodel);
+                    }
                 }
             }
 

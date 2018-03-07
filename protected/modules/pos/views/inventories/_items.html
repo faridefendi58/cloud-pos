@@ -1,7 +1,6 @@
-<form method="post" id="purchase-items-form" class="mt20" action="{{ 'pos/purchases/create-item' | link }}">
+<form method="post" id="inventory-items-form" class="mt20" action="{{ 'pos/inventories/create-item' | link }}">
     <div class="alert alert-info">
-        Tambahkan item untuk Purchase Order {{ model.po_number }}<br/>
-        Pastikan pilih salah satu produk, serta nilai Jumlah dan Harga item lebih dari 0 agar data dapat disimpan.
+        Pastikan pilih salah satu produk, serta nilai Jumlah item lebih dari 0 agar data dapat disimpan.
     </div>
     <div class="alert alert-warning" style="display: none;"></div>
     <div class="alert alert-success" style="display: none;"></div>
@@ -11,10 +10,11 @@
             <div class="col-md-4">
                 <div class="form-group">
                     <label for="product_id">Nama Produk <span class="required">*</span></label>
-                    <select id="product_id" name="PurchaseOrderItems[product_id][]" class="form-control select2" onchange="updateUnit(this);">
+                    <select id="product_id" name="InventoryIssueItems[product_id][]" class="form-control" onchange="updateUnit(this);">
                         {% for i, product in products %}
                         <option value="{{ product.id }}" {% if item.product_id == product.id %}selected=""{% endif %}>{{ product.title }}</option>
                         {% endfor %}
+                        <option value="0">Lainnya</option>
                     </select>
                     {#<span class="help-block"><a href="{{ 'pos/products/view' | link }}#create-new" target="_blank">Tambahkan Produk Baru</a></span>#}
                 </div>
@@ -23,15 +23,9 @@
                 <div class="form-group">
                     <label for="qty">Jumlah <span class="required">*</span></label>
                     <div class="input-group">
-                        <input type="text" id="qty" name="PurchaseOrderItems[quantity][]" class="form-control" value="{{ item.quantity }}" required>
+                        <input type="text" id="qty" name="InventoryIssueItems[quantity][]" class="form-control" value="{{ item.quantity }}" required>
                         <span class="input-group-addon" id="unit">{% if item.unit %}{{ item.unit }}{% else %}unit{% endif %}</span>
                     </div>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="form-group">
-                    <label for="price">Harga per Item<span class="required">*</span></label>
-                    <input type="text" id="price" name="PurchaseOrderItems[price][]" class="form-control" value="{{ item.price }}" required>
                 </div>
             </div>
             <div class="col-md-1" {% if model and model.status in ['completed', 'canceled'] %}style="display:none"{% endif %}>
@@ -45,18 +39,18 @@
                     {% endif %}
                 </div>
             </div>
-            <input type="hidden" name="PurchaseOrderItems[id][]" value="{{ item.id }}">
+            <input type="hidden" name="InventoryIssueItems[id][]" value="{{ item.id }}">
         </div>
     </div>
     {% endfor %}
     <div class="col-md-12" id="item-form">
         {% if items | length <= 0 %}
-        {% include 'purchases/_items_form.html' %}
+        {% include 'inventories/_items_form.html' %}
         {% endif %}
     </div>
     <div class="col-md-12">
         <div class="form-group">
-            <input name="PurchaseOrderItems[po_id]" type="hidden" value="{{ model.id }}">
+            <input name="InventoryIssueItems[ii_id]" type="hidden" value="{{ model.id }}">
             <input
                     type="submit"
                     value="Simpan"
@@ -77,7 +71,7 @@
             if (confirm('Anda yakin ingin menghapus item ini?')) {
                 if (execute) {
                     $.ajax({
-                        'url': '{{ "pos/purchases/delete-item" | link }}/'+$(dt).attr('attr-id'),
+                        'url': '{{ "pos/inventories/delete-item" | link }}/'+$(dt).attr('attr-id'),
                         'type':'post',
                         'data':{'id':$(dt).attr('attr-id')},
                         'success': function(data) {
@@ -99,7 +93,7 @@
     }
     function addItem(dt, hide = true) {
         $.ajax({
-            'url': '{{ "pos/purchases/create-item" | link }}',
+            'url': '{{ "pos/inventories/create-item" | link }}',
             'type':'get',
             'success': function(data) {
                 $('#item-form').append(data);
@@ -133,7 +127,7 @@
         return false;
     }
     $(function () {
-        $('#purchase-items-form').submit(function () {
+        $('#inventory-items-form').submit(function () {
             var url = $(this).attr('action');
             $('#purchases-items-form').find('.alert-warning').hide();
             $('#purchases-items-form').find('.alert-warning').empty();
@@ -141,20 +135,23 @@
             $.ajax({
                 'url': url,
                 'type':'post',
-                'data': $('#purchase-items-form').serialize(),
+                'data': $('#inventory-items-form').serialize(),
                 'success': function(data) {
                     console.log(data);
                     if (data.status == 'success') {
-                        var alert_success = $('#purchase-items-form').find('.alert-success');
+                        var alert_success = $('#inventory-items-form').find('.alert-success');
                         alert_success.html(data.message);
                         alert_success.show();
                         setTimeout(function () {
                             window.location.reload(true);
                         }, 3000);
                     } else {
-                        var alert_warning = $('#purchase-items-form').find('.alert-warning');
+                        var alert_warning = $('#inventory-items-form').find('.alert-warning');
                         alert_warning.html(data.message);
                         alert_warning.show();
+                        setTimeout(function () {
+                            window.location.reload(true);
+                        }, 3000);
                     }
                 },
                 error: function(XMLHttpRequest, textStatus, errorThrown) {

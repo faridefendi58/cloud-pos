@@ -41,7 +41,7 @@ Kelola Penerimaan Barang - {{ App.params.site_name }}
                                     {% include 'purchases/_form_receipt.html' with {'model':model, 'detail':detail,'suppliers':suppliers, 'warehouses':warehouses, 'purchases':purchases} %}
                                 </div>
                                 <div id="items" class="tab-pane fade">
-                                    {% include 'purchases/_items_receipt.html' with {'model':model,'detail':detail, 'items':items, 'products':products, 'primodel':primodel} %}
+                                    {% include 'purchases/_items_receipt.html' with {'model':model,'detail':detail, 'items':items, 'products':products, 'trimodel':trimodel} %}
                                 </div>
                             </div>
                         </div>

@@ -1,0 +1,153 @@
+<form method="post" id="inventorie-form" class="mt20" action="{% if model.id %}{{ 'pos/inventories/update' | link }}/{{ model.id }}{% else %}{{ 'pos/inventories/create' | link }}{% endif %}">
+    <div class="alert alert-success" style="display: none;"></div>
+    <div class="col-md-12 mb10">
+        <p>Kolom bertanda <span class="red">*</span> tidak boleh dikosongi</p>
+    </div>
+    <div class="col-md-6">
+        <div class="form-group">
+            <label for="warehouse_id">Dikeluarkan Dari Warehouse <span class="required">*</span></label>
+            <select id="warehouse_id" name="InventoryIssues[warehouse_id]" class="form-control select2" required>
+                <option value="">-</option>
+                {% for i, warehouse in warehouses %}
+                <option value="{{ warehouse.id }}" {% if model.warehouse_id and model.warehouse_id == warehouse.id %}selected="selected"{% endif %}>{{ warehouse.title }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="form-group">
+            <label>Tanggal Dikeluarkan <span class="text-danger">*</span></label>
+            <div class="input-group date ts_datepicker" data-date-format="dd-mm-yyyy" data-date-autoclose="true">
+                <input class="form-control" type="text" name="InventoryIssues[effective_date]"
+                       {% if model and model.effective_date %}
+                       value="{{ model.effective_date | date('d-m-Y') }}"
+                       {% else %}
+                       value="{{ now | date('d-m-Y') }}"
+                       {% endif %} required>
+                <span class="input-group-addon"><i class="fa fa-calendar"></i></span>
+            </div>
+            <span class="help-block">Format: dd-mm-yyyy</span>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="form-group">
+            <label for="desc">Alasan dan Tujuan Pengeluaran <span class="text-danger">*</span></label>
+            <textarea name="InventoryIssues[notes]" id="desc" cols="10" rows="4" class="form-control" required>{% if model and model.notes %}{{ model.notes }}{% endif %}</textarea>
+        </div>
+    </div>
+    <div class="col-md-12">
+        <div class="form-group">
+            <input type="submit"
+                   value="{% if not model %}Selanjutnya{% else %}Ubah Data{% endif %}"
+                   class="btn btn-info"
+                   {% if model and model.status in ['completed', 'canceled'] %}style="display:none"{% endif %}>
+            {% if model and model.status not in ['completed', 'canceled'] %}
+            <input type="button" value="Tandai Sudah Selesai" class="btn btn-success" id="mark-as-complete" attr-id="{{ model.id }}">
+            {% endif %}
+        </div>
+    </div>
+</form>
+
+<link rel="stylesheet" href="{{ 'lib/bootstrap-datepicker/css/datepicker3.css' | admin_asset_url }}">
+<script src="{{ 'lib/bootstrap-datepicker/js/bootstrap-datepicker.js' | admin_asset_url }}"></script>
+
+{% block endbodyjs %}
+<script type="text/javascript">
+    $(function () {
+        form_submit.init();
+        tisa_datepicker.init();
+        tisa_enhanced_select.init();
+        mark_as_sent.init();
+    });
+    form_submit = {
+        init: function () {
+            $('#inventorie-form').submit(function () {
+                var url = $(this).attr('action');
+                $.ajax({
+                    'url' : url,
+                    'type' : 'post',
+                    'data' : $('#inventorie-form').serializeArray(),
+                    'success' : function (data) {
+                        console.log(data);
+                        if (data.status == 'success') {
+                            var alert_success = $('#inventorie-form').find('.alert-success');
+                            alert_success.html(data.message);
+                            alert_success.show();
+                            setTimeout(function () {
+                                if (data.updated == true) {
+                                    window.location.reload(true);
+                                } else {
+                                    alert_success.hide();
+                                    alert_success.empty();
+                                    $('#inventorie-form')[0].reset();
+                                    window.location.href = "{{ 'pos/inventories/update' | link }}/"+data.id+"#items";
+                                }
+                            }, 1000);
+                        }
+                    },
+                    'error' : function(XMLHttpRequest, textStatus, errorThrown) {
+                        console.log("Status: " + textStatus + " Message: "+errorThrown);
+                    }
+                });
+                return false;
+            });
+        }
+    }
+    tisa_datepicker = {
+        init: function() {
+            if($('.ts_datepicker').length) {
+                $('.ts_datepicker').datepicker({
+                    todayHighlight: true
+                })
+            }
+            if( ($('#dpStart').length) && ($('#dpEnd').length) ) {
+                $('#dpStart').datepicker({
+                    todayHighlight: true
+                }).on('changeDate', function(e){
+                    $('#dpEnd').datepicker('setStartDate', e.date);
+                });
+                $('#dpEnd').datepicker({
+                    todayHighlight: true
+                }).on('changeDate', function(e){
+                    $('#dpStart').datepicker('setEndDate', e.date)
+                });
+            }
+        }
+    }
+    tisa_enhanced_select = {
+        init: function() {
+            if($('.select2').length) {
+                $('.select2').select2({
+                    allowClear: true,
+                    placeholder: "Select..."
+                });
+            }
+        }
+    }
+    mark_as_sent = {
+        init : function () {
+            $('#mark-as-complete').click(function () {
+                var $this = $(this);
+                if (confirm('Anda yakin barang sudah keluar dari gudang?')) {
+                    $.ajax({
+                        'url': '{{ "pos/inventories/proceed-issue" | link }}/'+$this.attr('attr-id'),
+                        'type':'post',
+                        'data': {'id':$this.attr('attr-id')},
+                        'success': function(data) {
+                            console.log(data);
+                            if (data.status == 'success') {
+                                var alert_success = $('#inventorie-form').find('.alert-success');
+                                alert_success.html(data.message);
+                                alert_success.show();
+                                $this.hide();
+                                setTimeout(function () {
+                                    window.location.reload(true);
+                                }, 2000);
+                            }
+                        }
+                    });
+                }
+                return false;
+            });
+        }
+    }
+</script>
+{% endblock %}

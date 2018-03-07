@@ -1,6 +1,6 @@
 {% extends "layout.html" %}
 {% block pagetitle %}
-Pindah Persediaan - {{ App.params.site_name }}
+Penerimaan Persediaan - {{ App.params.site_name }}
 {% endblock %}
 
 {% block content %}
@@ -8,12 +8,12 @@ Pindah Persediaan - {{ App.params.site_name }}
 <div id="main_wrapper">
     <div class="page_bar clearfix">
         <div class="row">
-            <div class="col-sm-10">
-                <h1 class="page_title">Pindah Persediaan</h1>
-                <p class="text-muted">Pindah Persediaan adalah perpindahan stok antar gudang atau warehouse</p>
+            <div class="col-sm-9">
+                <h1 class="page_title">Penerimaan Persediaan</h1>
+                <p class="text-muted">Penerimaan Persediaan adalah bukti penerimaan stok setelah dipindahkan dari gudang atau warehouse lain</p>
             </div>
-            <div class="col-sm-2 text-right">
-                <a class="btn btn-default" data-toggle="tab" href="#create-new">Pindah Persediaan Baru</a>
+            <div class="col-sm-3 text-right">
+                <a class="btn btn-default" data-toggle="tab" href="#create-new">Penerimaan Persediaan Baru</a>
             </div>
         </div>
     </div>
@@ -25,10 +25,10 @@ Pindah Persediaan - {{ App.params.site_name }}
                         <div class="panel-body">
                             <ul class="nav nav-tabs" id="tabs_a">
                                 <li class="active">
-                                    <a data-toggle="tab" href="#daftar">Daftar Pindah Persediaan</a>
+                                    <a data-toggle="tab" href="#daftar">Daftar Penerimaan Persediaan</a>
                                 </li>
                                 <li>
-                                    <a data-toggle="tab" href="#create-new">Pindah Persediaan Baru</a>
+                                    <a data-toggle="tab" href="#create-new">Penerimaan Persediaan Baru</a>
                                 </li>
                             </ul>
                             <div class="tab-content" id="tabs_content_a">
@@ -38,44 +38,44 @@ Pindah Persediaan - {{ App.params.site_name }}
                                             <thead>
                                             <tr>
                                                 <th>No</th>
-                                                <th>Nomor Issue</th>
-                                                <th>Warehouse Asal</th>
-                                                <th>Warehouse Tujuan</th>
+                                                <th>Nomor Penerimaan</th>
                                                 <th>Warehouse Penerima</th>
-                                                <th>Tanggal Transfer</th>
+                                                <th>Tanggal Penerimaan</th>
                                                 <th>Status</th>
                                                 <th>&nbsp;</th>
                                             </tr>
                                             </thead>
                                             <tbody>
-                                            {% for i, transfer in transfers %}
+                                            {% for i, receipt in receipts %}
                                             <tr>
                                                 <td><center>{{ i+1 }}</center></td>
                                                 <td>
-                                                    <a href="{{ 'pos/transfers/update' | link }}/{{ transfer.id }}#detail" title="Detail transfer {{ transfer.po_number }}">
-                                                        {{ transfer.ti_number }}
+                                                    <a href="{{ 'pos/inventories/update-receipt' | link }}/{{ receipt.id }}#update" title="Update Receipt {{ receipt.id }}">
+                                                        {{ receipt.ir_number }}
                                                     </a>
                                                 </td>
-                                                <td><a href="{{ 'pos/warehouses/update' | link }}/{{ transfer.warehouse_from }}#detail">{{ transfer.warehouse_from_name }}</a></td>
-                                                <td><a href="{{ 'pos/warehouses/update' | link }}/{{ transfer.warehouse_to }}#detail">{{ transfer.warehouse_to_name | default('-') }}</a></td>
-                                                <td>{{ rmodel.getRecipients({'ti_id':transfer.id,'output':'text'}) | default('-') }}</td>
-                                                <td><center>{{ transfer.date_transfer | date("Y-m-d") }}</center></td>
-                                                <td>{{ transfer.status | title }}</td>
                                                 <td>
-                                                    <a href="{{ 'pos/transfers/update' | link }}/{{ transfer.id }}" title="Ubah Pindah Persediaan">
+                                                    <a href="{{ 'pos/warehouses/update' | link }}/{{ receipt.warehouse_from }}#detail" title="Detail warehouse {{ receipt.warehouse_from }}" target="_blank">
+                                                        {{ receipt.warehouse_name }}
+                                                    </a>
+                                                </td>
+                                                <td><center>{{ receipt.effective_date | date("Y-m-d") }}</center></td>
+                                                <td>{{ receipt.status | title }}</td>
+                                                <td>
+                                                    <a href="{{ 'pos/inventories/update-receipt' | link }}/{{ receipt.id }}" title="Ubah Penerimaan Persediaan">
                                                         <i class="fa fa-pencil"></i>
                                                     </a>
-                                                    <a href="{{ 'pos/transfers/update' | link }}/{{ transfer.id }}#detail" title="Detail Pindah Persediaan">
+                                                    <a href="{{ 'pos/inventories/update-receipt' | link }}/{{ receipt.id }}#detail" title="Detail Penerimaan Persediaan">
                                                         <i class="fa fa-search"></i>
                                                     </a>
-                                                    <a href="{{ 'pos/transfers/delete' | link }}/{{ transfer.id }}" onclick="return hapus(this);">
+                                                    <a href="{{ 'pos/inventories/delete-receipt' | link }}/{{ receipt.id }}" onclick="return hapus(this);">
                                                         <i class="fa fa-trash-o"></i>
                                                     </a>
                                                 </td>
                                             </tr>
                                             {% else %}
                                             <tr class="no-data">
-                                                <td colspan="7">No data founds</td>
+                                                <td>No data founds</td>
                                             </tr>
                                             {% endfor %}
                                             </tbody>
@@ -83,7 +83,7 @@ Pindah Persediaan - {{ App.params.site_name }}
                                     </div>
                                 </div>
                                 <div id="create-new" class="tab-pane fade">
-                                    {% include 'transfers/_form.html' with {'warehouses':warehouses} %}
+                                    {% include 'inventories/_form_receipt.html' with {'transfers':transfers, 'warehouses':warehouses} %}
                                 </div>
                             </div>
                         </div>
@@ -106,7 +106,6 @@ Pindah Persediaan - {{ App.params.site_name }}
             $.ajax({
                 'url': url,
                 'type':'post',
-                //'dataType': 'json',
                 'success': function(data) {
                     if (data.status == 'success') {
                         $this.parent().parent().remove();

@@ -55,6 +55,12 @@ $app->group('/pos', function () use ($user) {
     $this->group('/transfers', function() use ($user) {
         new Pos\Controllers\TransfersController($this, $user);
     });
+    $this->group('/inventories', function() use ($user) {
+        new Pos\Controllers\InventoriesController($this, $user);
+    });
+    $this->group('/reports', function() use ($user) {
+        new Pos\Controllers\ReportsController($this, $user);
+    });
 });
 
 ?>

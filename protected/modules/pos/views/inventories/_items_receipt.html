@@ -1,7 +1,6 @@
-<form method="post" id="purchase-items-form" class="mt20" action="{{ 'pos/purchases/create-item' | link }}">
+<form method="post" id="receipts-items-form" class="mt20" action="{{ 'pos/inventories/create-receipt-item' | link }}">
     <div class="alert alert-info">
-        Tambahkan item untuk Purchase Order {{ model.po_number }}<br/>
-        Pastikan pilih salah satu produk, serta nilai Jumlah dan Harga item lebih dari 0 agar data dapat disimpan.
+        Pastikan pilih salah satu produk, serta nilai Jumlah item lebih dari 0 agar data dapat disimpan.
     </div>
     <div class="alert alert-warning" style="display: none;"></div>
     <div class="alert alert-success" style="display: none;"></div>
@@ -11,52 +10,46 @@
             <div class="col-md-4">
                 <div class="form-group">
                     <label for="product_id">Nama Produk <span class="required">*</span></label>
-                    <select id="product_id" name="PurchaseOrderItems[product_id][]" class="form-control select2" onchange="updateUnit(this);">
+                    <select id="product_id" name="InventoryReceiptItems[product_id][]" class="form-control select2" onchange="updateUnit(this);">
+                        <option value="">-</option>
                         {% for i, product in products %}
                         <option value="{{ product.id }}" {% if item.product_id == product.id %}selected=""{% endif %}>{{ product.title }}</option>
                         {% endfor %}
                     </select>
-                    {#<span class="help-block"><a href="{{ 'pos/products/view' | link }}#create-new" target="_blank">Tambahkan Produk Baru</a></span>#}
                 </div>
             </div>
             <div class="col-md-4">
                 <div class="form-group">
                     <label for="qty">Jumlah <span class="required">*</span></label>
                     <div class="input-group">
-                        <input type="text" id="qty" name="PurchaseOrderItems[quantity][]" class="form-control" value="{{ item.quantity }}" required>
+                        <input type="text" id="qty" name="InventoryReceiptItems[quantity][]" class="form-control" value="{{ item.quantity }}" required>
                         <span class="input-group-addon" id="unit">{% if item.unit %}{{ item.unit }}{% else %}unit{% endif %}</span>
                     </div>
                 </div>
             </div>
-            <div class="col-md-3">
-                <div class="form-group">
-                    <label for="price">Harga per Item<span class="required">*</span></label>
-                    <input type="text" id="price" name="PurchaseOrderItems[price][]" class="form-control" value="{{ item.price }}" required>
-                </div>
-            </div>
             <div class="col-md-1" {% if model and model.status in ['completed', 'canceled'] %}style="display:none"{% endif %}>
-                <div class="form-group">
-                    <label>&nbsp;</label>
-                    <a href="javascript:void(0);" onclick="removeItem(this, true);" attr-id="{{ item.id }}" title="Hapus item ini">
-                        <i class="fa fa-trash-o fa-2x"></i>
-                    </a>
-                    {% if i + 1 == items | length %}
-                    <a href="javascript:void(0);" onclick="addItem(this, false);"><i class="fa fa-plus fa-2x"></i></a>
-                    {% endif %}
-                </div>
+            <div class="form-group">
+                <label>&nbsp;</label>
+                <a href="javascript:void(0);" onclick="removeItem(this, true);" attr-id="{{ item.id }}" title="Hapus item ini">
+                    <i class="fa fa-trash-o fa-2x"></i>
+                </a>
+                {% if i + 1 == items | length %}
+                <a href="javascript:void(0);" onclick="addItem(this, false);"><i class="fa fa-plus fa-2x"></i></a>
+                {% endif %}
             </div>
-            <input type="hidden" name="PurchaseOrderItems[id][]" value="{{ item.id }}">
         </div>
+        <input type="hidden" name="InventoryReceiptItems[id][]" value="{{ item.id }}">
+    </div>
     </div>
     {% endfor %}
     <div class="col-md-12" id="item-form">
         {% if items | length <= 0 %}
-        {% include 'purchases/_items_form.html' %}
+        {% include 'inventories/_items_receipt_form.html' %}
         {% endif %}
     </div>
     <div class="col-md-12">
         <div class="form-group">
-            <input name="PurchaseOrderItems[po_id]" type="hidden" value="{{ model.id }}">
+            <input name="InventoryReceiptItems[ir_id]" type="hidden" value="{{ model.id }}">
             <input
                     type="submit"
                     value="Simpan"
@@ -77,7 +70,7 @@
             if (confirm('Anda yakin ingin menghapus item ini?')) {
                 if (execute) {
                     $.ajax({
-                        'url': '{{ "pos/purchases/delete-item" | link }}/'+$(dt).attr('attr-id'),
+                        'url': '{{ "pos/inventories/delete-receipt-item" | link }}/'+$(dt).attr('attr-id'),
                         'type':'post',
                         'data':{'id':$(dt).attr('attr-id')},
                         'success': function(data) {
@@ -99,8 +92,8 @@
     }
     function addItem(dt, hide = true) {
         $.ajax({
-            'url': '{{ "pos/purchases/create-item" | link }}',
-            'type':'get',
+            'url': '{{ "pos/inventories/create-receipt-item" | link }}',
+            'type':'post',
             'success': function(data) {
                 $('#item-form').append(data);
                 $(dt).hide();
@@ -133,7 +126,7 @@
         return false;
     }
     $(function () {
-        $('#purchase-items-form').submit(function () {
+        $('#receipts-items-form').submit(function () {
             var url = $(this).attr('action');
             $('#purchases-items-form').find('.alert-warning').hide();
             $('#purchases-items-form').find('.alert-warning').empty();
@@ -141,20 +134,23 @@
             $.ajax({
                 'url': url,
                 'type':'post',
-                'data': $('#purchase-items-form').serialize(),
+                'data': $('#receipts-items-form').serializeArray(),
                 'success': function(data) {
                     console.log(data);
                     if (data.status == 'success') {
-                        var alert_success = $('#purchase-items-form').find('.alert-success');
+                        var alert_success = $('#receipts-items-form').find('.alert-success');
                         alert_success.html(data.message);
                         alert_success.show();
                         setTimeout(function () {
                             window.location.reload(true);
                         }, 3000);
                     } else {
-                        var alert_warning = $('#purchase-items-form').find('.alert-warning');
+                        var alert_warning = $('#receipts-items-form').find('.alert-warning');
                         alert_warning.html(data.message);
                         alert_warning.show();
+                        setTimeout(function () {
+                            window.location.reload(true);
+                        }, 3000);
                     }
                 },
                 error: function(XMLHttpRequest, textStatus, errorThrown) {

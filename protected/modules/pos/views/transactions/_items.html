@@ -1,33 +1,33 @@
-<?php
-if(Yii::app()->user->hasState('items_belanja')):
-$no=1; $tot_qty=0; $tot_disc=0; $tot_pay=0;
-foreach(Yii::app()->user->getState('items_belanja') as $index=>$data){?>
-<?php
-		$harga_bruto=$data['unit_price']*$data['qty'];
-		$harga_netto=$harga_bruto-$data['discount'];
-		$discount=$harga_bruto-$harga_netto;
-		?>
-<tr class="<?php echo($no%2>0)? 'even':'odd';?>">
-    <td style="text-align:center;"><?php echo $no;?></td>
-    <td><?php echo $data['barcode'];?></td>
-    <td><?php echo $data['name'];?></td>
-    <td style="text-align:right;"><?php echo number_format($data['unit_price'],0,',','.');?></td>
-    <td style="text-align:center;"><?php echo CHtml::textField('qty',$data['qty'],array('size'=>3,'class'=>'text-center','onchange'=>'pushQty('.$index.',this,"'.Yii::app()->createUrl('/'.Yii::app()->controller->module->id.'/orders/updateQty').'")'));?></td>
-    <td style="text-align:right;" id="discount-<?php echo $index;?>" class="overwrite">
-        <?php echo CHtml::textField('discount',$this->money_format($discount),array('class'=>'form-control text-right','maxlength'=>10,'size'=>10,'rel_id'=>$index));?>
-    </td>
-    <td style="text-align:right;" id="total-item-<?php echo $index;?>"><?php echo number_format($harga_netto,0,',','.');?></td>
-    <td style="text-align:center;" class="table-action"><?php echo CHtml::link('<i class="fa fa-trash-o"></i>','javascript:void(0);',array('onclick'=>'deleteItem("'.$index.'");'));?></td>
-</tr>
-<?php
-		$no++;
-	}?>
-<?php
-endif;
-?>
+{% set no = 1 %}
+{% set tot_qty = 0 %}
+{% set tot_disc = 0 %}
+{% set tot_pay = 0 %}
+
+{% for i, item in items_belanja %}
+    {% set harga_bruto = item.unit_price * item.qty %}
+    {% set harga_netto = harga_bruto - item.discount %}
+    {% set discount = harga_bruto - harga_netto %}
+
+    <tr class="even">
+        <td style="text-align:center;">{{ no }}</td>
+        {#<td>{{ item.barcode }}</td>#}
+        <td>{{ item.name }}</td>
+        <td style="text-align:right;">{{ item.unit_price | number_format(0, ',', '.') }}</td>
+        <td style="text-align:center;">
+            <input type="text" name="qty" value="{{ item.qty }}" onchange="transaction.pushQty('{{ i }}', this)" class="form-control" size="3" maxlength="3">
+        </td>
+        <td style="text-align:right;" id="discount-{{ i }}" class="overwrite">
+            <input type="text" name="discount" value="{{ discount }}" class="form-control text-right" size="10" maxlength="10" rel_id="{{ i }}">
+        </td>
+        <td style="text-align:right;" id="total-item-{{ i }}">{{ harga_netto | number_format(0, ',', '.') }}</td>
+        <td style="text-align:center;" class="table-action">
+            <a href="javascript:void(0);" onclick="transaction.deleteItem('{{ i }}');"><i class="fa fa-trash-o"></i></a>
+        </td>
+    </tr>
+    {% set no = no + 1 %}
+{% endfor %}
 <script type="text/javascript">
     $(function(){
-        //$('input[id="discount"]').maskMoney({symbol:'', showSymbol:false, thousands:'.', decimal:',', symbolStay: true,precision:0});
         $('input[id="discount"]').keypress(function(e){
             if(e.which == 13) {
                 pushDiscount(this);

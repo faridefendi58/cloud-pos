@@ -49,4 +49,40 @@ class ProductPricesModel extends \Model\BaseModel
 
         return $rows;
     }
+
+    public function getPrice($product_id, $quantity = 1)
+    {
+        $sql = 'SELECT t.*, p.unit    
+            FROM {tablePrefix}ext_product_price t 
+            LEFT JOIN {tablePrefix}ext_product p ON p.id = t.product_id 
+            WHERE t.product_id =:product_id';
+
+        $params = [ 'product_id' => $product_id ];
+        if ($quantity > 0) {
+            $sql .= ' AND t.quantity =:quantity';
+            $params['quantity'] = $quantity;
+        }
+
+        $sql = str_replace(['{tablePrefix}'], [$this->_tbl_prefix], $sql);
+
+        $row = R::getRow( $sql, $params );
+
+        return $row['price'];
+    }
+
+    public function getDiscontedItems($product_id)
+    {
+        $sql = 'SELECT t.*, p.unit    
+            FROM {tablePrefix}ext_product_price t 
+            LEFT JOIN {tablePrefix}ext_product p ON p.id = t.product_id 
+            WHERE t.product_id =:product_id';
+
+        $params = [ 'product_id' => $product_id ];
+
+        $sql = str_replace(['{tablePrefix}'], [$this->_tbl_prefix], $sql);
+
+        $rows = R::getAll( $sql, $params );
+
+        return $rows;
+    }
 }

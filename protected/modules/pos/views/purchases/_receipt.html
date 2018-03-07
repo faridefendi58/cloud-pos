@@ -39,9 +39,15 @@
                                 <td><a href="{{ 'pos/warehouses/update' | link }}/{{ receipt.warehouse_id }}#detail">{{ receipt.warehouse_name }}</a></td>
                             </tr>
                             <tr>
-                                <td>Tanggal Efektif</td>
+                                <td>Tanggal Penerimaan</td>
                                 <td>{{ receipt.effective_date | date("d F Y") | default('-') }}</td>
                             </tr>
+                            {% if receipt.completed_by %}
+                            <tr>
+                                <td>Diterima Oleh</td>
+                                <td>{{ receipt.completed_by_name | default('-') }}</td>
+                            </tr>
+                            {% endif %}
                             <tr>
                                 <td>Catatan</td>
                                 <td>{{ receipt.notes | default('-') }}</td>

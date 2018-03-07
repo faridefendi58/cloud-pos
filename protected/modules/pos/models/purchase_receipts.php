@@ -36,11 +36,13 @@ class PurchaseReceiptsModel extends \Model\BaseModel
      */
     public function getData($data = array())
     {
-        $sql = 'SELECT t.*, po.po_number, wh.title AS warehouse_name, po.supplier_id, sp.name AS supplier_name     
+        $sql = 'SELECT t.*, po.po_number, wh.title AS warehouse_name, po.supplier_id, sp.name AS supplier_name,
+            a.name AS completed_by_name 
             FROM {tablePrefix}ext_purchase_receipt t 
             LEFT JOIN {tablePrefix}ext_purchase_order po ON po.id = t.po_id 
             LEFT JOIN {tablePrefix}ext_warehouse wh ON wh.id = t.warehouse_id 
-            LEFT JOIN {tablePrefix}ext_supplier sp ON sp.id = po.supplier_id  
+            LEFT JOIN {tablePrefix}ext_supplier sp ON sp.id = po.supplier_id 
+            LEFT JOIN {tablePrefix}admin a ON a.id = t.completed_by 
             WHERE 1';
 
         $params = [];
@@ -65,13 +67,15 @@ class PurchaseReceiptsModel extends \Model\BaseModel
     public function getDetail($id)
     {
         $sql = 'SELECT t.*, a.name AS created_by_name, ab.name AS updated_by_name, 
-            po.po_number, wh.title AS warehouse_name, po.supplier_id, sp.name AS supplier_name  
+            po.po_number, wh.title AS warehouse_name, po.supplier_id, sp.name AS supplier_name, 
+            ac.name AS completed_by_name 
             FROM {tablePrefix}ext_purchase_receipt t 
             LEFT JOIN {tablePrefix}ext_purchase_order po ON po.id = t.po_id 
             LEFT JOIN {tablePrefix}ext_warehouse wh ON wh.id = t.warehouse_id 
             LEFT JOIN {tablePrefix}ext_supplier sp ON sp.id = po.supplier_id  
             LEFT JOIN {tablePrefix}admin a ON a.id = t.created_by 
             LEFT JOIN {tablePrefix}admin ab ON ab.id = t.updated_by 
+            LEFT JOIN {tablePrefix}admin ac ON ac.id = t.completed_by 
             WHERE t.id =:id';
 
         $sql = str_replace(['{tablePrefix}'], [$this->_tbl_prefix], $sql);
@@ -98,5 +102,93 @@ class PurchaseReceiptsModel extends \Model\BaseModel
         $row = R::getRow( $sql, $params );
 
         return $row;
+    }
+
+    public function getHistory($data)
+    {
+        $sql = 'SELECT pr.pr_number, pr.warehouse_id, wh.title AS warehouse_name, pr.effective_date, t.*, 
+            po.supplier_id, sp.name AS supplier_name 
+            FROM {tablePrefix}ext_purchase_receipt_item t 
+            LEFT JOIN {tablePrefix}ext_purchase_receipt pr ON pr.id = t.pr_id 
+            LEFT JOIN {tablePrefix}ext_warehouse wh ON wh.id = pr.warehouse_id 
+            LEFT JOIN {tablePrefix}ext_purchase_order po ON po.id = pr.po_id 
+            LEFT JOIN {tablePrefix}ext_supplier sp ON sp.id = po.supplier_id 
+            WHERE 1';
+
+        $params = [];
+        if (isset($data['product_id'])) {
+            $sql .= ' AND t.product_id =:product_id';
+            $params = [ 'product_id' => $data['product_id'] ];
+        }
+
+        if (!empty($data['warehouse_id'])) {
+            $sql .= ' AND pr.warehouse_id =:warehouse_id';
+            $params['warehouse_id'] = $data['warehouse_id'];
+        }
+
+        if (!empty($data['status'])) {
+            $sql .= ' AND pr.status =:status';
+            $params['status'] = $data['status'];
+        }
+
+        if (isset($data['date_start']) && isset($data['date_end'])) {
+            $sql .= ' AND DATE_FORMAT(pr.completed_at, "%Y-%m-%d") BETWEEN :date_start AND :date_end';
+            $params['date_start'] = $data['date_start'];
+            $params['date_end'] = $data['date_end'];
+        }
+
+        $sql .= ' ORDER BY pr.completed_at DESC';
+
+        if (!isset($data['limit'])) {
+            $sql .= ' LIMIT 100';
+        }
+
+        $sql = str_replace(['{tablePrefix}'], [$this->_tbl_prefix], $sql);
+
+        $rows = R::getAll( $sql, $params );
+
+        return $rows;
+    }
+
+    public function getQuery($data)
+    {
+        $sql = 'SELECT wh.title AS warehouse_name, t.*, 
+            po.supplier_id, sp.name AS supplier_name, a.name AS completed_by_name 
+            FROM {tablePrefix}ext_purchase_receipt t 
+            LEFT JOIN {tablePrefix}ext_warehouse wh ON wh.id = t.warehouse_id 
+            LEFT JOIN {tablePrefix}ext_purchase_order po ON po.id = t.po_id 
+            LEFT JOIN {tablePrefix}ext_supplier sp ON sp.id = po.supplier_id 
+            LEFT JOIN {tablePrefix}admin a ON a.id = t.completed_by 
+            WHERE 1';
+
+        $params = [];
+
+        if (!empty($data['warehouse_id'])) {
+            $sql .= ' AND t.warehouse_id =:warehouse_id';
+            $params['warehouse_id'] = $data['warehouse_id'];
+        }
+
+        if (!empty($data['status'])) {
+            $sql .= ' AND t.status =:status';
+            $params['status'] = $data['status'];
+        }
+
+        if (isset($data['date_start']) && isset($data['date_end'])) {
+            $sql .= ' AND DATE_FORMAT(t.completed_at, "%Y-%m-%d") BETWEEN :date_start AND :date_end';
+            $params['date_start'] = $data['date_start'];
+            $params['date_end'] = $data['date_end'];
+        }
+
+        $sql .= ' ORDER BY t.effective_date DESC';
+
+        if (!isset($data['limit'])) {
+            $sql .= ' LIMIT 100';
+        }
+
+        $sql = str_replace(['{tablePrefix}'], [$this->_tbl_prefix], $sql);
+
+        $rows = R::getAll( $sql, $params );
+
+        return $rows;
     }
 }

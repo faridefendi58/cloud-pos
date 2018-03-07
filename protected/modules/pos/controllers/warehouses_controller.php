@@ -85,6 +85,7 @@ class WarehousesController extends BaseController
         $model = new \Model\WarehousesModel();
         if (isset($_POST['Warehouses'])) {
             $model->title = $_POST['Warehouses']['title'];
+            $model->phone = $_POST['Warehouses']['phone'];
             $model->address = $_POST['Warehouses']['address'];
             $model->notes = $_POST['Warehouses']['notes'];
             $model->created_at = date("Y-m-d H:i:s");
@@ -123,6 +124,7 @@ class WarehousesController extends BaseController
 
         if (isset($_POST['Warehouses'])){
             $model->title = $_POST['Warehouses']['title'];
+            $model->phone = $_POST['Warehouses']['phone'];
             $model->address = $_POST['Warehouses']['address'];
             $model->notes = $_POST['Warehouses']['notes'];
             $model->updated_at = date("Y-m-d H:i:s");

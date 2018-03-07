@@ -29,7 +29,7 @@
                     </div>
                 </div>
             </div>
-            <div class="col-md-1">
+            <div class="col-md-1" {% if model and model.status in ['processed', 'completed', 'canceled'] %}style="display:none"{% endif %}>
                 <div class="form-group">
                     <label>&nbsp;</label>
                     <a href="javascript:void(0);" onclick="removeItem(this, true);" attr-id="{{ item.id }}" title="Hapus item ini">
@@ -56,7 +56,7 @@
                     type="submit"
                     value="Simpan"
                     class="btn btn-info"
-                    {% if model and model.status in ['processed', 'completed', 'canceled'] %}style="display:none"{% endif %}>
+                    {% if model and model.status in ['completed', 'canceled'] %}style="display:none"{% endif %}>
         </div>
     </div>
 </form>

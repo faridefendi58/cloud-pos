@@ -15,7 +15,7 @@
             </select>
         </div>
         <div class="form-group">
-            <label for="warehouse_to">Warehouse Tujuan <span class="text-danger">*</span></label>
+            <label for="warehouse_to">Warehouse Tujuan</label>
             <select id="warehouse_to" name="TransferIssues[warehouse_to]" class="form-control select2">
                 <option value="0">-</option>
                 {% for i, warehouse in warehouses %}
@@ -58,7 +58,7 @@
             <input type="submit"
                    value="{% if not model %}Selanjutnya{% else %}Ubah Data{% endif %}"
                    class="btn btn-info"
-                   {% if model and model.status in ['processed', 'completed', 'canceled'] %}style="display:none"{% endif %}>
+                   {% if model and model.status in ['completed', 'canceled'] %}style="display:none"{% endif %}>
             {% if model and model.status not in ['processed', 'completed', 'canceled'] %}
             <input type="button" value="Tandai Sudah Dikirim" class="btn btn-success" id="mark-as-sent" attr-id="{{ model.id }}">
             {% endif %}
@@ -83,14 +83,14 @@
                 $('#transfers-form').find('.alert-warning').html('Warehouse Dari tidak boleh dikosongi.');
                 var has_error = has_error + 1;
             }
-            if (warehouse_to <= 0) {
+            /*if (warehouse_to <= 0) {
                 if (has_error == 0) {
                     $('#transfers-form').find('.alert-warning').html('Warehouse Tujuan tidak boleh dikosongi.');
                 } else {
                     $('#transfers-form').find('.alert-warning').append('<br/>Warehouse tujuan tidak boleh dikosongi.');
                 }
                 var has_error = has_error + 1;
-            }
+            }*/
             if (warehouse_from > 0 && warehouse_to > 0 && warehouse_from == warehouse_to) {
                 if (has_error == 0) {
                     $('#transfers-form').find('.alert-warning').html('Warehouse Tujuan tidak boleh sama dengan warehouse asal.');

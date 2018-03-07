@@ -1,32 +1,19 @@
-<form method="post" id="receipt-form" class="mt20" action="{% if model.id %}{{ 'pos/transfers/update-receipt' | link }}/{{ model.id }}{% else %}{{ 'pos/transfers/create-receipt' | link }}{% endif %}">
+<form method="post" id="receipt-form" class="mt20" action="{% if model.id %}{{ 'pos/inventories/update-receipt' | link }}/{{ model.id }}{% else %}{{ 'pos/inventories/create-receipt' | link }}{% endif %}">
     <div class="alert alert-success" style="display: none;"></div>
     <div class="col-md-6">
         <div class="form-group">
-            <label for="ti_number">Nomor Transfer <span class="required">*</span></label>
-            {% if not model.id %}
-            <select id="ti_number" name="TransferReceipts[ti_id]" class="form-control select2">
-                {% for g, transfer in transfers %}
-                <option value="{{ transfer.id }}" {% if model.ti_id and transfer.id == model.ti_id %}selected="selected"{% endif %}>
-                    {{ transfer.ti_number }} [Dari {{ transfer.warehouse_from_name | title }}]
-                </option>
-                {% endfor %}
-            </select>
-            {% else %}
-            <input type="text" name="TransferReceipts[ti_id]" class="form-control" value="{{ detail.ti_number }}" readonly="readonly">
-            {% endif %}
-        </div>
-        <div class="form-group">
-            <label for="supplier_id">Warehouse Penerima <span class="text-danger">*</span></label>
-            <select id="supplier_id" name="TransferReceipts[warehouse_id]" class="form-control select2">
+            <label for="warehouse_id">Warehouse Penerima <span class="required">*</span></label>
+            <select id="warehouse_id" name="InventoryReceipts[warehouse_id]" class="form-control select2" required>
+                <option value="">-</option>
                 {% for i, warehouse in warehouses %}
-                <option value="{{ warehouse.id }}" {% if model.warehouse_id and warehouse.id == model.warehouse_id %}selected="selected"{% endif %}>{{ warehouse.title }}</option>
+                <option value="{{ warehouse.id }}" {% if model.warehouse_id and model.warehouse_id == warehouse.id %}selected="selected"{% endif %}>{{ warehouse.title }}</option>
                 {% endfor %}
             </select>
         </div>
         <div class="form-group">
             <label>Tanggal Penerimaan <span class="text-danger">*</span></label>
             <div class="input-group date ts_datepicker" data-date-format="dd-mm-yyyy" data-date-autoclose="true">
-                <input class="form-control" type="text" name="TransferReceipts[effective_date]"
+                <input class="form-control" type="text" name="InventoryReceipts[effective_date]"
                        {% if model and model.effective_date %}
                        value="{{ model.effective_date | date('d-m-Y') }}"
                        {% else %}
@@ -40,16 +27,16 @@
     <div class="col-md-6">
         <div class="form-group">
             <label for="desc">Catatan</label>
-            <textarea name="TransferReceipts[notes]" id="desc" cols="10" rows="5" class="form-control">{% if model and model.notes %}{{ model.notes }}{% endif %}</textarea>
+            <textarea name="InventoryReceipts[notes]" id="desc" cols="10" rows="2" class="form-control">{% if model and model.notes %}{{ model.notes }}{% endif %}</textarea>
         </div>
         <div class="form-group">
-            {% if not model.id or model.status not in ['completed', 'canceled'] %}
+            {% if not model or model.status not in ['completed', 'canceled'] %}
             <input type="submit" value="{% if model.id %}Ubah Data{% else %}Selanjutnya{% endif %}" class="btn btn-info">
             {% endif %}
-            {% if model.id and model.status not in ['completed', 'canceled'] %}
-            <input type="button" value="Mark as complete" class="btn btn-success" id="mark-as-complete" attr-id="{{ model.id }}">
+            {% if model and model.status not in ['completed', 'canceled'] %}
+            <input type="button" value="Konfirmasi Penerimaan" class="btn btn-success" id="mark-as-complete" attr-id="{{ model.id }}">
             {% endif %}
-            {% if model.id and model.status not in ['canceled'] %}
+            {% if model and model.status not in ['canceled'] %}
             <input type="button" value="Cancel" class="btn btn-warning" id="cancel" attr-id="{{ model.id }}">
             {% endif %}
         </div>
@@ -61,39 +48,44 @@
 {% block endbodyjs %}
 <script type="text/javascript">
     $(function () {
-        $('#receipt-form').submit(function () {
-            var url = $(this).attr('action');
-            $.ajax({
-                'url': url,
-                'type':'post',
-                'data': $('#receipt-form').serialize(),
-                'success': function(data) {
-                    console.log(data);
-                    if (data.status == 'success') {
-                        var alert_success = $('#receipt-form').find('.alert-success');
-                        alert_success.html(data.message);
-                        alert_success.show();
-                        setTimeout(function () {
-                            if (data.updated == true) {
-                                window.location.reload(true);
-                            } else {
-                                alert_success.hide();
-                                alert_success.empty();
-                                $('#receipt-form')[0].reset();
-                                window.location.href = "{{ 'pos/transfers/update-receipt' | link }}/"+data.id+"#items";
-                            }
-                        }, 1000);
-                    }
-                }
-            });
-
-            return false;
-        });
+        form_submit.init();
         tisa_datepicker.init();
         tisa_enhanced_select.init();
         complete_receipt.init();
         cancel_receipt.init();
     });
+    form_submit = {
+        init: function () {
+            $('#receipt-form').submit(function () {
+                var url = $(this).attr('action');
+                $.ajax({
+                    'url': url,
+                    'type':'post',
+                    'data': $('#receipt-form').serializeArray(),
+                    'success': function(data) {
+                        console.log(data);
+                        if (data.status == 'success') {
+                            var alert_success = $('#receipt-form').find('.alert-success');
+                            alert_success.html(data.message);
+                            alert_success.show();
+                            setTimeout(function () {
+                                if (data.updated == true) {
+                                    window.location.reload(true);
+                                } else {
+                                    alert_success.hide();
+                                    alert_success.empty();
+                                    $('#receipt-form')[0].reset();
+                                    window.location.href = "{{ 'pos/inventories/update-receipt' | link }}/"+data.id+"#items";
+                                }
+                            }, 1000);
+                        }
+                    }
+                });
+
+                return false;
+            });
+        }
+    }
     tisa_datepicker = {
         init: function() {
             if($('.ts_datepicker').length) {
@@ -129,9 +121,9 @@
         init : function () {
             $('#mark-as-complete').click(function () {
                 var $this = $(this);
-                if (confirm('Anda yakin barang sudah diterima semua?')) {
+                if (confirm('Anda yakin ingin menambahkan barang ke persediaan?')) {
                     $.ajax({
-                        'url': '{{ "pos/transfers/complete-receipt" | link }}/'+$this.attr('attr-id'),
+                        'url': '{{ "pos/inventories/complete-receipt" | link }}/'+$this.attr('attr-id'),
                         'type':'post',
                         'data': {'id':$this.attr('attr-id')},
                         'success': function(data) {
@@ -158,7 +150,7 @@
                 var $this = $(this);
                 if (confirm('Apakah benar-benar terjadi kesalahan dengan penerimaan ini?')) {
                     $.ajax({
-                        'url': '{{ "pos/transfers/cancel-receipt" | link }}/'+$this.attr('attr-id'),
+                        'url': '{{ "pos/inventories/cancel-receipt" | link }}/'+$this.attr('attr-id'),
                         'type':'post',
                         'data': {'id':$this.attr('attr-id')},
                         'success': function(data) {

@@ -50,6 +50,17 @@ class TransferIssuesModel extends \Model\BaseModel
                 $sql .= ' AND t.status =:status';
                 $params['status'] = $data['status'];
             }
+
+            if (isset($data['warehouse_from'])) {
+                $sql .= ' AND t.warehouse_from =:warehouse_from';
+                $params['warehouse_from'] = $data['warehouse_from'];
+            }
+
+            if (isset($data['date_start']) && isset($data['date_end'])) {
+                $sql .= ' AND DATE_FORMAT(t.date_transfer, "%Y-%m-%d") BETWEEN :date_start AND :date_end';
+                $params['date_start'] = $data['date_start'];
+                $params['date_end'] = $data['date_end'];
+            }
         }
 
         $sql .= ' ORDER BY t.date_transfer DESC';

@@ -50,7 +50,7 @@
             <span class="help-block">Format: dd-mm-yyyy. Kosongkan jika tidak ada batasan jatuh tempo</span>
         </div>
         {% if model.status %}
-        <div class="form-group">
+        <div class="form-group hide">
             <label>Status <span class="text-danger">*</span></label>
             <select id="status" name="PurchaseOrders[status]" class="form-control">
                 <option value="onprocess" {% if model.status and model.status == 'onprocess' %}selected="selected"{% endif %}>On Process</option>
@@ -66,7 +66,13 @@
             <textarea name="PurchaseOrders[notes]" id="desc" cols="10" rows="5" class="form-control">{% if model and model.notes %}{{ model.notes }}{% endif %}</textarea>
         </div>
         <div class="form-group mt20">
-            <input type="submit" value="Simpan" class="btn btn-info">
+            <input type="submit"
+                   value="{% if not model %}Selanjutnya{% else %}Ubah Data{% endif %}"
+                   class="btn btn-info"
+                   {% if model and model.status in ['completed', 'canceled'] %}style="display:none"{% endif %}>
+            {% if model and model.status in ['processed', 'onprocess'] %}
+            <input type="button" value="Tandai Sudah Selesai" class="btn btn-success" id="mark-as-complete" attr-id="{{ model.id }}">
+            {% endif %}
         </div>
     </div>
     <div class="col-md-12">
@@ -130,6 +136,7 @@
         });
         tisa_datepicker.init();
         tisa_enhanced_select.init();
+        mark_as_complete.init();
     });
     tisa_datepicker = {
         init: function() {
@@ -160,6 +167,33 @@
                     placeholder: "Select..."
                 });
             }
+        }
+    }
+    mark_as_complete = {
+        init : function () {
+            $('#mark-as-complete').click(function () {
+                var $this = $(this);
+                if (confirm('Anda yakin barang sudah dikirimkan?')) {
+                    $.ajax({
+                        'url': '{{ "pos/purchases/complete" | link }}/'+$this.attr('attr-id'),
+                        'type':'post',
+                        'data': {'id':$this.attr('attr-id')},
+                        'success': function(data) {
+                            console.log(data);
+                            if (data.status == 'success') {
+                                var alert_success = $('#purchases-form').find('.alert-success');
+                                alert_success.html(data.message);
+                                alert_success.show();
+                                $this.hide();
+                                setTimeout(function () {
+                                    window.location.reload(true);
+                                }, 2000);
+                            }
+                        }
+                    });
+                }
+                return false;
+            });
         }
     }
 </script>

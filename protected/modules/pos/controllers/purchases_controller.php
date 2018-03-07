@@ -29,6 +29,7 @@ class PurchasesController extends BaseController
         $app->map(['POST'], '/create-receipt-item', [$this, 'create_receipt_item']);
         $app->map(['POST'], '/complete-receipt/[{id}]', [$this, 'complete_receipt']);
         $app->map(['POST'], '/cancel-receipt/[{id}]', [$this, 'cancel_receipt']);
+        $app->map(['POST'], '/complete/[{id}]', [$this, 'complete']);
     }
 
     public function accessRules()
@@ -599,14 +600,14 @@ class PurchasesController extends BaseController
                 $quantity_max = $quantity_max + $_POST['PurchaseReceiptItems']['quantity_max'][$item_id];
             }
 
-            /*$pomodel = \Model\PurchaseOrdersModel::model()->findByPk($model->po_id);
+            $pomodel = \Model\PurchaseOrdersModel::model()->findByPk($model->po_id);
             if ($pomodel->status !== \Model\PurchaseOrdersModel::STATUS_COMPLETED && $quantity == $quantity_max) {
                 $pomodel->status = \Model\PurchaseOrdersModel::STATUS_COMPLETED;
                 $pomodel->updated_at = date("Y-m-d H:i:s");
                 $pomodel->updated_by = $this->_user->id;
 
                 $update_status = \Model\PurchaseOrdersModel::model()->update($pomodel);
-            }*/
+            }
 
             return $response->withJson(
                     [
@@ -676,6 +677,44 @@ class PurchasesController extends BaseController
             ], 201);
     }
 
+    public function complete($request, $response, $args)
+    {
+        $isAllowed = $this->isAllowed($request, $response);
+        if ($isAllowed instanceof \Slim\Http\Response)
+            return $isAllowed;
+
+        if(!$isAllowed){
+            return $this->notAllowedAction();
+        }
+
+        if (!isset($args['id'])) {
+            return false;
+        }
+
+        $status = 'failed'; $message = 'Request gagal dieksekusi.';
+        if (isset($_POST['id']) && $_POST['id'] == $args['id']) {
+            $pomodel = \Model\PurchaseOrdersModel::model()->findByPk($_POST['id']);
+            if ($pomodel->status !== \Model\PurchaseOrdersModel::STATUS_COMPLETED) {
+                $pomodel->status = \Model\PurchaseOrdersModel::STATUS_COMPLETED;
+                $pomodel->completed_by = $this->_user->id;
+                $pomodel->completed_at = date("Y-m-d H:i:s");
+                $pomodel->updated_at = date("Y-m-d H:i:s");
+                $pomodel->updated_by = $this->_user->id;
+
+                $update_status = \Model\PurchaseOrdersModel::model()->update($pomodel);
+
+                $status = 'success';
+                $message = 'Request berhasil dieksekusi.';
+            }
+        }
+
+        return $response->withJson(
+            [
+                'status' => $status,
+                'message' => $message,
+            ], 201);
+    }
+
     /**
      * Adding stock on receiving purchase order
      * @param $data : pr_id
@@ -732,6 +771,7 @@ class PurchasesController extends BaseController
             if ($model->status != \Model\PurchaseReceiptsModel::STATUS_COMPLETED) {
                 $model->status = \Model\PurchaseReceiptsModel::STATUS_COMPLETED;
                 $model->completed_at = date("Y-m-d H:i:s");
+                $model->completed_by = $this->_user->id;
                 $model->updated_at = date("Y-m-d H:i:s");
                 $model->updated_by = $this->_user->id;
                 $update_receipt = \Model\PurchaseReceiptsModel::model()->update($model);

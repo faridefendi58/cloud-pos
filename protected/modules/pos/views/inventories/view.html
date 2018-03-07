@@ -1,6 +1,6 @@
 {% extends "layout.html" %}
 {% block pagetitle %}
-Pindah Persediaan - {{ App.params.site_name }}
+Inventory Issue - {{ App.params.site_name }}
 {% endblock %}
 
 {% block content %}
@@ -8,12 +8,12 @@ Pindah Persediaan - {{ App.params.site_name }}
 <div id="main_wrapper">
     <div class="page_bar clearfix">
         <div class="row">
-            <div class="col-sm-10">
-                <h1 class="page_title">Pindah Persediaan</h1>
-                <p class="text-muted">Pindah Persediaan adalah perpindahan stok antar gudang atau warehouse</p>
+            <div class="col-sm-9">
+                <h1 class="page_title">Pengeluaran Barang Non Penjualan</h1>
+                <p class="text-muted">Daftar transaksi pengeluaran barang non penjualan dan non perpindahan stok antar gudang.</p>
             </div>
-            <div class="col-sm-2 text-right">
-                <a class="btn btn-default" data-toggle="tab" href="#create-new">Pindah Persediaan Baru</a>
+            <div class="col-sm-3 text-right">
+                <a class="btn btn-default" data-toggle="tab" href="#create-new">Tambah Pengeluaran Baru</a>
             </div>
         </div>
     </div>
@@ -25,57 +25,59 @@ Pindah Persediaan - {{ App.params.site_name }}
                         <div class="panel-body">
                             <ul class="nav nav-tabs" id="tabs_a">
                                 <li class="active">
-                                    <a data-toggle="tab" href="#daftar">Daftar Pindah Persediaan</a>
+                                    <a data-toggle="tab" href="#daftar">Daftar Pengeluaran Barang</a>
                                 </li>
                                 <li>
-                                    <a data-toggle="tab" href="#create-new">Pindah Persediaan Baru</a>
+                                    <a data-toggle="tab" href="#create-new">Tambah Pengeluaran Baru</a>
                                 </li>
                             </ul>
                             <div class="tab-content" id="tabs_content_a">
                                 <div id="daftar" class="tab-pane fade in active">
                                     <div id="dt_basic_wrapper" class="dataTables_wrapper form-inline no-footer table-responsive mt20" role="grid">
-                                        <table id="dt_basic" class="table table-striped dataTable" attr-sort="5" attr-sort-type="desc">
+                                        <table id="dt_basic" class="table table-striped dataTable">
                                             <thead>
                                             <tr>
                                                 <th>No</th>
                                                 <th>Nomor Issue</th>
-                                                <th>Warehouse Asal</th>
-                                                <th>Warehouse Tujuan</th>
-                                                <th>Warehouse Penerima</th>
-                                                <th>Tanggal Transfer</th>
+                                                <th>Warehouse</th>
                                                 <th>Status</th>
+                                                <th>Keterangan</th>
+                                                <th>Tanggal Issue</th>
                                                 <th>&nbsp;</th>
                                             </tr>
                                             </thead>
                                             <tbody>
-                                            {% for i, transfer in transfers %}
+                                            {% for i, inventory in inventories %}
                                             <tr>
-                                                <td><center>{{ i+1 }}</center></td>
+                                                <td><center>{{ i + 1 }}</center></td>
                                                 <td>
-                                                    <a href="{{ 'pos/transfers/update' | link }}/{{ transfer.id }}#detail" title="Detail transfer {{ transfer.po_number }}">
-                                                        {{ transfer.ti_number }}
+                                                    <a href="{{ 'pos/inventories/update' | link }}/{{ inventory.id }}#detail" title="Detail Inventory Issue">
+                                                        {{ inventory.ii_number }}
                                                     </a>
                                                 </td>
-                                                <td><a href="{{ 'pos/warehouses/update' | link }}/{{ transfer.warehouse_from }}#detail">{{ transfer.warehouse_from_name }}</a></td>
-                                                <td><a href="{{ 'pos/warehouses/update' | link }}/{{ transfer.warehouse_to }}#detail">{{ transfer.warehouse_to_name | default('-') }}</a></td>
-                                                <td>{{ rmodel.getRecipients({'ti_id':transfer.id,'output':'text'}) | default('-') }}</td>
-                                                <td><center>{{ transfer.date_transfer | date("Y-m-d") }}</center></td>
-                                                <td>{{ transfer.status | title }}</td>
                                                 <td>
-                                                    <a href="{{ 'pos/transfers/update' | link }}/{{ transfer.id }}" title="Ubah Pindah Persediaan">
+                                                    <a href="{{ 'pos/warehouses/update' | link }}/{{ inventory.warehouse_id }}#detail" title="Detail Warehouse">
+                                                        {{ inventory.warehouse_name }}
+                                                    </a>
+                                                </td>
+                                                <td><b>{{ inventory.status | title }}</b></td>
+                                                <td>{{ inventory.notes | default('-') }}</td>
+                                                <td>{{ inventory.effective_date }}</td>
+                                                <td>
+                                                    <a href="{{ 'pos/inventories/update' | link }}/{{ inventory.id }}" title="Ubah Inventory Issue">
                                                         <i class="fa fa-pencil"></i>
                                                     </a>
-                                                    <a href="{{ 'pos/transfers/update' | link }}/{{ transfer.id }}#detail" title="Detail Pindah Persediaan">
+                                                    <a href="{{ 'pos/inventories/update' | link }}/{{ inventory.id }}#detail" title="Detail Inventory Issue">
                                                         <i class="fa fa-search"></i>
                                                     </a>
-                                                    <a href="{{ 'pos/transfers/delete' | link }}/{{ transfer.id }}" onclick="return hapus(this);">
+                                                    <a href="{{ 'pos/inventories/delete' | link }}/{{ inventory.id }}" onclick="return hapus(this);">
                                                         <i class="fa fa-trash-o"></i>
                                                     </a>
                                                 </td>
                                             </tr>
                                             {% else %}
                                             <tr class="no-data">
-                                                <td colspan="7">No data founds</td>
+                                                <td>No data founds</td>
                                             </tr>
                                             {% endfor %}
                                             </tbody>
@@ -83,7 +85,7 @@ Pindah Persediaan - {{ App.params.site_name }}
                                     </div>
                                 </div>
                                 <div id="create-new" class="tab-pane fade">
-                                    {% include 'transfers/_form.html' with {'warehouses':warehouses} %}
+                                    {% include 'inventories/_form.html' with {'warehouses':warehouses} %}
                                 </div>
                             </div>
                         </div>

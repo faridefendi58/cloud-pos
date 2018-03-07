@@ -74,4 +74,32 @@ class ProductStocksModel extends \Model\BaseModel
 
         return $row['total'];
     }
+
+    public function getQuery($data)
+    {
+        $sql = 'SELECT t.*, p.title AS product_name  
+               FROM {tablePrefix}ext_product_stock t 
+               LEFT JOIN {tablePrefix}ext_product p ON p.id = t.product_id 
+               WHERE 1';
+
+        $params = [];
+        if (isset($data['warehouse_id'])) {
+            $params['warehouse_id'] = $data['warehouse_id'];
+            $sql .= ' AND t.warehouse_id =:warehouse_id';
+        }
+
+        if (isset($data['date_start']) && isset($data['date_end'])) {
+            $sql .= ' AND DATE_FORMAT(t.created_at, "%Y-%m-%d") BETWEEN :date_start AND :date_end';
+            $params['date_start'] = $data['date_start'];
+            $params['date_end'] = $data['date_end'];
+        }
+
+        $sql .= ' ORDER BY t.quantity DESC';
+
+        $sql = str_replace(['{tablePrefix}'], [$this->_tbl_prefix], $sql);
+
+        $rows = R::getAll( $sql, $params );
+
+        return $rows;
+    }
 }

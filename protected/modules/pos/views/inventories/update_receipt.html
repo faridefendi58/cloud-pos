@@ -1,18 +1,18 @@
 {% extends "layout.html" %}
 {% block pagetitle %}
-Pindah Persediaan - {{ App.params.site_name }}
+Kelola Penerimaan Persediaan - {{ App.params.site_name }}
 {% endblock %}
 
 {% block content %}
 <div id="main_wrapper">
     <div class="page_bar clearfix">
         <div class="row">
-            <div class="col-sm-10">
-                <h1 class="page_title">Pindah Persediaan #{{ model.ti_number }}</h1>
-                <p class="text-muted">Pindah Persediaan adalah perpindahan stok antar gudang atau warehouse</p>
+            <div class="col-sm-9">
+                <h1 class="page_title">Penerimaan Persediaan #{{ model.ir_number }}</h1>
+                <p class="text-muted">Halaman pengelolaan data Penerimaan Persediaan {{ model.ir_number | lower }}</p>
             </div>
-            <div class="col-sm-2 text-right">
-                <a class="btn btn-default" href="{{ 'pos/transfers/view' | link }}">Daftar Pindah Persediaan</a>
+            <div class="col-sm-3 text-right">
+                <a class="btn btn-default" href="{{ 'pos/inventories/view-receipt' | link }}">Daftar Penerimaan Persediaan</a>
             </div>
         </div>
     </div>
@@ -32,25 +32,16 @@ Pindah Persediaan - {{ App.params.site_name }}
                                 <li>
                                     <a data-toggle="tab" href="#items">Detail Item</a>
                                 </li>
-                                <li {% if not receipts %}style="display:none"{% endif %}>
-                                    <a data-toggle="tab" href="#receipt">Penerimaan Barang</a>
-                                </li>
-                                <li {% if receipts %}style="display:none"{% endif %}>
-                                    <a href="{{ 'pos/transfers/view-receipt' | link }}#create-new" target="_blank">Buat Penerimaan Barang</a>
-                                </li>
                             </ul>
                             <div class="tab-content" id="tabs_content_a">
                                 <div id="detail" class="tab-pane fade">
-                                    {% include 'transfers/_detail.html' with {'model':model,'detail':detail, 'items':items} %}
+                                    {% include 'inventories/_detail_receipt.html' with {'model':model,'detail':detail, 'items':items, 'irimodel':irimodel} %}
                                 </div>
                                 <div id="update" class="tab-pane fade in active">
-                                    {% include 'transfers/_form.html' with {'model':model, 'detail':detail, 'warehouses':warehouses} %}
+                                    {% include 'inventories/_form_receipt.html' with {'model':model, 'detail':detail,'suppliers':suppliers, 'warehouses':warehouses, 'transfers':transfers} %}
                                 </div>
                                 <div id="items" class="tab-pane fade">
-                                    {% include 'transfers/_items.html' with {'model':model,'detail':detail, 'items':items, 'products':products} %}
-                                </div>
-                                <div id="receipt" class="tab-pane fade">
-                                    {% include 'transfers/_receipt.html' with {'model':model,'detail':detail, 'receipts':receipts, 'trimodel':trimodel} %}
+                                    {% include 'inventories/_items_receipt.html' with {'model':model,'detail':detail, 'items':items, 'products':products, 'irimodel':irimodel} %}
                                 </div>
                             </div>
                         </div>

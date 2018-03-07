@@ -71,6 +71,34 @@
                             </a>
                         </li>
                     </ul>
+                    <h4 class="panel_heading panel_heading_first">Inventory Issue</h4>
+                    <ul>
+                        <li>
+                            <a href="{{ 'pos/inventories/view' | link }}">
+                                <span class="side_icon ion-ios7-folder-outline ion-ios7-mon"></span>Daftar Pengeluaran Barang
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{{ 'pos/inventories/view' | link }}#create-new">
+                                <span class="side_icon ion-ios7-plus-outline"></span> Keluarkan Persediaan
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{{ 'pos/inventories/view-receipt' | link }}#create-new">
+                                <span class="side_icon ion-ios7-plus-outline"></span> Tambahkan Persediaan
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </li>
+        <li>
+            <a href="#">
+                <span class="ion-settings"></span>
+                <span class="nav_title">Kelola</span>
+            </a>
+            <div class="sub_panel">
+                <div class="side_inner">
                     <h4 class="panel_heading panel_heading_first">Produk</h4>
                     <ul>
                         <li>
@@ -110,31 +138,29 @@
                             </a>
                         </li>
                     </ul>
-                </div>
-            </div>
-        </li>
-        <li>
-            <a href="#">
-                <span class="ion-settings"></span>
-                <span class="nav_title">Kelola</span>
-            </a>
-            <div class="sub_panel">
-                <div class="side_inner">
-                    <h4 class="panel_heading panel_heading_first">Kelola</h4>
+                    <h4 class="panel_heading panel_heading_first">User</h4>
                     <ul>
+                        <li>
+                            <a href="{{ 'pos/users/view' | link }}">
+                                <span class="side_icon ion-ios7-folder-outline ion-ios7-mon"></span>Daftar User
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{{ 'pos/users/create' | link }}">
+                                <span class="side_icon ion-ios7-plus-outline"></span> Tambah User Baru
+                            </a>
+                        </li>
+                    </ul>
+                    <h4 class="panel_heading panel_heading_first">Lainnya</h4>
+                    <ul>
+                        <li>
+                            <a href="{{ 'pos/users/group' | link }}">
+                                <span class="side_icon ion-ios7-folder-outline"></span> Hak Akses
+                            </a>
+                        </li>
                         <li>
                             <a href="{{ 'pos/params/view' | link }}">
                                 <span class="side_icon ion-ios7-folder-outline"></span> Parameter
-                            </a>
-                        </li>
-                        <li>
-                            <a href="{{ 'pos/users/view' | link }}">
-                                <span class="side_icon ion-ios7-folder-outline"></span> User
-                            </a>
-                        </li>
-                        <li>
-                            <a href="{{ 'pos/users/group' | link }}">
-                                <span class="side_icon ion-ios7-folder-outline"></span> User Goup
                             </a>
                         </li>
                         {#<li>
@@ -142,6 +168,29 @@
                                 <span class="side_icon ion-ios7-folder-outline"></span> Ekstensi
                             </a>
                         </li>#}
+                    </ul>
+                </div>
+            </div>
+        </li>
+        <li>
+            <a href="#">
+                <span class="glyphicon glyphicon-stats"></span>
+                <span class="nav_title">Laporan</span>
+            </a>
+            <div class="sub_panel">
+                <div class="side_inner">
+                    <h4 class="panel_heading panel_heading_first">Laporan</h4>
+                    <ul>
+                        <li>
+                            <a href="{{ 'pos/reports/stock' | link }}">
+                                <span class="side_icon ion-ios7-folder-outline ion-ios7-mon"></span>Stok Per Warehouse
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{{ 'pos/reports/activity' | link }}">
+                                <span class="side_icon ion-ios7-folder-outline ion-ios7-mon"></span>Aktifitas Warehouse
+                            </a>
+                        </li>
                     </ul>
                 </div>
             </div>

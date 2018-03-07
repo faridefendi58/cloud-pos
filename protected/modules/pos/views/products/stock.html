@@ -1,0 +1,257 @@
+{% extends "layout.html" %}
+{% block pagetitle %}
+Stok Produk - {{ model.title | title }} - {{ App.params.site_name }}
+{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" href="{{ 'lib/bootstrap-daterangepicker/daterangepicker-bs3.css' | admin_asset_url }}">
+<div id="main_wrapper">
+    <div class="page_bar clearfix">
+        <div class="row">
+            <div class="col-sm-8">
+                <h1 class="page_title">Stok {{ model.title | title }} di WH {{ whmodel.title }} </h1>
+                <p class="text-muted">History pengadaan produk {{ model.title | lower }} di warehouse {{ whmodel.title }}</p>
+            </div>
+            <div class="col-sm-4 text-right">
+                <div id="reportrange" class="btn">
+                    <i class="fa fa-calendar"></i>
+                    {% if params.date_from %}
+                    <span>{{ params.date_from | date("M d, Y") }} - {{ params.date_to | date("M d, Y") }}</span> <b class="caret"></b>
+                    {% else %}
+                    <span>{{ "now" | date("M d, Y") }} - {{ "now" | date("M d, Y") }}</span> <b class="caret"></b>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="page_content">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-lg-12">
+                    <div class="panel panel-default">
+                        <div class="panel-body">
+                            <ul class="nav nav-tabs" id="tabs_a">
+                                <li class="active">
+                                    <a data-toggle="tab" href="#purchase">Pembelian Dari Supplier</a>
+                                </li>
+                                <li>
+                                    <a data-toggle="tab" href="#transfer">Masuk dari Warehouse Lain</a>
+                                </li>
+                                <li>
+                                    <a data-toggle="tab" href="#non-pembelian">Masuk dari Non Pembelian</a>
+                                </li>
+                                <li>
+                                    <a data-toggle="tab" href="#non-penjualan">Pengeluaran Non Penjualan</a>
+                                </li>
+                            </ul>
+                            <div class="tab-content" id="tabs_content_a">
+                                <div id="purchase" class="tab-pane fade in active">
+                                    <div id="dt_basic_wrapper" class="dataTables_wrapper form-inline no-footer table-responsive mt20" role="grid">
+                                        <table id="dt_basic" class="table table-striped dataTable" attr-sort="4" attr-sort-type="desc">
+                                            <thead>
+                                            <tr>
+                                                <th>No</th>
+                                                <th>Nomor Penerimaan</th>
+                                                <th>Nama Suplier</th>
+                                                <th>Jumlah Barang</th>
+                                                <th>Tanggal Penerimaan</th>
+                                            </tr>
+                                            </thead>
+                                            <tbody>
+                                            {% for i, purchase in purchases %}
+                                            <tr>
+                                                <td><center>{{ i + 1 }}</center></td>
+                                                <td>
+                                                    <a href="{{ 'pos/purchases/update-receipt' | link }}/{{ purchase.pr_id }}#detail" title="Detail Purchase Receipt" target="_blank">
+                                                        {{ purchase.pr_number }}
+                                                    </a>
+                                                </td>
+                                                <td>
+                                                    <a href="{{ 'pos/suppliers/update' | link }}/{{ purchase.supplier_id }}#detail" title="Detail Supplier" target="_blank">
+                                                        {{ purchase.supplier_name }}
+                                                    </a>
+                                                </td>
+                                                <td>{{ purchase.added_value }} {{ purchase.unit | title }}</td>
+                                                <td>{{ purchase.added_at | default('-') }}</td>
+                                            </tr>
+                                            {% else %}
+                                            <tr class="no-data">
+                                                <td>No data founds</td>
+                                            </tr>
+                                            {% endfor %}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                                <div id="transfer" class="tab-pane fade">
+                                    <div id="dt_basic_wrapper" class="dataTables_wrapper form-inline no-footer table-responsive mt20" role="grid">
+                                        <table id="dt_basic" class="table table-striped dataTable" attr-sort="4" attr-sort-type="desc">
+                                            <thead>
+                                            <tr>
+                                                <th>No</th>
+                                                <th>Nomor Penerimaan</th>
+                                                <th>Diterima Dari</th>
+                                                <th>Jumlah Barang</th>
+                                                <th>Tanggal Penerimaan</th>
+                                            </tr>
+                                            </thead>
+                                            <tbody>
+                                            {% for i, transfer in transfers %}
+                                            <tr>
+                                                <td><center>{{ i + 1 }}</center></td>
+                                                <td>
+                                                    <a href="{{ 'pos/transfers/update-receipt' | link }}/{{ transfer.tr_id }}#detail" title="Detail Transfer Receipt" target="_blank">
+                                                        {{ transfer.tr_number }}
+                                                    </a>
+                                                </td>
+                                                <td>{{ transfer.warehouse_from_name }}</td>
+                                                <td>{{ transfer.added_value }} {{ transfer.unit | title }}</td>
+                                                <td>{{ transfer.added_at | default('-') }}</td>
+                                            </tr>
+                                            {% else %}
+                                            <tr class="no-data">
+                                                <td>No data founds</td>
+                                            </tr>
+                                            {% endfor %}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                                <div id="non-pembelian" class="tab-pane fade">
+                                    <div id="dt_basic_wrapper" class="dataTables_wrapper form-inline no-footer table-responsive mt20" role="grid">
+                                        <table id="dt_basic" class="table table-striped dataTable" attr-sort="4" attr-sort-type="desc">
+                                            <thead>
+                                            <tr>
+                                                <th>No</th>
+                                                <th>Nomor Penerimaan</th>
+                                                <th>Diterima Dari</th>
+                                                <th>Jumlah Barang</th>
+                                                <th>Tanggal Penerimaan</th>
+                                                <th>Catatan</th>
+                                            </tr>
+                                            </thead>
+                                            <tbody>
+                                            {% for i, inventory in inventories %}
+                                            <tr>
+                                                <td><center>{{ i + 1 }}</center></td>
+                                                <td>
+                                                    <a href="{{ 'pos/inventories/update-receipt' | link }}/{{ inventory.ir_id }}#detail" title="Detail Inventory Receipt" target="_blank">
+                                                        {{ inventory.ir_number }}
+                                                    </a>
+                                                </td>
+                                                <td>{{ inventory.warehouse_name }}</td>
+                                                <td>{{ inventory.added_value }} {{ inventory.unit | title }}</td>
+                                                <td>{{ inventory.added_at | default('-') }}</td>
+                                                <td>{{ inventory.notes | default('-') }}</td>
+                                            </tr>
+                                            {% else %}
+                                            <tr class="no-data">
+                                                <td>No data founds</td>
+                                            </tr>
+                                            {% endfor %}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                                <div id="non-penjualan" class="tab-pane fade">
+                                    <div id="dt_basic_wrapper" class="dataTables_wrapper form-inline no-footer table-responsive mt20" role="grid">
+                                        <table id="dt_basic" class="table table-striped dataTable" attr-sort="3" attr-sort-type="desc">
+                                            <thead>
+                                            <tr>
+                                                <th>No</th>
+                                                <th>Nomor Pengeluaran</th>
+                                                <th>Jumlah Barang</th>
+                                                <th>Tanggal Pengeluaran</th>
+                                                <th>Catatan</th>
+                                            </tr>
+                                            </thead>
+                                            <tbody>
+                                            {% for i, iissue in iissues %}
+                                            <tr>
+                                                <td><center>{{ i + 1 }}</center></td>
+                                                <td>
+                                                    <a href="{{ 'pos/inventories/update' | link }}/{{ iissue.ii_id }}#detail" title="Detail Inventory Issue" target="_blank">
+                                                        {{ iissue.ii_number }}
+                                                    </a>
+                                                </td>
+                                                <td>{{ iissue.substract_value }} {{ iissue.unit | title }}</td>
+                                                <td>{{ iissue.substracted_at | default('-') }}</td>
+                                                <td>{{ iissue.notes | default('-') }}</td>
+                                            </tr>
+                                            {% else %}
+                                            <tr class="no-data">
+                                                <td>No data founds</td>
+                                            </tr>
+                                            {% endfor %}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% include 'partial/right_menu.html' %}
+{% endblock %}
+{% block endbodyjs %}
+<script src="{{ 'lib/bootstrap-daterangepicker/daterangepicker.js' | admin_asset_url }}"></script>
+<script src="{{ 'lib/moment-js/moment.min.js' | admin_asset_url }}"></script>
+<script src="{{ 'lib/DataTables/media/js/jquery.dataTables.min.js' | admin_asset_url }}"></script>
+<script src="{{ 'lib/DataTables/media/js/dataTables.bootstrap.js' | admin_asset_url }}"></script>
+<script type="text/javascript">
+    $(function() {
+        initDateRage();
+    });
+
+    function initDateRage() {
+        if($('#reportrange').length) {
+            if( $(window).width() < 974 ) {
+                var dropdownPos = 'right';
+            } else {
+                var dropdownPos = 'left';
+            }
+            $('#reportrange').daterangepicker({
+                        opens: dropdownPos,
+                        ranges: {
+                            'Today': [moment(), moment()],
+                            'Yesterday': [moment().subtract('days', 1), moment().subtract('days', 1)],
+                            'Last 7 Days': [moment().subtract('days', 6), moment()],
+                            'Last 30 Days': [moment().subtract('days', 29), moment()],
+                            'This Month': [moment().startOf('month'), moment().endOf('month')],
+                            'Last Month': [moment().subtract('month', 1).startOf('month'), moment().subtract('month', 1).endOf('month')]
+                        },
+                        startDate: moment().subtract('days', 29),
+                        endDate: moment(),
+                        buttonClasses: ['btn','btn-sm']
+                    },
+                    function(start, end) {
+                        $('#reportrange span').html(start.format('MMMM D, YYYY') + ' - ' + end.format('MMMM D, YYYY'));
+                        setDateRange(start, end);
+                    }
+            );
+        }
+    }
+    function setDateRange(start, end) {
+        var loc = window.location;
+        var currentURL = loc.protocol + '//' + loc.host + loc.pathname;
+        var wh = gup('wh', loc);
+        if (wh && wh.length > 0) {
+            window.location.href = currentURL+'?wh='+wh+'&start='+start+'&end='+end;
+        } else {
+            window.location.href = currentURL+'?start='+start+'&end='+end;
+        }
+    }
+    function gup( name, url ) {
+        if (!url) url = location.href;
+        name = name.replace(/[\[]/,"\\\[").replace(/[\]]/,"\\\]");
+        var regexS = "[\\?&]"+name+"=([^&#]*)";
+        var regex = new RegExp( regexS );
+        var results = regex.exec( url );
+        return results == null ? null : results[1];
+    }
+</script>
+{% endblock %}

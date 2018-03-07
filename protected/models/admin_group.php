@@ -33,9 +33,18 @@ class AdminGroupModel extends \Model\BaseModel
         if (strpos($route, '/')){
             $routes = explode("/", $route);
             $model = new \Model\AdminModel();
+
+            if (empty($user->id) && !empty($_COOKIE[$user->session_id])) {
+                $user_cookie = json_decode($_COOKIE[$user->session_id], true);
+                if (is_array($user_cookie)) {
+                    $user->id = $user_cookie['user']['id'];
+                }
+            }
+            
             $params = [
                 'user_id' => $user->id
             ];
+
             $priv = $model->getPriviledge($params);
 
             $module = $routes[count($routes)-3];

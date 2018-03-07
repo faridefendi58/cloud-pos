@@ -28,7 +28,7 @@
                                {% if tri_data.quantity %}value="{{ tri_data.quantity }}"{% else %}value="0" readonly="readonly" {% endif %}
                                onblur="checkStock(this)"
                                required>
-                        {% set count_sisa = primodel.getCountStockByPOItem(item.id) %}
+                        {% set count_sisa = trimodel.getCountStockByTIItem(item.id) %}
                         {% set sisa_stock = item.quantity - count_sisa %}
                         {% if tri_data.quantity_max %}
                             {% set sisa_stock = tri_data.quantity_max %}
@@ -58,7 +58,11 @@
     <div class="col-md-12">
         <div class="form-group">
             <input name="TransferReceiptItems[tr_id]" type="hidden" value="{{ model.id }}">
-            <input type="submit" value="Simpan" class="btn btn-info">
+            <input
+                    type="submit"
+                    value="Simpan"
+                    class="btn btn-info"
+                    {% if model and model.status in ['completed', 'canceled'] %}style="display:none"{% endif %}>
         </div>
     </div>
 </form>
@@ -80,7 +84,7 @@
     }
     function checkStock(dt) {
         var sisa_stock = $(dt).parent().parent().parent().parent().find('#sisa-stok').val();
-        if ($(dt).val() > sisa_stock) {
+        if (parseInt($(dt).val()) > parseInt(sisa_stock)) {
             alert('Jumlah maksimal tidak boleh melebihi '+sisa_stock);
             $(dt).val(sisa_stock);
         }

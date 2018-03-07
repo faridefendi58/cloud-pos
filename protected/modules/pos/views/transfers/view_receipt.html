@@ -9,8 +9,8 @@ Penerimaan Persediaan - {{ App.params.site_name }}
     <div class="page_bar clearfix">
         <div class="row">
             <div class="col-sm-9">
-                <h1 class="page_title">Penerimaan Persediaan</h1>
-                <p class="text-muted">Penerimaan Persediaan adalah bukti penerimaan stok setelah dipindahkan dari gudang atau warehouse lain</p>
+                <h1 class="page_title">Penerimaan Perpindahan Stok</h1>
+                <p class="text-muted">Penerimaan Perpindahan Stok adalah bukti penerimaan stok setelah dipindahkan dari gudang atau warehouse lain</p>
             </div>
             <div class="col-sm-3 text-right">
                 <a class="btn btn-default" data-toggle="tab" href="#create-new">Penerimaan Persediaan Baru</a>
@@ -34,7 +34,7 @@ Penerimaan Persediaan - {{ App.params.site_name }}
                             <div class="tab-content" id="tabs_content_a">
                                 <div id="daftar" class="tab-pane fade in active">
                                     <div id="dt_basic_wrapper" class="dataTables_wrapper form-inline no-footer table-responsive mt20" role="grid">
-                                        <table id="dt_basic" class="table table-striped dataTable" attr-sort="5" attr-sort-type="desc">
+                                        <table id="dt_basic" class="table table-striped dataTable" attr-sort="6" attr-sort-type="desc">
                                             <thead>
                                             <tr>
                                                 <th>No</th>
@@ -42,6 +42,7 @@ Penerimaan Persediaan - {{ App.params.site_name }}
                                                 <th>Nomor Issue</th>
                                                 <th>Warehouse Asal</th>
                                                 <th>Warehouse Tujuan</th>
+                                                <th>Warehouse Penerima</th>
                                                 <th>Tanggal Efektif</th>
                                                 <th>&nbsp;</th>
                                             </tr>
@@ -66,9 +67,22 @@ Penerimaan Persediaan - {{ App.params.site_name }}
                                                     </a>
                                                 </td>
                                                 <td>
+                                                    {% if receipt.warehouse_to_should_be %}
                                                     <a href="{{ 'pos/warehouses/update' | link }}/{{ receipt.warehouse_to }}#detail" title="Detail warehouse {{ receipt.warehouse_to }}" target="_blank">
-                                                        {{ receipt.warehouse_to_name }}
+                                                        {{ receipt.warehouse_to_should_be | default('-') }}
                                                     </a>
+                                                    {% else %}
+                                                    -
+                                                    {% endif %}
+                                                </td>
+                                                <td>
+                                                    {% if receipt.warehouse_to_name %}
+                                                    <a href="{{ 'pos/warehouses/update' | link }}/{{ receipt.warehouse_id }}#detail" title="Detail warehouse {{ receipt.warehouse_id }}" target="_blank">
+                                                        {{ receipt.warehouse_to_name | default('-') }}
+                                                    </a>
+                                                    {% else %}
+                                                    -
+                                                    {% endif %}
                                                 </td>
                                                 <td><center>{{ receipt.effective_date | date("Y-m-d") }}</center></td>
                                                 <td>{{ receipt.status | title }}</td>

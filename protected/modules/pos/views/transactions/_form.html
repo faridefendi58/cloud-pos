@@ -2,19 +2,16 @@
     <div class="col-sm-9">
         <div class="row">
             <div class="col-md-5 col-sm-6" id="list-item">
-                <select data-live-search="1" class="form-control no-margin" name="scan" id="scan">
+                <select class="form-control no-margin select2" name="scan" id="scan">
                     <option value="" selected="selected">Pilih Nama Barang</option>
-                    <option value="10001 - Kue Cubit">10001 - Kue Cubit</option>
-                    <option value="10002 - Kue Cubit SD">10002 - Kue Cubit SD</option>
-                    <option value="10003 - Kue Cubit Coklat">10003 - Kue Cubit Coklat</option>
-                    <option value="10004 - Kue Cubit Greentea">10004 - Kue Cubit Greentea</option>
-                    <option value="10005 - Kue Cubit Candy">10005 - Kue Cubit Candy</option>
-                    <option value="10006 - Roti Maryam">10006 - Roti Maryam</option>
+                    {% for i, product in products %}
+                    <option value="{{ product.id }}">{{ product.title | title }}</option>
+                    {% endfor %}
                 </select>
             </div>
             <div class="col-md-7 col-sm-6 text-right">
-                <button class="btn btn-default mar_top1" onclick="listItems();">Advanced Search Item</button>
-                <div class="col-md-4 row">
+                <button class="btn btn-default mar_top1" onclick="listItems();">Pencarian Barang</button>
+                <div class="col-md-4 row hide">
                     <select class="form-control" onchange="setCurrency(this);" name="currency" id="currency">
                         <option value="1" selected="selected">Rupiah</option>
                         <option value="2">US Dollar</option>
@@ -28,17 +25,17 @@
                     <thead>
                     <tr>
                         <th>No</th>
-                        <th>Item Code</th>
-                        <th>Item Name</th>
-                        <th>Price</th>
-                        <th>Quantity</th>
-                        <th>Discount</th>
+                        <!--<th>Kode Produk</th>-->
+                        <th>Nama Produk</th>
+                        <th>Harga</th>
+                        <th>Jumlah</th>
+                        <th>Diskon</th>
                         <th>Total</th>
                         <th>&nbsp;</th>
                     </tr>
                     </thead>
                     <tbody>
-                    {# include 'transactions/_items.html' #}
+                    {% include 'transactions/_items.html' with {'items_belanja':items_belanja} %}
                     </tbody>
                 </table>
             </div>
@@ -61,7 +58,6 @@
                 <select data-live-search="1" class="form-control no-margin" name="find_customer" id="find_customer">
                     <option value="" selected="selected">Pilih Pelanggan</option>
                     <option value="1 - noname">1 - noname</option>
-                    <option value="3 - effendi">3 - effendi</option>
                 </select>
                 <button class="btn btn-info btn-block" onclick="createCustomer();">Add New Customer</button>
             </div>
@@ -71,7 +67,7 @@
                         <tbody>
                         <tr>
                             <td><b>Sub Total</b></td>
-                            <td><h3><span id="sub-total" style="font-size:35px;">{# $this->getTotalBelanja() #}</span></h3></td>
+                            <td><h3><span id="sub-total" style="font-size:35px;">{{ sub_total | number_format(0, ',', '.') }}</span></h3></td>
                         </tr>
                         </tbody>
                     </table>
@@ -90,9 +86,7 @@ if (e.which == 13) {
 pushSearch(this.value,'".Yii::app()->createUrl('/'.Yii::app()->controller->module->id.'/orders/scan')."');
 }
 });
-$('select[id=\"scan\"]').change(function(){
-pushSearch(this.value,'".Yii::app()->createUrl('/'.Yii::app()->controller->module->id.'/orders/scan')."');
-});
+
 $('#find').keypress(function(e){
 if (e.which == 13) {
 pushFindCustomer(this.value,'".Yii::app()->createUrl('/'.Yii::app()->controller->module->id.'/customer/choose')."');
@@ -125,32 +119,104 @@ pushFindPromoCode(this.value,'".Yii::app()->createUrl('/'.Yii::app()->controller
     </div>
 </div>
 
+{% block endbodyjs %}
 <script type="text/javascript">
-    function pushSearch(item,action)
-    {
-        $.ajax({
-            'beforeSend': function() { Loading.show(); },
-            'complete': function() { Loading.hide(); },
-            'url': action,
-            'type':'post',
-            'dataType': 'json',
-            'data':{"item":item},
-            'success': function(data){
-                if(data.status=='success'){
-                    $('#sales-frame table.items tbody').html(data.div);
-                    $('span[id="sub-total"]').html(data.subtotal);
-                    $('#payment-button').css('display','block');
-                    $("input[id=\'scan\']").val("");
-                    $('#list-item').find("input.input-block-level").val("");
-                    $('#list-item').find(".filter-option").html('Pilih Nama Barang');
-                }else{
-                    alert(data.message);
-                    $("input[id=\'scan\']").val("");
-                    $("input[id=\'scan\']").focus();
-                }
-            },
+    $(function () {
+        tisa_enhanced_select.init();
+        $('select[id="scan"]').change(function(){
+            transaction.pushSearch(this.value);
         });
-        return false;
+    });
+    tisa_enhanced_select = {
+        init: function() {
+            if($('.select2').length) {
+                $('.select2').select2({
+                    allowClear: true,
+                    placeholder: "Select..."
+                });
+            }
+        }
+    }
+    transaction = {
+        pushSearch: function (item) {
+            $.ajax({
+                'url': "{{ 'pos/transactions/scan' | link }}",
+                'type':'post',
+                'data':{"item":item},
+                'success': function(data){
+                    console.log(data);
+                    if(data.status=='success'){
+                        transaction.refreshChart();
+                        $('span[id="sub-total"]').html(transaction.moneyFormat(data.sub_total));
+                        $('#payment-button').css('display','block');
+                        $("input[id='scan']").val("");
+                        $('#list-item').find("input.input-block-level").val("");
+                        $('#list-item').find(".filter-option").html('Pilih Nama Barang');
+                    }else{
+                        $("input[id='scan']").val("");
+                        $("input[id='scan']").focus();
+                    }
+                },
+            });
+            return false;
+        },
+        deleteItem: function (id) {
+            if(confirm('Anda yakin ingin menghapus item ini ?')){
+                $.ajax({
+                    //'beforeSend': function() { Loading.show(); },
+                    //'complete': function() { Loading.hide(); },
+                    'url': "{{ 'pos/transactions/delete-item' | link }}/"+id,
+                    'type':'post',
+                    'data':{"id":id},
+                    'success': function(data){
+                        console.log(data);
+                        if(data.status=='success'){
+                            transaction.refreshChart();
+                            $('span[id="sub-total"]').html(transaction.moneyFormat(data.sub_total));
+                        }
+                    },
+                });
+                return false;
+            }
+        },
+        refreshChart: function () {
+            $.ajax({
+                'url': "{{ 'pos/transactions/cart' | link }}",
+                'type':'get',
+                'success': function(data){
+                    console.log(data);
+                    $('#sales-frame table.items tbody').html(data);
+                    //$('span[id="sub-total"]').html(data.sub_total);
+                    $("input[id='scan']").focus();
+                },
+            });
+        },
+        moneyFormat: function (num) {
+            return num.toString().replace(/(\d)(?=(\d{3})+(?!\d))/g, "$1.");
+        },
+        pushQty: function (id,data) {
+            var $this = $(data);
+            var qty = data.value;
+            if(typeof qty == "undefined")
+                var qty = $this.val();
+            $.ajax({
+                'url' : "{{ 'pos/transactions/update-qty' | link }}",
+                'type' : 'post',
+                'data' : {"id":id, "qty":qty},
+                'success' : function(data){
+                    console.log(data);
+                    if (data.status == 'success'){
+                        $('input[id="qty"]').html(data.div);
+                        $('span[id="sub-total"]').html(data.subtotal);
+                        $('#discount-'+id).html(data.discount);
+                        $('#total-item-'+id).html(data.total);
+                        $("input[id=\'scan\']").focus();
+                    } else
+                        $this.val(1);
+                },
+            });
+            return false;
+        }
     }
     function pushQty(id,data,action)
     {
@@ -171,12 +237,9 @@ pushFindPromoCode(this.value,'".Yii::app()->createUrl('/'.Yii::app()->controller
                     $('span[id="sub-total"]').html(data.subtotal);
                     $('#discount-'+id).html(data.discount);
                     $('#total-item-'+id).html(data.total);
-                    //if($('#promocode').val().length>0)
-                    //window.location.reload(true);
                     $("input[id=\'scan\']").focus();
                 }else
                     $this.val(1);
-                //alert(data.message);
             },
         });
         return false;
@@ -228,30 +291,6 @@ pushFindPromoCode(this.value,'".Yii::app()->createUrl('/'.Yii::app()->controller
         });
         return false;
     }
-    function deleteItem(id)
-    {
-        if(confirm('Are you sure to delete this item ?')){
-            $.ajax({
-                'beforeSend': function() { Loading.show(); },
-                'complete': function() { Loading.hide(); },
-                'url': "<?php echo Yii::app()->createUrl('/'.Yii::app()->controller->module->id.'/orders/deleteItem",
-                'type':'post',
-                'dataType': 'json',
-                'data':{"id":id},
-                'success': function(data){
-                    if(data.status=='success'){
-                        $('#sales-frame table.items tbody').html(data.div);
-                        $('span[id="sub-total"]').html(data.subtotal);
-                        if(data.count<=0)
-                            $('#payment-button').css('display','none');
-
-                        $("input[id=\'scan\']").focus();
-                    }
-                },
-            });
-            return false;
-        }
-    }
     function cancelRequest()
     {
         if(confirm('Are you sure to cancel transactions ?')){
@@ -280,9 +319,7 @@ pushFindPromoCode(this.value,'".Yii::app()->createUrl('/'.Yii::app()->controller
     function listItems()
     {
         $.ajax({
-            'beforeSend': function() { Loading.show(); },
-            'complete': function() { Loading.hide(); },
-            'url': "<?php echo Yii::app()->createUrl('/'.Yii::app()->controller->module->id.'/orders/viewItems",
+            'url': "{{ 'pos/transactions/view-items' | link }}",
             'type':'post',
             'dataType': 'json',
             'success': function(data){
@@ -300,8 +337,6 @@ pushFindPromoCode(this.value,'".Yii::app()->createUrl('/'.Yii::app()->controller
     function createCustomer()
     {
         $.ajax({
-            'beforeSend': function() { Loading.show(); },
-            'complete': function() { Loading.hide(); },
             'url': "<?php echo Yii::app()->createUrl('/'.Yii::app()->controller->module->id.'/customer/create",
             'type':'post',
             'dataType': 'json',
@@ -420,7 +455,6 @@ pushFindPromoCode(this.value,'".Yii::app()->createUrl('/'.Yii::app()->controller
 
         document.onkeydown = function(e){
             setfocus();
-//alert(e.keyCode);
             if (e.keyCode==17){//--Tombol_CTRL---
                 //$('#find-btn').click();
                 //listItems();
@@ -452,3 +486,4 @@ pushFindPromoCode(this.value,'".Yii::app()->createUrl('/'.Yii::app()->controller
         }
     });
 </script>
+{% endblock %}

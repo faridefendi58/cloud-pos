@@ -4,7 +4,7 @@
         <div class="panel-heading">
             <h4 class="panel-title">
                 <a data-toggle="collapse" data-parent="#accordion_a" href="#accordion_a_{{ i }}">
-                    {{ receipt.tr_number }} [{{ receipt.warehouse_from_name }}]
+                    {{ receipt.tr_number }} [{{ receipt.warehouse_to_name }}]
                 </a>
             </h4>
         </div>
@@ -36,7 +36,7 @@
                             </tr>
                             <tr>
                                 <td>Warehouse Tujuan</td>
-                                <td><a href="{{ 'pos/warehouses/update' | link }}/{{ detail.warehouse_to }}#detail">{{ detail.warehouse_to_name }}</a></td>
+                                <td><a href="{{ 'pos/warehouses/update' | link }}/{{ receipt.warehouse_id }}#detail">{{ receipt.warehouse_to_name }}</a></td>
                             </tr>
                             <tr>
                                 <td>Tanggal Transfer</td>
@@ -46,6 +46,12 @@
                                 <td>Status</td>
                                 <td><b>{{ receipt.status | title }}</b></td>
                             </tr>
+                            {% if receipt.completed_by %}
+                            <tr>
+                                <td>Nama Penerima</td>
+                                <td><b>{{ receipt.completed_by_name | title }}</b></td>
+                            </tr>
+                            {% endif %}
                             <tr>
                                 <td>Catatan</td>
                                 <td>{{ receipt.notes | default('-') }}</td>

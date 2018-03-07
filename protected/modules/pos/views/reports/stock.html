@@ -1,0 +1,172 @@
+{% extends "layout.html" %}
+{% block pagetitle %}
+Stok Produk Per Warehouse - {{ App.params.site_name }}
+{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" href="{{ 'lib/bootstrap-daterangepicker/daterangepicker-bs3.css' | admin_asset_url }}">
+<div id="main_wrapper">
+    <div class="page_bar clearfix">
+        <div class="row">
+            <div class="col-sm-6">
+                <h1 class="page_title">
+                    {% if not warehouse %}
+                    Stok Per Warehouse
+                    {% else %}
+                    Stok di Warehouse {{ warehouse.title }}
+                    {% endif %}
+                </h1>
+                <p class="text-muted">Stok dan catatan aktifitas di warehouse {{ warehouse.title }}</p>
+            </div>
+            <div class="col-sm-3">
+                <select id="warehouse_from" name="Reports[warehouse_id]" class="form-control select2" onchange="selectWH(this)">
+                    <option value="0">- Pilih Warehouse -</option>
+                    {% for i, wh in warehouses %}
+                    <option value="{{ wh.id }}" {% if warehouse and warehouse.id == wh.id %}selected="selected"{% endif %}>{{ wh.title }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-sm-3 text-right">
+                <div id="reportrange" class="btn">
+                    <i class="fa fa-calendar"></i>
+                    {% if params.date_start %}
+                    <span>{{ params.date_start | date("M d, Y") }} - {{ params.date_end | date("M d, Y") }}</span> <b class="caret"></b>
+                    {% else %}
+                    <span>{{ "now" | date("M d, Y") }} - {{ "now" | date("M d, Y") }}</span> <b class="caret"></b>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="page_content">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-lg-12">
+                    <div class="panel panel-default">
+                        <div class="panel-heading">Sisa Stok</div>
+                        <div class="panel-body">
+                            <div id="dt_basic_wrapper" class="dataTables_wrapper form-inline no-footer table-responsive mt20" role="grid">
+                                <table id="dt_basic" class="table table-striped dataTable" attr-sort="2" attr-sort-type="asc">
+                                    <thead>
+                                    <tr>
+                                        <th>No</th>
+                                        <th>Nama Produk</th>
+                                        <th>Sisa Stok</th>
+                                        <th>&nbsp;</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    {% for i, stock in stocks %}
+                                    <tr>
+                                        <td><center>{{ i + 1 }}</center></td>
+                                        <td>
+                                            <a href="{{ 'pos/products/stock' | link }}/{{ stock.product_id }}?wh={{ warehouse.id }}" title="Detail Product">
+                                                {{ stock.product_name }}
+                                            </a>
+                                        </td>
+                                        <td>{{ stock.quantity }}</td>
+                                        <td>
+                                            <a href="{{ 'pos/products/stock' | link }}/{{ stock.product_id }}?wh={{ warehouse.id }}" title="Detail Persediaan">
+                                                <i class="fa fa-briefcase"></i>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    {% else %}
+                                    <tr class="no-data">
+                                        <td>No data founds</td>
+                                    </tr>
+                                    {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% include 'partial/right_menu.html' %}
+{% endblock %}
+{% block endbodyjs %}
+<script src="{{ 'lib/bootstrap-daterangepicker/daterangepicker.js' | admin_asset_url }}"></script>
+<script src="{{ 'lib/moment-js/moment.min.js' | admin_asset_url }}"></script>
+<script src="{{ 'lib/DataTables/media/js/jquery.dataTables.min.js' | admin_asset_url }}"></script>
+<script src="{{ 'lib/DataTables/media/js/dataTables.bootstrap.js' | admin_asset_url }}"></script>
+<script type="text/javascript">
+    $(function() {
+        initDateRage();
+        tisa_enhanced_select.init();
+    });
+
+    function initDateRage() {
+        if($('#reportrange').length) {
+            if( $(window).width() < 974 ) {
+                var dropdownPos = 'right';
+            } else {
+                var dropdownPos = 'left';
+            }
+            $('#reportrange').daterangepicker({
+                        opens: dropdownPos,
+                        ranges: {
+                            'Today': [moment(), moment()],
+                            'Yesterday': [moment().subtract('days', 1), moment().subtract('days', 1)],
+                            'Last 7 Days': [moment().subtract('days', 6), moment()],
+                            'Last 30 Days': [moment().subtract('days', 29), moment()],
+                            'This Month': [moment().startOf('month'), moment().endOf('month')],
+                            'Last Month': [moment().subtract('month', 1).startOf('month'), moment().subtract('month', 1).endOf('month')]
+                        },
+                        startDate: moment().subtract('days', 29),
+                        endDate: moment(),
+                        buttonClasses: ['btn','btn-sm']
+                    },
+                    function(start, end) {
+                        $('#reportrange span').html(start.format('MMMM D, YYYY') + ' - ' + end.format('MMMM D, YYYY'));
+                        setDateRange(start, end);
+                    }
+            );
+        }
+    }
+    function setDateRange(start, end) {
+        var loc = window.location;
+        var currentURL = loc.protocol + '//' + loc.host + loc.pathname;
+        var wh = gup('wh', loc);
+        if (wh && wh.length > 0) {
+            window.location.href = currentURL+'?wh='+wh+'&start='+start+'&end='+end;
+        } else {
+            window.location.href = currentURL+'?start='+start+'&end='+end;
+        }
+    }
+    function gup( name, url ) {
+        if (!url) url = location.href;
+        name = name.replace(/[\[]/,"\\\[").replace(/[\]]/,"\\\]");
+        var regexS = "[\\?&]"+name+"=([^&#]*)";
+        var regex = new RegExp( regexS );
+        var results = regex.exec( url );
+        return results == null ? null : results[1];
+    }
+    tisa_enhanced_select = {
+        init: function() {
+            if($('.select2').length) {
+                $('.select2').select2({
+                    allowClear: true,
+                    placeholder: "Select..."
+                });
+            }
+        }
+    }
+    function selectWH(dt) {
+        var loc = window.location;
+        var currentURL = loc.protocol + '//' + loc.host + loc.pathname;
+        if ($(dt).val() && parseInt($(dt).val()) > 0) {
+            var start = gup('start', loc);
+            var end = gup('end', loc);
+            if (start && start.length >0 && end && end.length > 0)
+                window.location.href = currentURL+'?wh='+$(dt).val()+'&start='+start+'&end='+end;
+            else
+                window.location.href = currentURL+'?wh='+$(dt).val();
+        }
+        return false;
+    }
+</script>
+{% endblock %}

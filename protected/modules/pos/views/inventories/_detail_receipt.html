@@ -1,6 +1,6 @@
 <div class="col-md-12">&nbsp;</div>
 <div class="col-md-6">
-    <h4 class="no-margin"><i class="fa fa-file-o"></i> Transfer Data</h4>
+    <h4 class="no-margin"><i class="fa fa-file-o"></i> Data Penerimaan Persediaan</h4>
     <table class="table table-hover mt20">
         <tr>
         <tr>
@@ -9,38 +9,20 @@
         </tr>
         <tr>
             <td>Nomor Receipt</td>
-            <td>{{ model.tr_number }}</td>
-        </tr>
-        <tr>
-            <td>Nomor Transfer</td>
-            <td>
-                <a href="{{ 'pos/transfers/update' | link }}/{{ model.ti_id }}#detail" title="Detail Transfer {{ model.ti_id }}">
-                    {{ detail.ti_number }}
-                </a>
-            </td>
+            <td>{{ model.ir_number }}</td>
         </tr>
         <tr>
             <td>Tanggal Penerimaan</td>
             <td>{{ model.effective_date | date("d F Y") | default('-') }}</td>
         </tr>
         <tr>
-            <td>Dikirim Oleh</td>
-            <td>{{ detail.warehouse_from_name }}</td>
-        </tr>
-        <tr>
             <td>Diterima Oleh</td>
-            <td>{{ detail.warehouse_to_name }}</td>
+            <td>{{ detail.warehouse_name }}</td>
         </tr>
         <tr>
             <td>Status</td>
-            <td>{{ model.status | title }}</td>
+            <td><b>{{ model.status | title }}</b></td>
         </tr>
-        {% if model.completed_by %}
-        <tr>
-            <td>Nama Penerima</td>
-            <td>{{ detail.completed_by_name | default('-') }}</td>
-        </tr>
-        {% endif %}
         <tr>
             <td>Catatan</td>
             <td>{{ model.notes | default('-') }}</td>
@@ -83,7 +65,7 @@
         <tbody>
         {% set tot_qty = 0 %}
         {% set tot_price = 0 %}
-        {% set ritems = trimodel.getData(model.id) %}
+        {% set ritems = irimodel.getData(model.id) %}
         {% for i, item in ritems %}
         <tr>
             <td>{{ i+1 }}</td>
