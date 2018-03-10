@@ -18,6 +18,9 @@ if (!empty($settings['settings']['params']['extensions'])) {
 // Controller
 require __DIR__ . '/controller.php';
 
+// API base controller
+require __DIR__ . '/api_controller.php';
+
 // Tool
 require __DIR__ . '/tool.php';
 
