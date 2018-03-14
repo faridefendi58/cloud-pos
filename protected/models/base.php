@@ -201,7 +201,7 @@ class BaseModel extends \RedBeanPHP\SimpleModel
         return true;
     }
 
-    public function getErrors($in_array = true, $per_attribute = false)
+    public function getErrors($in_array = true, $per_attribute = false, $html_format = true)
     {
         if ($in_array) {
             if ($per_attribute){
@@ -216,13 +216,24 @@ class BaseModel extends \RedBeanPHP\SimpleModel
 
             return $this->_errors;
         } else {
-            $msg = "<ul>Silakan periksa kembali beberapa kesalahan berikut :";
-            foreach ($this->_errors as $i => $error){
-                foreach (array_values($error) as $j => $err_detail) {
-                    $msg .= "<li>" . $err_detail . "</li>";
+            if ($html_format) {
+                $msg = "<ul>Silakan periksa kembali beberapa kesalahan berikut :";
+                foreach ($this->_errors as $i => $error){
+                    foreach (array_values($error) as $j => $err_detail) {
+                        $msg .= "<li>" . $err_detail . "</li>";
+                    }
                 }
+                $msg .= "</ul>";
+            } else {
+                $amsg = [];
+                foreach ($this->_errors as $i => $error){
+                    foreach (array_values($error) as $j => $err_detail) {
+                        $amsg[$j] = $err_detail;
+                    }
+                }
+                $msg = implode( ", ", $amsg );
             }
-            $msg .= "</ul>";
+
             return $msg;
         }
     }

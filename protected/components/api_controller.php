@@ -2,8 +2,6 @@
 
 namespace Components;
 
-use PHPMailer\PHPMailer\Exception;
-
 class ApiBaseController
 {
     protected $_container;

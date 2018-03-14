@@ -23,7 +23,7 @@ class AdminModel extends \Model\BaseModel
         // NOTE: you should only define rules for those attributes that
         // will receive user inputs.
         return [
-            ['username, email, group_id, status', 'required'],
+            ['username, email, group_id', 'required'],
             ['username', 'length', 'min'=>3, 'max'=>32],
             ['username, email', 'unique'],
             ['password', 'required', 'on'=>'create'],

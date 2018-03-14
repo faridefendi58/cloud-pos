@@ -69,7 +69,7 @@ class Validator
                     $errors[$attribute] = $model->{$attribute}.' bukan dalam format angka.';
             } else {
                 if (array_key_exists('integerOnly', $rule) && $rule['integerOnly']) {
-                    if (is_int($model->{$attribute}))
+                    if (!is_int($model->{$attribute}))
                         $errors[$attribute] = $model->{$attribute}.' bukan bilangan bulat.';
                 }
             }
