@@ -15,13 +15,14 @@ class ReceiptController extends BaseController
     {
         $app->map(['GET'], '/get-issue', [$this, 'get_issue']);
         $app->map(['GET'], '/list-issue', [$this, 'list_issue']);
+        $app->map(['GET'], '/list-issue-number', [$this, 'list_issue_number']);
     }
 
     public function accessRules()
     {
         return [
             ['allow',
-                'actions' => ['get-issue', 'list-issue'],
+                'actions' => ['get-issue', 'list-issue', 'list-issue-number'],
                 'users'=> ['@'],
             ]
         ];
@@ -90,6 +91,45 @@ class ReceiptController extends BaseController
         if (is_array($result_ti_data) && count($result_ti_data)>0) {
             $result['success'] = 1;
             $result['data']['transfer_issue'] = $result_ti_data;
+        }
+
+        return $response->withJson($result, 201);
+    }
+
+    public function list_issue_number($request, $response, $args)
+    {
+        $isAllowed = $this->isAllowed($request, $response);
+
+        if (!$isAllowed['allow']) {
+            $result = [
+                'success' => 0,
+                'message' => $isAllowed['message'],
+            ];
+            return $response->withJson($result, 201);
+        }
+
+        $result = [];
+        $po_model = new \Model\PurchaseOrdersModel();
+        $params = $request->getParams();
+        $status = \Model\PurchaseOrdersModel::STATUS_ON_PROCESS;
+        if (isset($params['status'])) {
+            $status = $params['status'];
+        }
+        $result_data = $po_model->getData(['status' => $status]);
+        if (is_array($result_data) && count($result_data)>0) {
+            $result['success'] = 1;
+            foreach ($result_data as $i => $po_result) {
+                $result['data'][] = $po_result['po_number'];
+            }
+        }
+
+        $ti_model = new \Model\TransferIssuesModel();
+        $result_ti_data = $ti_model->getData(['status' => $status]);
+        if (is_array($result_ti_data) && count($result_ti_data)>0) {
+            $result['success'] = 1;
+            foreach ($result_ti_data as $i => $ti_result) {
+                $result['data'][] = $ti_result['ti_number'];
+            }
         }
 
         return $response->withJson($result, 201);
