@@ -16,13 +16,14 @@ class ReceiptController extends BaseController
         $app->map(['GET'], '/get-issue', [$this, 'get_issue']);
         $app->map(['GET'], '/list-issue', [$this, 'list_issue']);
         $app->map(['GET'], '/list-issue-number', [$this, 'list_issue_number']);
+        $app->map(['POST'], '/confirm', [$this, 'confirm']);
     }
 
     public function accessRules()
     {
         return [
             ['allow',
-                'actions' => ['get-issue', 'list-issue', 'list-issue-number'],
+                'actions' => ['get-issue', 'list-issue', 'list-issue-number', 'confirm'],
                 'users'=> ['@'],
             ]
         ];
@@ -135,6 +136,75 @@ class ReceiptController extends BaseController
             $result['success'] = 1;
             foreach ($result_ti_data as $i => $ti_result) {
                 $result['data'][] = $ti_result['ti_number'];
+            }
+        }
+
+        return $response->withJson($result, 201);
+    }
+
+    public function confirm($request, $response, $args)
+    {
+        $isAllowed = $this->isAllowed($request, $response);
+
+        if (!$isAllowed['allow']) {
+            $result = [
+                'success' => 0,
+                'message' => $isAllowed['message'],
+            ];
+            return $response->withJson($result, 201);
+        }
+
+        $result = [];
+        $model = new \Model\PurchaseOrdersModel();
+        $params = $request->getParams();
+        if (isset($params['issue_number'])) {
+            $result = [
+                'success' => 0,
+                'message' => "Nomor pengadaan tidak ditemukan.",
+            ];
+        }
+
+        if (isset($params['type'])) {
+            if ($params['type'] == 'purchase_order') {
+                $model = \Model\PurchaseOrdersModel::model()->findByAttributes(['po_number' => $params['issue_number']]);
+                if (isset($params['notes'])) {
+                    $model->notes = $params['notes'];
+                }
+                $model->updated_at = date("Y-m-d H:i:s");
+                $update = \Model\PurchaseOrdersModel::model()->update($model);
+                if ($update){
+                    $result = [
+                        'success' => 1,
+                        'message' => 'Data berhasi disimpan.',
+                        'id' => $model->id
+                    ];
+                } else {
+                    $result = [
+                        'success' => 0,
+                        'message' => 'Data gagal disimpan.',
+                        'errors' => \Model\PurchaseOrdersModel::model()->getErrors(false, false, false)
+                    ];
+                }
+            } elseif ($params['type'] == 'transfer_issue') {
+                $model = \Model\TransferIssuesModel::model()->findByAttributes(['ti_number' => $params['issue_number']]);
+                if (isset($params['notes'])) {
+                    $model->notes = $params['notes'];
+                }
+                $model->updated_at = date("Y-m-d H:i:s");
+                $update = \Model\TransferIssuesModel::model()->update($model);
+                if ($update){
+                    $result = [
+                        'success' => 1,
+                        'message' => 'Data berhasi disimpan.',
+                        'id' => $model->id
+                    ];
+                } else {
+                    $result = [
+                        'success' => 0,
+                        'message' => 'Data gagal disimpan.',
+                        'errors' => \Model\TransferIssuesModel::model()->getErrors(false, false, false)
+                    ];
+                }
             }
         }
 
