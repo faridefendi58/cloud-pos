@@ -49,6 +49,9 @@ class ReceiptController extends BaseController
                 $result_data = $po_model->getDetail($model->id);
                 $result['success'] = 1;
                 $result['data'] = array_merge(['type' => 'purchase_order'], $result_data);
+                $dt_model = new \Model\PurchaseOrderItemsModel();
+                $items_data = $dt_model->getData( $model->id );
+                $result['data']['items'] = $items_data;
             } else {
                 $model = \Model\TransferIssuesModel::model()->findByAttributes(['ti_number' => $params['issue_number']]);
                 if ($model instanceof \RedBeanPHP\OODBBean) {
@@ -56,6 +59,9 @@ class ReceiptController extends BaseController
                     $result_data = $ti_model->getDetail($model->id);
                     $result['success'] = 1;
                     $result['data'] = array_merge(['type' => 'transfer_issue'], $result_data);
+                    $dt_model = new \Model\TransferIssueItemsModel();
+                    $items_data = $dt_model->getData( $model->id );
+                    $result['data']['items'] = $items_data;
                 } else {
                     $result['success'] = 0;
                     $result['message'] = 'Nomor pengadaan tidak ditemukan.';
