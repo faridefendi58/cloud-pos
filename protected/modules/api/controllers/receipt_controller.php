@@ -131,7 +131,7 @@ class ReceiptController extends BaseController
         }
 
         $ti_model = new \Model\TransferIssuesModel();
-        $result_ti_data = $ti_model->getData(['status' => $status]);
+        $result_ti_data = $ti_model->getData(['status' => \Model\TransferIssuesModel::STATUS_PENDING]);
         if (is_array($result_ti_data) && count($result_ti_data)>0) {
             $result['success'] = 1;
             foreach ($result_ti_data as $i => $ti_result) {
@@ -171,6 +171,11 @@ class ReceiptController extends BaseController
                     $model->notes = $params['notes'];
                 }
                 $model->updated_at = date("Y-m-d H:i:s");
+                if (isset($params['admin_id'])) {
+                    $model->updated_by = $params['admin_id'];
+                    $model->received_at = date("Y-m-d H:i:s");
+                    $model->received_by = $params['admin_id'];
+                }
                 $update = \Model\PurchaseOrdersModel::model()->update($model);
                 if ($update){
                     $result = [
@@ -191,6 +196,11 @@ class ReceiptController extends BaseController
                     $model->notes = $params['notes'];
                 }
                 $model->updated_at = date("Y-m-d H:i:s");
+                if (isset($params['admin_id'])) {
+                    $model->updated_by = $params['admin_id'];
+                    $model->received_at = date("Y-m-d H:i:s");
+                    $model->received_by = $params['admin_id'];
+                }
                 $update = \Model\TransferIssuesModel::model()->update($model);
                 if ($update){
                     $result = [
