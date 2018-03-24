@@ -43,13 +43,20 @@ class WarehouseController extends BaseController
         $whmodel = new \Model\WarehousesModel();
         $items = $whmodel->getData();
         if (is_array($items)){
+            $result['success'] = 1;
             if (is_array($params) && isset($params['simply']) && $params['simply'] == 1) {
+                $result['data'] = [];
                 foreach ($items as $i => $item) {
-                    $result[$item['id']] = $item['title'];
+                    array_push($result['data'], ['id' => $item['id'], 'title' => $item['title']]);
                 }
             } else {
-                $result = $items;
+                $result['data'] = $items;
             }
+        } else {
+            $result = [
+                'success' => 0,
+                'message' => "Data warehouse tidak ditemukan.",
+            ];
         }
 
         return $response->withJson($result, 201);
