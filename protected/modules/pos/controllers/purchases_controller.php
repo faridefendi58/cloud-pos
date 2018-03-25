@@ -433,7 +433,7 @@ class PurchasesController extends BaseController
         }
     }
 
-    private function get_pr_number()
+    public function get_pr_number()
     {
         $pmodel = new \Model\OptionsModel();
         $ext_pos = $pmodel->getOption('ext_pos');

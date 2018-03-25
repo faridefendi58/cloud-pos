@@ -433,7 +433,7 @@ class TransfersController extends BaseController
         }
     }
 
-    private function get_tr_number()
+    public function get_tr_number()
     {
         $pmodel = new \Model\OptionsModel();
         $ext_pos = $pmodel->getOption('ext_pos');
