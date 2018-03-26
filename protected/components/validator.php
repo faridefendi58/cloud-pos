@@ -16,7 +16,7 @@ class Validator
         $attr_data = preg_replace('/\s+/', '', $rule[0]);
         $attrs = explode(",", $attr_data);
 
-        return self::{$rule[1]}($attrs, $rule);
+        return $this->{$rule[1]}($attrs, $rule);
     }
 
     public function required($attributes, $rule = null)
