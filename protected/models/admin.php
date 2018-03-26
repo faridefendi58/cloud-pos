@@ -29,7 +29,7 @@ class AdminModel extends \Model\BaseModel
             ['password', 'required', 'on'=>'create'],
             ['password', 'length', 'min'=>8, 'on'=>'create'],
             ['email', 'email'],
-            ['group_id', 'numerical', 'integerOnly' => true],
+            ['group_id', 'numerical'],
         ];
     }
 
