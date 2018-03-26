@@ -198,12 +198,20 @@ class UserController extends BaseController
                     $update = \Model\AdminModel::model()->update($model);
                     if ($update) {
                         $result['success'] = 1;
-                        $result['message'] = 'Konfimasi akun berhasil.';
+                        $result['message'] = 'Konfirmasi akun berhasil.';
+                    } else {
+                        $result = [
+                            'success' => 0,
+                            'message' => 'Data gagal disimpan.',
+                            'errors' => \Model\AdminModel::model()->getErrors(false, false, false)
+                        ];
                     }
                 } else {
                     $result['message'] = 'User ini sudah dalam kondisi aktif.';
                 }
             }
+        } else {
+            $result['message'] = 'User tidak ditemukan.';
         }
 
         return $response->withJson($result, 201);
