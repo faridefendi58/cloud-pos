@@ -319,6 +319,11 @@ class ReceiptController extends BaseController
                         $update_status = \Model\PurchaseOrdersModel::model()->update($pomodel);
                     }
 
+                    if ($tot_quantity > 0) {
+                        // directly add to wh stock
+                        $add_to_stock = \Pos\Controllers\PurchasesController::_add_to_stock(['pr_id' => $model->id]);
+                    }
+
                     return ["success" => 1, "id" => $model->id];
                 }
             } else {
@@ -373,6 +378,11 @@ class ReceiptController extends BaseController
                         $timodel->updated_by = $model->created_by;
 
                         $update_status = \Model\TransferIssuesModel::model()->update($timodel);
+                    }
+
+                    if ($tot_quantity > 0) {
+                        // directly add to wh stock
+                        $add_to_stock = \Pos\Controllers\TransfersController::_add_to_stock(['tr_id' => $model->id]);
                     }
 
                     return ["success" => 1, "id" => $model->id];

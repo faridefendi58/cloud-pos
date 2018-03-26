@@ -708,7 +708,7 @@ class TransfersController extends BaseController
      * @param $data : tr_id
      * @return bool
      */
-    protected function _add_to_stock($data)
+    public function _add_to_stock($data)
     {
         if (!isset($data['tr_id']))
             return false;

@@ -720,7 +720,7 @@ class PurchasesController extends BaseController
      * @param $data : pr_id
      * @return bool
      */
-    protected function _add_to_stock($data)
+    public function _add_to_stock($data)
     {
         if (!isset($data['pr_id']))
             return false;
