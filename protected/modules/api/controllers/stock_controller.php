@@ -51,11 +51,12 @@ class StockController extends BaseController
         if ($model instanceof \RedBeanPHP\OODBBean) {
             $ps_model = new \Model\ProductStocksModel();
             $stocks = $ps_model->getQuery(['warehouse_id' => $model->id]);
-            $result['status'] = 1;
+            $result['success'] = 1;
             $result['data'] = $stocks;
         } else {
-            $result['status'] = 0;
+            $result['success'] = 0;
             $result['message'] = 'Warehouse tidak ditemukan.';
+            $result['params'] = $params;
         }
         
         return $response->withJson($result, 201);
