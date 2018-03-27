@@ -185,7 +185,7 @@ class ReceiptController extends BaseController
                 }
             }
 
-            if (empty($params['warehouse_id'])) {
+            if (!isset($params['notes']) && empty($params['warehouse_id'])) {
                 $result = [
                     'success' => 0,
                     'message' => 'Warehouse tidak ditemukan.'
@@ -319,12 +319,17 @@ class ReceiptController extends BaseController
                         $update_status = \Model\PurchaseOrdersModel::model()->update($pomodel);
                     }
 
+                    $result = ["success" => 1, "id" => $model->id];
                     if ($tot_quantity > 0) {
                         // directly add to wh stock
-                        $add_to_stock = \Pos\Controllers\PurchasesController::_add_to_stock(['pr_id' => $model->id]);
+                        try {
+                            $add_to_stock = \Pos\Controllers\PurchasesController::_add_to_stock(['pr_id' => $model->id, 'admin_id' => $model->created_by]);
+                        } catch (\Exception $e) {
+                            $result['message'] = $e->getMessage();
+                        }
                     }
 
-                    return ["success" => 1, "id" => $model->id];
+                    return $result;
                 }
             } else {
                 return ["success" => 0, "message" => "Purchase order tersebut sudah terkonfirmasi sebelumnya."];
@@ -380,12 +385,17 @@ class ReceiptController extends BaseController
                         $update_status = \Model\TransferIssuesModel::model()->update($timodel);
                     }
 
+                    $result = ["success" => 1, "id" => $model->id];
                     if ($tot_quantity > 0) {
                         // directly add to wh stock
-                        $add_to_stock = \Pos\Controllers\TransfersController::_add_to_stock(['tr_id' => $model->id]);
+                        try {
+                            $add_to_stock = \Pos\Controllers\TransfersController::_add_to_stock(['tr_id' => $model->id, 'admin_id' => $model->created_by]);
+                        } catch (\Exception $e) {
+                            $result['message'] = $e->getMessage();
+                        }
                     }
 
-                    return ["success" => 1, "id" => $model->id];
+                    return $result;
                 }
             } else {
                 return ["success" => 0, "message" => "Transfer issue tersebut sudah terkonfirmasi sebelumnya."];

@@ -725,7 +725,7 @@ class TransfersController extends BaseController
                 if ($stock instanceof \RedBeanPHP\OODBBean) {
                     $stock->quantity = $stock->quantity + $item_data->quantity;
                     $stock->updated_at = date("Y-m-d H:i:s");
-                    $stock->updated_by = $this->_user->id;
+                    $stock->updated_by = (isset($data['admin_id']))? $data['admin_id'] : $this->_user->id;
                     $update_stock = \Model\ProductStocksModel::model()->update($stock);
                 } else {
                     $new_stock = new \Model\ProductStocksModel();
@@ -733,7 +733,7 @@ class TransfersController extends BaseController
                     $new_stock->warehouse_id = $model->warehouse_id; //$timodel->warehouse_to;
                     $new_stock->quantity = $item_data->quantity;
                     $new_stock->created_at = date("Y-m-d H:i:s");
-                    $new_stock->created_by = $this->_user->id;
+                    $new_stock->created_by = (isset($data['admin_id']))? $data['admin_id'] : $this->_user->id;
                     $update_stock = \Model\ProductStocksModel::model()->save($new_stock);
                 }
                 if ($update_stock) {
@@ -742,7 +742,7 @@ class TransfersController extends BaseController
                     $item_data->added_value = $item_data->quantity;
                     $item_data->added_at = date("Y-m-d H:i:s");
                     $item_data->updated_at = date("Y-m-d H:i:s");
-                    $item_data->updated_by = $this->_user->id;
+                    $item_data->updated_by = (isset($data['admin_id']))? $data['admin_id'] : $this->_user->id;
                     $update = \Model\TransferReceiptItemsModel::model()->update($item_data);
                     if ($update) {
                         // also update current price
@@ -751,7 +751,7 @@ class TransfersController extends BaseController
                         $product = \Model\ProductsModel::model()->findByPk($item_data['product_id']);
                         $product->current_cost = $current_cost;
                         $product->updated_at = date("Y-m-d H:i:s");
-                        $product->updated_by = $this->_user->id;
+                        $product->updated_by = (isset($data['admin_id']))? $data['admin_id'] : $this->_user->id;
                         $update_product = \Model\ProductsModel::model()->update($product);
                     }
                 }
@@ -760,9 +760,9 @@ class TransfersController extends BaseController
             if ($model->status != \Model\TransferReceiptsModel::STATUS_COMPLETED) {
                 $model->status = \Model\TransferReceiptsModel::STATUS_COMPLETED;
                 $model->completed_at = date("Y-m-d H:i:s");
-                $model->completed_by = $this->_user->id;
+                $model->completed_by = (isset($data['admin_id']))? $data['admin_id'] : $this->_user->id;
                 $model->updated_at = date("Y-m-d H:i:s");
-                $model->updated_by = $this->_user->id;
+                $model->updated_by = (isset($data['admin_id']))? $data['admin_id'] : $this->_user->id;
                 $update_receipt = \Model\TransferReceiptsModel::model()->update($model);
                 if ($update_receipt) {
                     $trmodel = new \Model\TransferReceiptsModel();
@@ -771,9 +771,9 @@ class TransfersController extends BaseController
                         $timodel = \Model\TransferIssuesModel::model()->findByPk($model->ti_id);
                         $timodel->status = \Model\TransferIssuesModel::STATUS_COMPLETED;
                         $timodel->completed_at = date("Y-m-d H:i:s");
-                        $timodel->completed_by = $this->_user->id;
+                        $timodel->completed_by = (isset($data['admin_id']))? $data['admin_id'] : $this->_user->id;
                         $timodel->updated_at = date("Y-m-d H:i:s");
-                        $timodel->updated_by = $this->_user->id;
+                        $timodel->updated_by = (isset($data['admin_id']))? $data['admin_id'] : $this->_user->id;
                         $update_issue = \Model\TransferIssuesModel::model()->update($timodel);
                     }
                 }

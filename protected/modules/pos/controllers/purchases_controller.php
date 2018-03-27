@@ -537,15 +537,25 @@ class PurchasesController extends BaseController
             return false;
         }
 
-        $model = \Model\PurchaseReceiptsModel::model()->findByPk($_POST['id']);
+        $model = \Model\PurchaseReceiptsModel::model()->findByPk($args['id']);
+        $result = [];
+        if (!$model instanceof \RedBeanPHP\OODBBean) {
+            $result = [
+                'status' => 'failed',
+                'message' => 'Purchase order tidak ditemukan.',
+            ];
+            return $response->withJson( $result, 201 );
+        }
+        $pr_id = $model->id;
         $delete = \Model\PurchaseReceiptsModel::model()->delete($model);
         if ($delete) {
-            return $response->withJson(
-                [
-                    'status' => 'success',
-                    'message' => 'Data berhasil dihapus.',
-                ], 201);
+            $delete_items = \Model\PurchaseReceiptItemsModel::model()->deleteAllByAttributes(['pr_id' => $pr_id]);
+            $result = [
+                'status' => 'success',
+                'message' => 'Data berhasil dihapus.',
+            ];
         }
+        return $response->withJson( $result, 201 );
     }
 
     public function create_receipt_item($request, $response, $args)
@@ -736,7 +746,7 @@ class PurchasesController extends BaseController
                 if ($stock instanceof \RedBeanPHP\OODBBean) {
                     $stock->quantity = $stock->quantity + $item_data->quantity;
                     $stock->updated_at = date("Y-m-d H:i:s");
-                    $stock->updated_by = $this->_user->id;
+                    $stock->updated_by = (isset($data['admin_id']))? $data['admin_id'] : $this->_user->id;
                     $update_stock = \Model\ProductStocksModel::model()->update($stock);
                 } else {
                     $new_stock = new \Model\ProductStocksModel();
@@ -744,7 +754,7 @@ class PurchasesController extends BaseController
                     $new_stock->warehouse_id = $model->warehouse_id;
                     $new_stock->quantity = $item_data->quantity;
                     $new_stock->created_at = date("Y-m-d H:i:s");
-                    $new_stock->created_by = $this->_user->id;
+                    $new_stock->created_by = (isset($data['admin_id']))? $data['admin_id'] : $this->_user->id;
                     $update_stock = \Model\ProductStocksModel::model()->save($new_stock);
                 }
                 if ($update_stock) {
@@ -753,7 +763,7 @@ class PurchasesController extends BaseController
                     $item_data->added_value = $item_data->quantity;
                     $item_data->added_at = date("Y-m-d H:i:s");
                     $item_data->updated_at = date("Y-m-d H:i:s");
-                    $item_data->updated_by = $this->_user->id;
+                    $item_data->updated_by = (isset($data['admin_id']))? $data['admin_id'] : $this->_user->id;
                     $update = \Model\PurchaseReceiptItemsModel::model()->update($item_data);
                     if ($update) {
                         // also update current price
@@ -762,7 +772,7 @@ class PurchasesController extends BaseController
                         $product = \Model\ProductsModel::model()->findByPk($item_data['product_id']);
                         $product->current_cost = $current_cost;
                         $product->updated_at = date("Y-m-d H:i:s");
-                        $product->updated_by = $this->_user->id;
+                        $product->updated_by = (isset($data['admin_id']))? $data['admin_id'] : $this->_user->id;
                         $update_product = \Model\ProductsModel::model()->update($product);
                     }
                 }
@@ -771,9 +781,9 @@ class PurchasesController extends BaseController
             if ($model->status != \Model\PurchaseReceiptsModel::STATUS_COMPLETED) {
                 $model->status = \Model\PurchaseReceiptsModel::STATUS_COMPLETED;
                 $model->completed_at = date("Y-m-d H:i:s");
-                $model->completed_by = $this->_user->id;
+                $model->completed_by = (isset($data['admin_id']))? $data['admin_id'] : $this->_user->id;
                 $model->updated_at = date("Y-m-d H:i:s");
-                $model->updated_by = $this->_user->id;
+                $model->updated_by = (isset($data['admin_id']))? $data['admin_id'] : $this->_user->id;
                 $update_receipt = \Model\PurchaseReceiptsModel::model()->update($model);
             }
 
