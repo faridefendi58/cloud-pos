@@ -31,6 +31,9 @@ $app->group('/api', function () use ($user) {
     $this->group('/stock', function() use ($user) {
         new Api\Controllers\StockController($this, $user);
     });
+    $this->group('/product', function() use ($user) {
+        new Api\Controllers\ProductController($this, $user);
+    });
 });
 
 ?>
