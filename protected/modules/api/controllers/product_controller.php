@@ -47,7 +47,7 @@ class ProductController extends BaseController
             if (is_array($params) && isset($params['simply']) && $params['simply'] == 1) {
                 $result['data'] = [];
                 foreach ($items as $i => $item) {
-                    array_push($result['data'], ['id' => $item['id'], 'title' => $item['title']]);
+                    array_push($result['data'], ['id' => $item['id'], 'title' => $item['title'], 'unit' => $item['unit']]);
                 }
             } else {
                 $result['data'] = $items;

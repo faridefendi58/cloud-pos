@@ -34,6 +34,9 @@ $app->group('/api', function () use ($user) {
     $this->group('/product', function() use ($user) {
         new Api\Controllers\ProductController($this, $user);
     });
+    $this->group('/transfer', function() use ($user) {
+        new Api\Controllers\TransferController($this, $user);
+    });
 });
 
 ?>

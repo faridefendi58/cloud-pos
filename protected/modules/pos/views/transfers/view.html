@@ -108,6 +108,7 @@ Pindah Persediaan - {{ App.params.site_name }}
                 'type':'post',
                 //'dataType': 'json',
                 'success': function(data) {
+                    console.log(data);
                     if (data.status == 'success') {
                         $this.parent().parent().remove();
                     }

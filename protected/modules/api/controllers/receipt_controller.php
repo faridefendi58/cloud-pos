@@ -131,7 +131,7 @@ class ReceiptController extends BaseController
         }
 
         $ti_model = new \Model\TransferIssuesModel();
-        $result_ti_data = $ti_model->getData(['status' => \Model\TransferIssuesModel::STATUS_PENDING]);
+        $result_ti_data = $ti_model->getData(['status' => \Model\TransferIssuesModel::STATUS_ON_PROCESS]);
         if (is_array($result_ti_data) && count($result_ti_data)>0) {
             $result['success'] = 1;
             foreach ($result_ti_data as $i => $ti_result) {

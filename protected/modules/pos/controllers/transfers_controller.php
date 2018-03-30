@@ -218,7 +218,7 @@ class TransfersController extends BaseController
         $model = \Model\TransferIssuesModel::model()->findByPk($args['id']);
         $delete = \Model\TransferIssuesModel::model()->delete($model);
         if ($delete) {
-            $delete2 = \Model\TransferIssueItemsModel::model()->deleteAllByAttributes(['po_id'=>$args['id']]);
+            $delete2 = \Model\TransferIssueItemsModel::model()->deleteAllByAttributes(['ti_id'=>$args['id']]);
             return $response->withJson(
                 [
                     'status' => 'success',
@@ -227,7 +227,7 @@ class TransfersController extends BaseController
         }
     }
 
-    private function get_ti_number()
+    public function get_ti_number()
     {
         $pmodel = new \Model\OptionsModel();
         $ext_pos = $pmodel->getOption('ext_pos');
