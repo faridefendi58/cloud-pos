@@ -77,7 +77,7 @@ class ProductStocksModel extends \Model\BaseModel
 
     public function getQuery($data)
     {
-        $sql = 'SELECT t.*, p.title AS product_name  
+        $sql = 'SELECT t.*, p.title AS product_name, p.unit AS unit   
                FROM {tablePrefix}ext_product_stock t 
                LEFT JOIN {tablePrefix}ext_product p ON p.id = t.product_id 
                WHERE 1';
