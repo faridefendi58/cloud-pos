@@ -115,7 +115,12 @@ class TransferController extends BaseController
                     $pomodel->base_price = $tot_price;
                     $update = \Model\TransferIssuesModel::model()->update($pomodel);
 
-                    $result = ["success" => 1, "id" => $model->id, 'message' => 'Data berhasi disimpan.'];
+                    $result = [
+                        "success" => 1,
+                        "id" => $model->id,
+                        'message' => 'Data berhasi disimpan.',
+                        "issue_number" => $model->ti_number
+                    ];
                 } else {
                     $result = ["success" => 0, "message" => "Tidak ada item yang dapat disimpan."];
                 }
