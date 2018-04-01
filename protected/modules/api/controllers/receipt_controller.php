@@ -311,7 +311,7 @@ class ReceiptController extends BaseController
                     }
 
                     $pomodel = \Model\PurchaseOrdersModel::model()->findByPk($data['po_id']);
-                    if ($pomodel->status !== \Model\PurchaseOrdersModel::STATUS_COMPLETED && $quantity == $quantity_max) {
+                    if ($pomodel->status !== \Model\PurchaseOrdersModel::STATUS_COMPLETED && $tot_quantity == $quantity_max) {
                         $pomodel->status = \Model\PurchaseOrdersModel::STATUS_COMPLETED;
                         $pomodel->updated_at = date("Y-m-d H:i:s");
                         $pomodel->updated_by = $model->created_by;
@@ -319,7 +319,7 @@ class ReceiptController extends BaseController
                         $update_status = \Model\PurchaseOrdersModel::model()->update($pomodel);
                     }
 
-                    $result = ["success" => 1, "id" => $model->id];
+                    $result = ["success" => 1, "id" => $model->id, "receipt_number" => $model->pr_number];
                     if ($tot_quantity > 0) {
                         // directly add to wh stock
                         try {
@@ -377,7 +377,7 @@ class ReceiptController extends BaseController
                         }
                     }
                     $timodel = \Model\TransferIssuesModel::model()->findByPk($data['ti_id']);
-                    if ($timodel->status !== \Model\TransferIssuesModel::STATUS_COMPLETED && $quantity == $quantity_max) {
+                    if ($timodel->status !== \Model\TransferIssuesModel::STATUS_COMPLETED && $tot_quantity == $quantity_max) {
                         $timodel->status = \Model\TransferIssuesModel::STATUS_COMPLETED;
                         $timodel->updated_at = date("Y-m-d H:i:s");
                         $timodel->updated_by = $model->created_by;
@@ -385,7 +385,7 @@ class ReceiptController extends BaseController
                         $update_status = \Model\TransferIssuesModel::model()->update($timodel);
                     }
 
-                    $result = ["success" => 1, "id" => $model->id];
+                    $result = ["success" => 1, "id" => $model->id, "receipt_number" => $model->tr_number];
                     if ($tot_quantity > 0) {
                         // directly add to wh stock
                         try {

@@ -37,6 +37,15 @@ $app->group('/api', function () use ($user) {
     $this->group('/transfer', function() use ($user) {
         new Api\Controllers\TransferController($this, $user);
     });
+    $this->group('/purchase', function() use ($user) {
+        new Api\Controllers\PurchaseController($this, $user);
+    });
+    $this->group('/supplier', function() use ($user) {
+        new Api\Controllers\SupplierController($this, $user);
+    });
+    $this->group('/shipment', function() use ($user) {
+        new Api\Controllers\ShipmentController($this, $user);
+    });
 });
 
 ?>
