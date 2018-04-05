@@ -1,6 +1,6 @@
 {% extends "layout.html" %}
 {% block pagetitle %}
-Warehouse - {{ App.params.site_name }}
+Warehouse Group - {{ App.params.site_name }}
 {% endblock %}
 
 {% block content %}
@@ -8,12 +8,12 @@ Warehouse - {{ App.params.site_name }}
 <div id="main_wrapper">
     <div class="page_bar clearfix">
         <div class="row">
-            <div class="col-sm-10">
-                <h1 class="page_title">Warehouse</h1>
-                <p class="text-muted">Kelola data Warehouse</p>
+            <div class="col-sm-9">
+                <h1 class="page_title">Warehouse Group/Coverage</h1>
+                <p class="text-muted">Kelola data Grup Warehouse</p>
             </div>
-            <div class="col-sm-2 text-right">
-                <a class="btn btn-default" data-toggle="tab" href="#create-new">Tambah Warehouse Baru</a>
+            <div class="col-sm-3 text-right">
+                <a class="btn btn-default" data-toggle="tab" href="#create-new">Tambah Grup Warehouse Baru</a>
             </div>
         </div>
     </div>
@@ -25,10 +25,10 @@ Warehouse - {{ App.params.site_name }}
                         <div class="panel-body">
                             <ul class="nav nav-tabs" id="tabs_a">
                                 <li class="active">
-                                    <a data-toggle="tab" href="#daftar">Daftar Warehouse</a>
+                                    <a data-toggle="tab" href="#daftar">Daftar Grup Warehouse</a>
                                 </li>
                                 <li>
-                                    <a data-toggle="tab" href="#create-new">Tambah Warehouse Baru</a>
+                                    <a data-toggle="tab" href="#create-new">Tambah Grup Warehouse Baru</a>
                                 </li>
                             </ul>
                             <div class="tab-content" id="tabs_content_a">
@@ -38,48 +38,40 @@ Warehouse - {{ App.params.site_name }}
                                             <thead>
                                             <tr>
                                                 <th>id</th>
-                                                <th>Nama Warehouse</th>
-                                                <th>Alamat</th>
-                                                <th>Telepon</th>
-                                                <th>Group/Coverage</th>
+                                                <th>Nama Grup</th>
                                                 <th>PIC</th>
+                                                <th>Catatan</th>
+                                                <th>Tanggal Input</th>
+                                                <th>Diinput Oleh</th>
                                                 <th>&nbsp;</th>
                                             </tr>
                                             </thead>
                                             <tbody>
-                                            {% for i, warehouse in warehouses %}
+                                            {% for i, group in groups %}
                                             <tr>
                                                 <td><center>{{ i + 1 }}</center></td>
-                                                <td>{{ warehouse.title }}</td>
-                                                <td>{{ warehouse.address }}</td>
-                                                <td>{{ warehouse.phone | default('-') }}</td>
+                                                <td>{{ group.title }}</td>
                                                 <td>
-                                                    {% if warehouse.group_name %}
-                                                        <a href="{{ 'pos/warehouses/group/update' | link }}/{{ warehouse.group_id }}" target="_blank">
-                                                            {{ warehouse.group_name | default('-') }}
-                                                        </a>
+                                                    {% if group.pic %}
+                                                        {% set pics = group.pic | json_decode %}
+                                                        {% set idx = 0 %}
+                                                        {% for pid, pic in pics %}
+                                                            {% if idx > 0 %}, {% endif %}
+                                                            <a href="{{ 'pos/users/update' | link }}/{{ pid }}" target="_blank">{{ pic.name }}</a>
+                                                            {% set idx = idx + 1 %}
+                                                        {% endfor %}
                                                     {% else %}
                                                     -
                                                     {% endif %}
                                                 </td>
+                                                <td>{{ group.description }}</td>
+                                                <td>{{ group.created_at }}</td>
+                                                <td>{{ group.admin_name | default('-') }}</td>
                                                 <td>
-                                                    {% if warehouse.group_pic %}
-                                                    {% set pics = warehouse.group_pic | json_decode %}
-                                                    {% set idx = 0 %}
-                                                    {% for pid, pic in pics %}
-                                                    {% if idx > 0 %}, {% endif %}
-                                                    <a href="{{ 'pos/users/update' | link }}/{{ pid }}" target="_blank">{{ pic.name }}</a>
-                                                    {% set idx = idx + 1 %}
-                                                    {% endfor %}
-                                                    {% else %}
-                                                    -
-                                                    {% endif %}
-                                                </td>
-                                                <td>
-                                                    <a href="{{ 'pos/warehouses/update' | link }}/{{ warehouse.id }}" title="Ubah Warehouse">
+                                                    <a href="{{ 'pos/warehouses/group/update' | link }}/{{ group.id }}" title="Ubah Grup Warehouse">
                                                         <i class="fa fa-pencil"></i>
                                                     </a>
-                                                    <a href="{{ 'pos/warehouses/delete' | link }}/{{ warehouse.id }}" onclick="return hapus(this);">
+                                                    <a href="{{ 'pos/warehouses/group/delete' | link }}/{{ group.id }}" onclick="return hapus(this);">
                                                         <i class="fa fa-trash-o"></i>
                                                     </a>
                                                 </td>
@@ -94,7 +86,7 @@ Warehouse - {{ App.params.site_name }}
                                     </div>
                                 </div>
                                 <div id="create-new" class="tab-pane fade">
-                                    {% include 'warehouses/_form.html' with {'groups' : groups} %}
+                                    {% include 'warehouses/_form_group.html' with {'admins' : admins} %}
                                 </div>
                             </div>
                         </div>
@@ -119,6 +111,7 @@ Warehouse - {{ App.params.site_name }}
                 'type':'post',
                 //'dataType': 'json',
                 'success': function(data) {
+                    console.log(data);
                     if (data.status == 'success') {
                         $this.parent().parent().remove();
                     }
@@ -128,11 +121,11 @@ Warehouse - {{ App.params.site_name }}
         return false;
     }
     $(function () {
-       if (window.location.hash) {
-           var hash = window.location.hash.substring(1);
-           if ($('a[href="#'+hash+'"]').length > 0)
+        if (window.location.hash) {
+            var hash = window.location.hash.substring(1);
+            if ($('a[href="#'+hash+'"]').length > 0)
                 $('a[href="#'+hash+'"]').click();
-       }
+        }
     });
 </script>
 {% endblock %}

@@ -5,28 +5,28 @@
         <td>#{{ model.id }}</td>
     </tr>
     <tr>
-        <td>Nama Warehouse</td>
+        <td>Nama Grup Warehouse</td>
         <td>{{ model.title }}</td>
-    </tr>
-    <tr>
-        <td>Alamat</td>
-        <td>{{ model.address }}</td>
-    </tr>
-    <tr>
-        <td>Telepon</td>
-        <td>{{ model.phone }}</td>
     </tr>
     <tr>
         <td>Catatan</td>
         <td>{{ model.notes | default('-') }}</td>
     </tr>
     <tr>
-        <td>Group/Coverage</td>
-        <td>{{ detail.group_name | default('-')  }}</td>
-    </tr>
-    <tr>
         <td>Coverage PIC</td>
-        <td>{{ detail.pic | default('-')  }}</td>
+        <td>
+            {% if detail.pic %}
+                {% set pics = detail.pic | json_decode %}
+                {% set idx = 0 %}
+                {% for pid, pic in pics %}
+                    {% if idx > 0 %}, {% endif %}
+                    <a href="{{ 'pos/users/update' | link }}/{{ pid }}" target="_blank">{{ pic.name }}</a>
+                  {% set idx = idx + 1 %}
+                {% endfor %}
+            {% else %}
+            -
+            {% endif %}
+        </td>
     </tr>
     <tr>
         <td>Tanggal Input</td>

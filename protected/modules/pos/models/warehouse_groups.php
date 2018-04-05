@@ -3,7 +3,7 @@ namespace Model;
 
 require_once __DIR__ . '/../../../models/base.php';
 
-class WarehousesModel extends \Model\BaseModel
+class WarehouseGroupsModel extends \Model\BaseModel
 {
     public static function model($className=__CLASS__)
     {
@@ -12,7 +12,7 @@ class WarehousesModel extends \Model\BaseModel
 
     public function tableName()
     {
-        return 'ext_warehouse';
+        return 'ext_warehouse_group';
     }
 
     /**
@@ -32,9 +32,8 @@ class WarehousesModel extends \Model\BaseModel
      */
     public function getData()
     {
-        $sql = 'SELECT t.*, a.name AS admin_name, g.title AS group_name, g.pic AS group_pic    
-            FROM {tablePrefix}ext_warehouse t 
-            LEFT JOIN {tablePrefix}ext_warehouse_group g ON g.id = t.group_id 
+        $sql = 'SELECT t.*, a.name AS admin_name   
+            FROM {tablePrefix}ext_warehouse_group t 
             LEFT JOIN {tablePrefix}admin a ON a.id = t.created_by 
             WHERE 1';
 
@@ -53,10 +52,8 @@ class WarehousesModel extends \Model\BaseModel
      */
     public function getDetail($id)
     {
-        $sql = 'SELECT t.*, a.name AS created_by_name, ab.name AS updated_by_name, 
-            g.title AS group_name, g.pic AS group_pic   
-            FROM {tablePrefix}ext_warehouse t 
-            LEFT JOIN {tablePrefix}ext_warehouse_group g ON g.id = t.group_id 
+        $sql = 'SELECT t.*, a.name AS created_by_name, ab.name AS updated_by_name  
+            FROM {tablePrefix}ext_warehouse_group t 
             LEFT JOIN {tablePrefix}admin a ON a.id = t.created_by 
             LEFT JOIN {tablePrefix}admin ab ON ab.id = t.updated_by 
             WHERE t.id =:id';

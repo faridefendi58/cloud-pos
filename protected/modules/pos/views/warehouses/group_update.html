@@ -1,18 +1,18 @@
 {% extends "layout.html" %}
 {% block pagetitle %}
-Kelola Warehouse - {{ App.params.site_name }}
+Kelola Grup Warehouse - {{ App.params.site_name }}
 {% endblock %}
 
 {% block content %}
 <div id="main_wrapper">
     <div class="page_bar clearfix">
         <div class="row">
-            <div class="col-sm-10">
-                <h1 class="page_title">Kelola Warehouse #{{ model.title }}</h1>
-                <p class="text-muted">Halaman pengelolaan data Warehouse {{ model.title | lower }}</p>
+            <div class="col-sm-9">
+                <h1 class="page_title">Kelola Grup Warehouse #{{ model.title }}</h1>
+                <p class="text-muted">Halaman pengelolaan data Grup Warehouse {{ model.title | lower }}</p>
             </div>
-            <div class="col-sm-2 text-right">
-                <a class="btn btn-default" href="{{ 'pos/warehouses/view' | link }}">Daftar Warehouse</a>
+            <div class="col-sm-3 text-right">
+                <a class="btn btn-default" href="{{ 'pos/warehouses/group/view' | link }}">Daftar Grup Warehouse</a>
             </div>
         </div>
     </div>
@@ -32,10 +32,10 @@ Kelola Warehouse - {{ App.params.site_name }}
                             </ul>
                             <div class="tab-content" id="tabs_content_a">
                                 <div id="detail" class="tab-pane fade">
-                                    {% include 'warehouses/_detail.html' with {'model':model,'detail':detail} %}
+                                    {% include 'warehouses/_detail_group.html' with {'model':model,'detail':detail} %}
                                 </div>
                                 <div id="update" class="tab-pane fade in active">
-                                    {% include 'warehouses/_form.html' with {'model':model, 'groups':groups} %}
+                                    {% include 'warehouses/_form_group.html' with {'model':model, 'admins':admins} %}
                                 </div>
                             </div>
                         </div>

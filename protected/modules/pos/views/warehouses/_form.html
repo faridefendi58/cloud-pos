@@ -8,8 +8,14 @@
             <label for="name">Nama Warehouse <span class="required">*</span></label>
             <input type="text" id="name" name="Warehouses[title]" class="form-control" {% if model.title %}value="{{ model.title }}"{% endif %} required>
         </div>
-    </div>
-    <div class="col-md-6">
+        <div class="form-group">
+            <label for="group">Group / Coverage <span class="required">*</span></label>
+            <select name="Warehouses[group_id]" id="group" class="form-control">
+                {% for i, group in groups %}
+                <option value="{{ group.id }}" {% if model.group_id and model.group_id == group.id %}selected="true"{% endif %}>{{ group.title }}</option>
+                {% endfor %}
+            </select>
+        </div>
         <div class="form-group">
             <label for="phone">Telepon <span class="required">*</span></label>
             <input type="text" id="phone" name="Warehouses[phone]" class="form-control" {% if model.phone %}value="{{ model.phone }}"{% endif %} required>
@@ -18,13 +24,11 @@
     <div class="col-md-6">
         <div class="form-group">
             <label for="desc">Alamat <span class="required">*</span></label>
-            <textarea name="Warehouses[address]" id="desc" cols="10" rows="3" class="form-control" required>{% if model and model.address %}{{ model.address }}{% endif %}</textarea>
+            <textarea name="Warehouses[address]" id="desc" cols="10" rows="2" class="form-control" required>{% if model and model.address %}{{ model.address }}{% endif %}</textarea>
         </div>
-    </div>
-    <div class="col-md-6">
         <div class="form-group">
             <label for="desc">Catatan</label>
-            <textarea name="Warehouses[notes]" id="desc" cols="10" rows="3" class="form-control">{% if model and model.notes %}{{ model.notes }}{% endif %}</textarea>
+            <textarea name="Warehouses[notes]" id="desc" cols="10" rows="2" class="form-control">{% if model and model.notes %}{{ model.notes }}{% endif %}</textarea>
         </div>
     </div>
     <div class="col-md-12">
