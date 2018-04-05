@@ -305,18 +305,29 @@ class ReceiptController extends BaseController
                                 if ($save2) {
                                     $tot_quantity = $tot_quantity + $quantity;
                                     $quantity_max = $quantity_max + $po_item->quantity;
+                                    // update available_qty
+                                    if ($po_item->available_qty > 0) {
+                                        $po_item->available_qty = $po_item->available_qty - $quantity;
+                                        $po_item->updated_at = date("Y-m-d H:i:s");
+                                        $po_item->updated_by = $model->created_by;
+                                        $update_po_item = \Model\PurchaseOrderItemsModel::model()->update($po_item);
+                                    }
                                 }
                             }
                         }
                     }
 
                     $pomodel = \Model\PurchaseOrdersModel::model()->findByPk($data['po_id']);
-                    if ($pomodel->status !== \Model\PurchaseOrdersModel::STATUS_COMPLETED && $tot_quantity == $quantity_max) {
-                        $pomodel->status = \Model\PurchaseOrdersModel::STATUS_COMPLETED;
-                        $pomodel->updated_at = date("Y-m-d H:i:s");
-                        $pomodel->updated_by = $model->created_by;
+                    if ($pomodel->status !== \Model\PurchaseOrdersModel::STATUS_COMPLETED) {
+                        $po_mdl = new \Model\PurchaseOrdersModel();
+                        $available_items = $po_mdl->available_items(['po_id' => $pomodel->id ]);
+                        if (!is_array($available_items) || empty($available_items) || count($available_items) <= 0) {
+                            $pomodel->status = \Model\PurchaseOrdersModel::STATUS_COMPLETED;
+                            $pomodel->updated_at = date("Y-m-d H:i:s");
+                            $pomodel->updated_by = $model->created_by;
 
-                        $update_status = \Model\PurchaseOrdersModel::model()->update($pomodel);
+                            $update_status = \Model\PurchaseOrdersModel::model()->update($pomodel);
+                        }
                     }
 
                     $result = ["success" => 1, "id" => $model->id, "receipt_number" => $model->pr_number];

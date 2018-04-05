@@ -99,4 +99,33 @@ class PurchaseOrdersModel extends \Model\BaseModel
 
         return $row;
     }
+
+    public function available_items($data)
+    {
+        $params = [];
+        if (isset($data['id'])) {
+            $params['po_id'] = $data['id'];
+        }
+
+        if (isset($data['po_id'])) {
+            $params['po_id'] = $data['po_id'];
+        }
+
+        $sql = 'SELECT t.*, po.po_number   
+            FROM {tablePrefix}ext_purchase_order_item t 
+            LEFT JOIN {tablePrefix}ext_purchase_order po ON po.id = t.po_id 
+            WHERE 1';
+
+        if (!empty($params['po_id'])) {
+            $sql .= ' AND t.po_id =:po_id';
+        }
+
+        $sql .= ' AND t.available_qty > 0';
+
+        $sql = str_replace(['{tablePrefix}'], [$this->_tbl_prefix], $sql);
+
+        $rows = R::getAll( $sql, $params );
+
+        return $rows;
+    }
 }

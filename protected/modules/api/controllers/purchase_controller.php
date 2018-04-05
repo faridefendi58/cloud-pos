@@ -115,6 +115,7 @@ class PurchaseController extends BaseController
                     $imodel[$product_id]->product_id = $product_id;
                     $imodel[$product_id]->title = $product->title;
                     $imodel[$product_id]->quantity = $quantity;
+                    $imodel[$product_id]->available_qty = $quantity;
                     $imodel[$product_id]->unit = $product->unit;
                     if (isset($purchase_prices[$product_id]))
                         $imodel[$product_id]->price = $purchase_prices[$product_id];
