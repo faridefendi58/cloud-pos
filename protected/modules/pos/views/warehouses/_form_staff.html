@@ -1,0 +1,154 @@
+<form method="post" id="warehouse-staff-form" class="mt20" action="{{ 'pos/warehouses/staff/create' | link }}/{{ warehouse.id }}">
+    <div class="alert alert-info">
+        Pastikan pilih salah satu staf, serta hak aksesnya agar data dapat disimpan.
+    </div>
+    <div class="alert alert-warning" style="display: none;"></div>
+    <div class="alert alert-success" style="display: none;"></div>
+    {% for i, staff in staffs %}
+    <div class="col-md-12">
+        <div class="row">
+            <div class="col-md-4">
+                <div class="form-group">
+                    <label for="admin_id">Nama Staf <span class="required">*</span></label>
+                    <select id="admin_id" name="WarehouseStaffs[admin_id][]" class="form-control select2">
+                        {% for i, admin in admins %}
+                        <option value="{{ admin.id }}" {% if staff.admin_id == admin.id %}selected=""{% endif %}>{{ admin.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="form-group">
+                    <label for="role_id">Hak Akses <span class="required">*</span></label>
+                    <select id="role_id" name="WarehouseStaffs[role_id][]" class="form-control select2">
+                        <option value="0">-</option>
+                        {% for i, role in roles %}
+                        <option value="{{ role.id }}" {% if staff.role_id == role.id %}selected="selected"{% endif %}>{{ role.title }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            <div class="col-md-1">
+            <div class="form-group">
+                <label>&nbsp;</label>
+                <a href="javascript:void(0);" onclick="removeItem(this, true);" attr-id="{{ staff.id }}" title="Hapus item ini">
+                    <i class="fa fa-trash-o fa-2x"></i>
+                </a>
+                {% if i + 1 == staffs | length %}
+                <a href="javascript:void(0);" onclick="addItem(this, false);"><i class="fa fa-plus fa-2x"></i></a>
+                {% endif %}
+            </div>
+        </div>
+        <input type="hidden" name="WarehouseStaffs[id][]" value="{{ staff.id }}">
+    </div>
+    </div>
+    {% endfor %}
+    <div class="col-md-12" id="item-form">
+        {% if staffs | length <= 0 %}
+        {% include 'warehouses/_form_staff_items.html' %}
+        {% endif %}
+    </div>
+    <div class="col-md-12">
+        <div class="form-group">
+            <input
+                    type="submit"
+                    value="Simpan"
+                    class="btn btn-info">
+        </div>
+    </div>
+</form>
+
+<style>
+    .row + .row {margin-top: 0px;}
+</style>
+<script type="text/javascript">
+    function removeItem(dt, execute = false) {
+        if ($(dt).parent().find('.fa-plus').parent().is(':visible') && !execute) {
+            alert('Item ini tidak dapat dihapus!.');
+        } else {
+            if (confirm('Anda yakin ingin menghapus item ini?')) {
+                if (execute) {
+                    $.ajax({
+                        'url': '{{ "pos/warehouses/staff/delete" | link }}/'+$(dt).attr('attr-id'),
+                        'type':'post',
+                        'data':{'id':$(dt).attr('attr-id')},
+                        'success': function(data) {
+                            console.log(data);
+                            if (data.status == 'success') {
+                                $(dt).parent().parent().parent().remove();
+                            }
+                        },
+                        error: function(XMLHttpRequest, textStatus, errorThrown) {
+                            console.log("Status: " + textStatus + " Message: "+errorThrown);
+                        }
+                    });
+                } else {
+                    $(dt).parent().parent().parent().remove();
+                }
+            }
+        }
+        return false;
+    }
+    function addItem(dt, hide = true) {
+        $.ajax({
+            'url': '{{ "pos/warehouses/staff/create" | link }}/{{ warehouse.id }}',
+            'type':'get',
+            'success': function(data) {
+                //console.log(data);
+                $('#item-form').append(data);
+                $(dt).hide();
+                if (hide) {
+                    $(dt).parent().find('.fa-trash-o').parent().show();
+                }
+            },
+            error: function(XMLHttpRequest, textStatus, errorThrown) {
+                console.log("Status: " + textStatus + " Message: "+errorThrown);
+            }
+        });
+    }
+    $(function () {
+        $('#warehouse-staff-form').submit(function (e) {
+            e.preventDefault();
+
+            var url = $(this).attr('action');
+            $('#warehouse-staff-form').find('.alert-warning').hide();
+            $('#warehouse-staff-form').find('.alert-warning').empty();
+
+            $.ajax({
+                'url': url,
+                'type':'post',
+                'data': $('#warehouse-staff-form').serialize(),
+                'success': function(data) {
+                    console.log(data);
+                    if (data.status == 'success') {
+                        var alert_success = $('#warehouse-staff-form').find('.alert-success');
+                        alert_success.html(data.message);
+                        alert_success.show();
+                        setTimeout(function () {
+                            window.location.reload(true);
+                        }, 3000);
+                    } else {
+                        var alert_warning = $('#warehouse-staff-form').find('.alert-warning');
+                        alert_warning.html(data.message);
+                        alert_warning.show();
+                        setTimeout(function () {
+                            window.location.reload(true);
+                        }, 3000);
+                    }
+                },
+                error: function(XMLHttpRequest, textStatus, errorThrown) {
+                    console.log("Status: " + textStatus + " Message: "+errorThrown);
+                }
+            });
+
+            return false;
+        });
+        // init select
+        if($('.select2').length) {
+            $('.select2').select2({
+                allowClear: true,
+                placeholder: "Select..."
+            });
+        }
+    });
+</script>

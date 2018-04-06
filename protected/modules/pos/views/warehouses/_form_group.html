@@ -35,7 +35,10 @@
 
 <script type="text/javascript">
     $(function () {
-        $('#warehouse-group-form').submit(function () {
+        $('#warehouse-group-form').submit(function (e) {
+            //prevent Default functionality
+            e.preventDefault();
+
             var url = $(this).attr('action');
             $.ajax({
                 'url': url,

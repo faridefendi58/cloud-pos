@@ -1,0 +1,147 @@
+<form method="post" id="warehouse-role-form{{ model.id }}" class="mt20" action="{% if model.id %}{{ 'pos/warehouses/role/update' | link }}/{{ model.id }}{% else %}{{ 'pos/warehouses/role/create' | link }}{% endif %}">
+    <div class="alert alert-success" style="display: none;"></div>
+    <div class="col-md-12 mb10">
+        <p>Kolom bertanda <span class="red">*</span> tidak boleh dikosongi</p>
+    </div>
+    <div class="col-md-5">
+        <div class="form-group">
+            <label for="name">Nama Hak Akses <span class="required">*</span></label>
+            <input type="text" id="name" name="WarehouseStaffRoles[title]" class="form-control" {% if model.title %}value="{{ model.title }}"{% endif %} required>
+        </div>
+        <div class="form-group">
+            <label for="desc">Catatan</label>
+            <textarea name="WarehouseStaffRoles[description]" id="desc" cols="10" rows="5" class="form-control">{% if model and model.description %}{{ model.description }}{% endif %}</textarea>
+        </div>
+    </div>
+    <div class="col-md-7">
+        <div class="form-group">
+            {% if model.roles %}
+                {% set current_roles = model.roles | json_decode %}
+            {% endif %}
+            <table class="table table-bordered">
+                <tr>
+                    <th rowspan="2" class="text-center" style="vertical-align: middle;">Nama Akses</th>
+                    <th colspan="4" class="text-center">Hak Akses</th>
+                </tr>
+                <tr>
+                    <th class="text-center">Menambah</th>
+                    <th class="text-center">Membaca</th>
+                    <th class="text-center">Merubah</th>
+                    <th class="text-center">Menghapus</th>
+                </tr>
+            {% for rule_id, rule_data in rules %}
+                <tr>
+                    <td>{{ rule_data.title }}</td>
+                    {% for i, rule_name in rule_data.items %}
+                    <td class="text-center">
+                        <input
+                                type="checkbox"
+                                name="WarehouseStaffRoles[roles][{{ rule_id }}][{{ rule_name }}]"
+                                class="cbox"
+                                {% if current_roles and (rule_name in current_roles[rule_id]) %}
+                                checked="checked"
+                                {% endif %}
+                        />
+                    </td>
+                    {% endfor %}
+                </tr>
+            {% endfor %}
+                <tr>
+                    <td colspan="5">
+                        <div class="checkbox pull-right">
+                            <label>
+                                <input type="checkbox" name="check_all">
+                                <b>Pilih Semua</b>
+                            </label>
+                        </div>
+                    </td>
+                </tr>
+            </table>
+        </div>
+    </div>
+    <div class="col-md-12">
+        <div class="form-group">
+            <input type="submit" value="Simpan" class="btn btn-info">
+        </div>
+    </div>
+</form>
+
+<script type="text/javascript">
+    var role_id = "{{ model.id }}";
+    if (role_id.length > 0) { // due to unable fire jquery form submit after ajax rendering
+        $(document).on('submit','form#warehouse-role-form'+role_id,function(e){
+            //prevent Default functionality
+            e.preventDefault();
+
+            var url = $(this).attr('action');
+            var form = $(this);
+            $.ajax({
+                'url': url,
+                'type':'post',
+                'data': form.serialize(),
+                'success': function(data) {
+                    console.log(data);
+                    if (data.status == 'success') {
+                        var alert_success = form.find('.alert-success');
+                        alert_success.html(data.message);
+                        alert_success.show();
+                        setTimeout(function () {
+                            if (data.updated == true) {
+                                window.location.reload(true);
+                            } else {
+                                alert_success.hide();
+                                alert_success.empty();
+                                form[0].reset();
+                            }
+                        }, 3000);
+                    }
+                }
+            });
+            return false;
+        });
+    } else {
+        $(function () {
+            var form = $('#warehouse-role-form');
+            form.submit(function (e) {
+                //prevent Default functionality
+                e.preventDefault();
+
+                var url = $(this).attr('action');
+                $.ajax({
+                    'url': url,
+                    'type':'post',
+                    'data': form.serialize(),
+                    'success': function(data) {
+                        console.log(data);
+                        if (data.status == 'success') {
+                            var alert_success = form.find('.alert-success');
+                            alert_success.html(data.message);
+                            alert_success.show();
+                            setTimeout(function () {
+                                if (data.updated == true) {
+                                    window.location.reload(true);
+                                } else {
+                                    alert_success.hide();
+                                    alert_success.empty();
+                                    form[0].reset();
+                                }
+                            }, 3000);
+                        }
+                    }
+                });
+
+                return false;
+            });
+        });
+    }
+    $(function () {
+        $('input[name="check_all"]').click(function () {
+            if ($(this).is(':checked')) {
+                $('.cbox').prop('checked', true);
+            } else {
+                $('.cbox').prop('checked', false);
+            }
+            return true;
+        });
+    });
+</script>

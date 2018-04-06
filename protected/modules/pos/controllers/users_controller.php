@@ -304,7 +304,8 @@ class UsersController extends BaseController
                         $file_name = $c_end;
                         $ctrls = explode('_', $c_end);
                     }
-                    array_push($items, [ 'path' => $cname, 'module' => $module[0], 'controller' => $ctrls[0]]);
+                    if (!in_array($module[0], ['api']))
+                        array_push($items, [ 'path' => $cname, 'module' => $module[0], 'controller' => $ctrls[0]]);
                 }
             }
         }

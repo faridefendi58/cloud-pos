@@ -1,0 +1,87 @@
+<div id="update-area"></div>
+<div id="dt_basic_wrapper" class="dataTables_wrapper form-inline no-footer table-responsive mt20" role="grid">
+    <table id="dt_basic" class="table table-striped dataTable">
+        <thead>
+        <tr>
+            <th>id</th>
+            <th>Nama</th>
+            <th>Deskripsi</th>
+            <th>Tanggal Input</th>
+            <th>Diinput Oleh</th>
+            <th>&nbsp;</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for i, role in roles %}
+        <tr>
+            <td><center>{{ i + 1 }}</center></td>
+            <td>
+                {{ role.title }}
+            </td>
+            <td>{{ role.description | default('-') }}</td>
+            <td>{{ role.created_at }}</td>
+            <td>{{ role.admin_creator_name | default('-') }}</td>
+            <td>
+                <a href="{{ 'pos/warehouses/role/update' | link }}/{{ role.id }}" onclick="return updateRole(this);">
+                    <i class="fa fa-pencil"></i>
+                </a>
+                <a href="{{ 'pos/warehouses/role/delete' | link }}/{{ role.id }}" onclick="return hapusRole(this);" attr-id="{{ role.id }}">
+                    <i class="fa fa-trash-o"></i>
+                </a>
+            </td>
+        </tr>
+        {% else %}
+        <tr class="no-data">
+            <td>No data founds</td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% block endbodyjs %}
+<script type="text/javascript">
+    function hapusRole(data) {
+        if (confirm('Anda yakin ingin menghapus item ini ?')) {
+            var $this =  $(data);
+            var url = $this.attr('href');
+            $.ajax({
+                'url': url,
+                'type':'post',
+                'data': {"id" : $this.attr("attr-id")},
+                'success': function(data) {
+                    console.log(data);
+                    if (data.status == 'success') {
+                        $this.parent().parent().remove();
+                    }
+                }
+            });
+        }
+        return false;
+    }
+    function updateRole(data) {
+        var $this = $(data);
+        var append_id = "{{ append_id }}";
+        if (append_id.length <= 0) {
+            append_id = "#update-area";
+        }
+        var append_type = "{{ append_type }}";
+        $.ajax({
+            'url': $this.attr('href'),
+            'type':'post',
+            'success': function(data) {
+                console.log(data);
+                $(append_id).html(data);
+                if (append_type.length > 0) {
+                    $('a[href="'+append_id+'"]').trigger('click');
+                    $('a[href="'+append_id+'"]').parent().removeClass('hide');
+                }
+            },
+            error: function(XMLHttpRequest, textStatus, errorThrown) {
+                console.log("Status: " + textStatus + " Message: "+errorThrown);
+            }
+        });
+
+        return false;
+    }
+</script>
+{% endblock %}

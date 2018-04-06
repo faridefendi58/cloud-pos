@@ -1,0 +1,138 @@
+{% extends "layout.html" %}
+{% block pagetitle %}
+Warehouse Staff - {{ App.params.site_name }}
+{% endblock %}
+
+{% block content %}
+<!-- main content -->
+<div id="main_wrapper">
+    <div class="page_bar clearfix">
+        <div class="row">
+            <div class="col-sm-9">
+                <h1 class="page_title">Staf Warehouse {{ warehouse.title }}</h1>
+                <p class="text-muted">Kelola data Staf Warehouse</p>
+            </div>
+            <div class="col-sm-3 text-right">
+                <a class="btn btn-default" data-toggle="tab" href="#create-new">Tambah Staf Warehouse Baru</a>
+            </div>
+        </div>
+    </div>
+    <div class="page_content">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="panel panel-default">
+                        <div class="panel-body">
+                            <ul class="nav nav-tabs" id="tabs_a">
+                                <li class="active">
+                                    <a data-toggle="tab" href="#daftar">Daftar Staf Warehouse</a>
+                                </li>
+                                <li>
+                                    <a data-toggle="tab" href="#create-new">Tambah/Ubah Staf Warehouse</a>
+                                </li>
+                                <li>
+                                    <a data-toggle="tab" href="#list-roles">Daftar Hak Akses Apps</a>
+                                </li>
+                                <li>
+                                    <a data-toggle="tab" href="#create-new-role">Tambah Hak Akses Apps</a>
+                                </li>
+                                <li class="hide">
+                                    <a data-toggle="tab" href="#update-role">Ubah Hak Akses Apps</a>
+                                </li>
+                            </ul>
+                            <div class="tab-content" id="tabs_content_a">
+                                <div id="daftar" class="tab-pane fade in active">
+                                    <div id="dt_basic_wrapper" class="dataTables_wrapper form-inline no-footer table-responsive mt20" role="grid">
+                                        <table id="dt_basic" class="table table-striped dataTable">
+                                            <thead>
+                                            <tr>
+                                                <th>id</th>
+                                                <th>Nama Staf</th>
+                                                <th>Hak Akses</th>
+                                                <th>Tanggal Input</th>
+                                                <th>Diinput Oleh</th>
+                                                <th>&nbsp;</th>
+                                            </tr>
+                                            </thead>
+                                            <tbody>
+                                            {% for i, staff in staffs %}
+                                            <tr>
+                                                <td><center>{{ i + 1 }}</center></td>
+                                                <td>
+                                                    <a href="{{ 'pos/users/update' | link }}/{{ staff.admin_id }}" target="_blank">{{ staff.admin_name }}</a>
+                                                </td>
+                                                <td>{{ staff.role_name }}</td>
+                                                <td>{{ staff.created_at }}</td>
+                                                <td>{{ staff.admin_creator_name | default('-') }}</td>
+                                                <td>
+                                                    <a href="{{ 'pos/warehouses/staff/delete' | link }}/{{ staff.id }}" onclick="return hapus(this);" attr-id="{{ staff.id }}">
+                                                        <i class="fa fa-trash-o"></i>
+                                                    </a>
+                                                </td>
+                                            </tr>
+                                            {% else %}
+                                            <tr class="no-data">
+                                                <td>No data founds</td>
+                                            </tr>
+                                            {% endfor %}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                                <div id="create-new" class="tab-pane fade">
+                                    {% include 'warehouses/_form_staff.html' with {
+                                        'warehouse' : warehouse,
+                                        'staffs' : staffs,
+                                        'admins' : admins,
+                                        'roles' : roles}
+                                    %}
+                                </div>
+                                <div id="list-roles" class="tab-pane fade">
+                                    {% include 'warehouses/_role_view.html' with {'roles' : roles, 'append_id' : '#update-role', 'append_type' : 'tab'} %}
+                                </div>
+                                <div id="create-new-role" class="tab-pane fade">
+                                    {% include 'warehouses/_role_form.html' with {'rules' : rules} %}
+                                </div>
+                                <div id="update-role" class="tab-pane fade"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% include 'partial/right_menu.html' %}
+{% endblock %}
+{% block endbodyjs %}
+<script src="{{ 'lib/DataTables/media/js/jquery.dataTables.min.js' | admin_asset_url }}"></script>
+<script src="{{ 'lib/DataTables/media/js/dataTables.bootstrap.js' | admin_asset_url }}"></script>
+<script type="text/javascript">
+    function hapus(data) {
+        if (confirm('Anda yakin ingin menghapus item ini ?')) {
+            var $this =  $(data);
+            var url = $this.attr('href');
+            $.ajax({
+                'url': url,
+                'type':'post',
+                'data': {"id" : $this.attr("attr-id")},
+                //'dataType': 'json',
+                'success': function(data) {
+                    console.log(data);
+                    if (data.status == 'success') {
+                        $this.parent().parent().remove();
+                    }
+                }
+            });
+        }
+        return false;
+    }
+    $(function () {
+        if (window.location.hash) {
+            var hash = window.location.hash.substring(1);
+            if ($('a[href="#'+hash+'"]').length > 0)
+                $('a[href="#'+hash+'"]').click();
+        }
+    });
+</script>
+{% endblock %}

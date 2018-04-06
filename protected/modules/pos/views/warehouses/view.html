@@ -40,10 +40,9 @@ Warehouse - {{ App.params.site_name }}
                                                 <th>id</th>
                                                 <th>Nama Warehouse</th>
                                                 <th>Alamat</th>
-                                                <th>Telepon</th>
                                                 <th>Group/Coverage</th>
                                                 <th>PIC</th>
-                                                <th>&nbsp;</th>
+                                                <th width="50px">&nbsp;</th>
                                             </tr>
                                             </thead>
                                             <tbody>
@@ -51,8 +50,7 @@ Warehouse - {{ App.params.site_name }}
                                             <tr>
                                                 <td><center>{{ i + 1 }}</center></td>
                                                 <td>{{ warehouse.title }}</td>
-                                                <td>{{ warehouse.address }}</td>
-                                                <td>{{ warehouse.phone | default('-') }}</td>
+                                                <td>{{ warehouse.address }}<br/>Phone : {{ warehouse.phone | default('-') }}</td>
                                                 <td>
                                                     {% if warehouse.group_name %}
                                                         <a href="{{ 'pos/warehouses/group/update' | link }}/{{ warehouse.group_id }}" target="_blank">
@@ -75,9 +73,12 @@ Warehouse - {{ App.params.site_name }}
                                                     -
                                                     {% endif %}
                                                 </td>
-                                                <td>
+                                                <td class="text-center">
                                                     <a href="{{ 'pos/warehouses/update' | link }}/{{ warehouse.id }}" title="Ubah Warehouse">
                                                         <i class="fa fa-pencil"></i>
+                                                    </a>
+                                                    <a href="{{ 'pos/warehouses/staff/view' | link }}/{{ warehouse.id }}" title="Daftar Staf {{ warehouse.title }}">
+                                                        <i class="fa fa-user"></i>
                                                     </a>
                                                     <a href="{{ 'pos/warehouses/delete' | link }}/{{ warehouse.id }}" onclick="return hapus(this);">
                                                         <i class="fa fa-trash-o"></i>
