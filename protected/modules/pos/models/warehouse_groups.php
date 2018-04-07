@@ -64,4 +64,24 @@ class WarehouseGroupsModel extends \Model\BaseModel
 
         return $row;
     }
+
+    public function getDataByPic($data)
+    {
+        $sql = 'SELECT t.id, t.title    
+            FROM {tablePrefix}ext_warehouse_group t 
+            WHERE 1';
+
+        if (isset($data['admin_id']) && isset($data['admin_name'])) {
+            $key = '"'. $data['admin_id'] .'":{"name":"'. $data['admin_name'] .'"';
+            $sql .= " AND t.pic LIKE '%".$key."%'";
+        }
+
+        $sql .= ' ORDER BY t.id DESC';
+
+        $sql = str_replace(['{tablePrefix}'], [$this->_tbl_prefix], $sql);
+
+        $rows = R::getAll( $sql );
+
+        return $rows;
+    }
 }

@@ -58,14 +58,20 @@ class UserController extends BaseController
                 } else {
                     $has_password = \Model\AdminModel::hasPassword($_POST['password'], $model->salt);
                     if ($model->password == $has_password){
-                        $login = $this->_user->login($model, $remember);
+                        $roles = $this->_get_roles($model->id);
+                        $pics = $this->_get_coverage_wh($model->id, $model->name);
+                        $login = $this->_user->login($model, false);
                         if ($login){
                             $result = [
                                 'success' => 1,
                                 'message' => 'Selamat datang '.$model->name,
                                 'id' => $model->id,
                                 'username' => $model->username,
-                                'name' => $model->name
+                                'name' => $model->name,
+                                'is_admin' => ($model->group_id == 1)? true : false,
+                                'is_pic' => (count($pics) > 0)? true : false,
+                                'roles' => $roles,
+                                'coverage' => $pics
                             ];
                         }
                     } else {
@@ -256,5 +262,56 @@ class UserController extends BaseController
         }
 
         return true;
+    }
+
+    /**
+     * @param $admin_id
+     * @return array|bool
+     */
+    private function _get_roles($admin_id)
+    {
+        $whs_model = new \Model\WarehouseStaffsModel();
+        $items = $whs_model->getData(['admin_id' => $admin_id]);
+
+        if (count($items) > 0) {
+            $roles = [];
+            foreach ($items as $i => $item) {
+                $roles[$item['warehouse_id']] = [
+                    'warehouse_name' => $item['warehouse_name'],
+                    'warehouse_group_name' => $item['warehouse_group_name'],
+                    'warehouse_pic' => (!empty($item['warehouse_group_pic']))? json_decode($item['warehouse_group_pic'], true) : null,
+                    'role_name' => $item['role_name'],
+                    'roles' => (!empty($item['roles']))? json_decode($item['roles'], true) : null,
+                ];
+            }
+
+            return $roles;
+        }
+
+        return false;
+    }
+
+    private function _get_coverage_wh($admin_id, $admin_name = null)
+    {
+        if (empty($admin_name)) {
+            $amodel = \Model\AdminModel::model()->findByPk($admin_id);
+            if (!$amodel instanceof \RedBeanPHP\OODBBean) {
+                return false;
+            } else {
+                $admin_name = $amodel->name;
+            }
+        }
+
+        $model = new \Model\WarehouseGroupsModel();
+        $items = $model->getDataByPic(['admin_id' => $admin_id, 'admin_name' => $admin_name]);
+
+        $groups = [];
+        if (is_array($items) && count($items) > 0) {
+            foreach ($items as $i => $item) {
+                $groups[$item['id']] = $item['title'];
+            }
+        }
+
+        return $groups;
     }
 }
