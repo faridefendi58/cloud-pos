@@ -103,6 +103,14 @@ class ReceiptController extends BaseController
         return $response->withJson($result, 201);
     }
 
+    /**
+     * @param $request
+     * @param $response
+     * @param $args
+     * @return mixed
+     * return example :
+     * {"success":1,"data":["PO-0000016"],"origin":{"PO-0000016":"Rumah produksi medan"}}
+     */
     public function list_issue_number($request, $response, $args)
     {
         $isAllowed = $this->isAllowed($request, $response);
@@ -119,23 +127,43 @@ class ReceiptController extends BaseController
         $po_model = new \Model\PurchaseOrdersModel();
         $params = $request->getParams();
         $status = \Model\PurchaseOrdersModel::STATUS_ON_PROCESS;
+        $params_data = ['status' => $status];
         if (isset($params['status'])) {
-            $status = $params['status'];
+            $params_data['status'] = $params['status'];
         }
-        $result_data = $po_model->getData(['status' => $status]);
+        if (isset($params['admin_id'])) {
+            $whsmodel = new \Model\WarehouseStaffsModel();
+            $wh_staff = $whsmodel->getData(['admin_id' => $params['admin_id']]);
+            $wh_groups = [];
+            if (is_array($wh_staff) && count($wh_staff) > 0) {
+                foreach ($wh_staff as $i => $whs) {
+                    $wh_groups[$whs['wh_group_id']] = $whs['wh_group_id'];
+                }
+            }
+            if (count($wh_groups) > 0) {
+                $params_data['wh_group_id'] = $wh_groups;
+            }
+        }
+        $result_data = $po_model->getData($params_data);
         if (is_array($result_data) && count($result_data)>0) {
             $result['success'] = 1;
             foreach ($result_data as $i => $po_result) {
                 $result['data'][] = $po_result['po_number'];
+                $result['origin'][$po_result['po_number']] = $po_result['supplier_name'];
             }
         }
 
         $ti_model = new \Model\TransferIssuesModel();
-        $result_ti_data = $ti_model->getData(['status' => \Model\TransferIssuesModel::STATUS_ON_PROCESS]);
+        $params_data2 = ['status' => \Model\TransferIssuesModel::STATUS_ON_PROCESS];
+        if (count($params_data['wh_group_id']) > 0) {
+            $params_data2['wh_group_id'] = $params_data['wh_group_id'];
+        }
+        $result_ti_data = $ti_model->getData($params_data2);
         if (is_array($result_ti_data) && count($result_ti_data)>0) {
             $result['success'] = 1;
             foreach ($result_ti_data as $i => $ti_result) {
                 $result['data'][] = $ti_result['ti_number'];
+                $result['origin'][$ti_result['ti_number']] = $ti_result['warehouse_from_name'];
             }
         }
 

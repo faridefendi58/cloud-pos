@@ -61,6 +61,16 @@ class TransferIssuesModel extends \Model\BaseModel
                 $params['date_start'] = $data['date_start'];
                 $params['date_end'] = $data['date_end'];
             }
+
+            if (isset($data['wh_group_id'])) {
+                if (is_array($data['wh_group_id'])) {
+                    $group_id = implode(", ", $data['wh_group_id']);
+                    $sql .= ' AND t.wh_group_id IN ('.$group_id.')';
+                } else {
+                    $sql .= ' AND t.wh_group_id =:wh_group_id';
+                    $params['wh_group_id'] = $data['wh_group_id'];
+                }
+            }
         }
 
         $sql .= ' ORDER BY t.date_transfer DESC';

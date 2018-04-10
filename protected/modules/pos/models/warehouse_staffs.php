@@ -34,7 +34,7 @@ class WarehouseStaffsModel extends \Model\BaseModel
     {
         $sql = 'SELECT t.*, a.name AS admin_name, w.title AS warehouse_name, 
             ab.name AS admin_creator_name, r.title AS role_name, r.roles AS roles, 
-            g.title AS warehouse_group_name, g.pic AS warehouse_group_pic     
+            g.id AS wh_group_id, g.title AS warehouse_group_name, g.pic AS warehouse_group_pic     
             FROM {tablePrefix}ext_warehouse_staff t 
             LEFT JOIN {tablePrefix}ext_warehouse w ON w.id = t.warehouse_id 
             LEFT JOIN {tablePrefix}ext_warehouse_staff_role r ON r.id = t.role_id 

@@ -49,6 +49,15 @@ class PurchaseOrdersModel extends \Model\BaseModel
                 $sql .= ' AND t.status =:status';
                 $params['status'] = $data['status'];
             }
+            if (isset($data['wh_group_id'])) {
+                if (is_array($data['wh_group_id'])) {
+                    $group_id = implode(", ", $data['wh_group_id']);
+                    $sql .= ' AND t.wh_group_id IN ('.$group_id.')';
+                } else {
+                    $sql .= ' AND t.wh_group_id =:wh_group_id';
+                    $params['wh_group_id'] = $data['wh_group_id'];
+                }
+            }
         }
 
         $sql .= ' ORDER BY t.date_order DESC';
