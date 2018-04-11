@@ -37,11 +37,13 @@ class TransferIssuesModel extends \Model\BaseModel
      */
     public function getData($data = null)
     {
-        $sql = 'SELECT t.*, a.name AS admin_name, wf.title AS warehouse_from_name, wt.title AS warehouse_to_name   
+        $sql = 'SELECT t.*, a.name AS admin_name, wf.title AS warehouse_from_name, wt.title AS warehouse_to_name, 
+            wh.title AS wh_group_name    
             FROM {tablePrefix}ext_transfer_issue t 
             LEFT JOIN {tablePrefix}admin a ON a.id = t.created_by 
             LEFT JOIN {tablePrefix}ext_warehouse wf ON wf.id = t.warehouse_from 
             LEFT JOIN {tablePrefix}ext_warehouse wt ON wt.id = t.warehouse_to  
+            LEFT JOIN {tablePrefix}ext_warehouse_group wh ON wh.id = t.wh_group_id 
             WHERE 1';
 
         $params = [];
@@ -89,12 +91,14 @@ class TransferIssuesModel extends \Model\BaseModel
     public function getDetail($id)
     {
         $sql = 'SELECT t.*,  a.name AS created_by_name, ab.name AS updated_by_name, 
-            wf.title AS warehouse_from_name, wt.title AS warehouse_to_name   
+            wf.title AS warehouse_from_name, wt.title AS warehouse_to_name, 
+            wh.title AS wh_group_name, wh.pic AS wh_group_pic 
             FROM {tablePrefix}ext_transfer_issue t 
             LEFT JOIN {tablePrefix}admin a ON a.id = t.created_by 
             LEFT JOIN {tablePrefix}admin ab ON ab.id = t.updated_by 
             LEFT JOIN {tablePrefix}ext_warehouse wf ON wf.id = t.warehouse_from 
             LEFT JOIN {tablePrefix}ext_warehouse wt ON wt.id = t.warehouse_to  
+            LEFT JOIN {tablePrefix}ext_warehouse_group wh ON wh.id = t.wh_group_id 
             WHERE t.id =:id';
 
         $sql = str_replace(['{tablePrefix}'], [$this->_tbl_prefix], $sql);

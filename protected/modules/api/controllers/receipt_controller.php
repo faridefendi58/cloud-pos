@@ -109,7 +109,7 @@ class ReceiptController extends BaseController
      * @param $args
      * @return mixed
      * return example :
-     * {"success":1,"data":["PO-0000016"],"origin":{"PO-0000016":"Rumah produksi medan"}}
+     * {"success":1,"data":["PO-0000016"],"origin":{"PO-0000016":"Rumah produksi medan"},"destination":{"PO-0000016":"Jakarta"}}
      */
     public function list_issue_number($request, $response, $args)
     {
@@ -150,6 +150,7 @@ class ReceiptController extends BaseController
             foreach ($result_data as $i => $po_result) {
                 $result['data'][] = $po_result['po_number'];
                 $result['origin'][$po_result['po_number']] = $po_result['supplier_name'];
+                $result['destination'][$po_result['po_number']] = $po_result['wh_group_name'];
             }
         }
 
@@ -164,6 +165,7 @@ class ReceiptController extends BaseController
             foreach ($result_ti_data as $i => $ti_result) {
                 $result['data'][] = $ti_result['ti_number'];
                 $result['origin'][$ti_result['ti_number']] = $ti_result['warehouse_from_name'];
+                $result['destination'][$ti_result['ti_number']] = $ti_result['wh_group_name'];
             }
         }
 
