@@ -89,6 +89,13 @@ class PurchaseController extends BaseController
                 return $response->withJson($result, 201);
             }
 
+            if (isset($params['wh_group_name'])) {
+                $whgmodel = \Model\WarehouseGroupsModel::model()->findByAttributes(['title' => $params['wh_group_name']]);
+                if ($whgmodel instanceof \RedBeanPHP\OODBBean) {
+                    $params['wh_group_id'] = $whgmodel->id;
+                }
+            }
+
             $model = new \Model\PurchaseOrdersModel();
             $po_number = \Pos\Controllers\PurchasesController::get_po_number();
             $model->po_number = $po_number['serie_nr'];
@@ -100,6 +107,8 @@ class PurchaseController extends BaseController
             $model->date_order = date("Y-m-d H:i:s");
             if (isset($params['shipment_id']))
                 $model->shipment_id = $params['shipment_id'];
+            if (isset($params['wh_group_id']))
+                $model->wh_group_id = $params['wh_group_id'];
             $model->status = \Model\PurchaseOrdersModel::STATUS_ON_PROCESS;
             if (isset($params['notes']))
                 $model->notes = $params['notes'];
