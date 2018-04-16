@@ -5,6 +5,7 @@ require_once __DIR__ . '/../../../models/base.php';
 
 class PurchaseOrdersModel extends \Model\BaseModel
 {
+    const STATUS_PENDING = 'pending';
     const STATUS_ON_PROCESS = 'onprocess';
     const STATUS_COMPLETED = 'completed';
     const STATUS_CANCELED = 'canceled';

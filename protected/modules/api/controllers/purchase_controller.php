@@ -96,6 +96,18 @@ class PurchaseController extends BaseController
                 }
             }
 
+            if (isset($params['due_date'])) {
+                $params['due_date'] = date("Y-m-d H:i:s", strtotime($params['due_date']));
+            }
+
+            if (isset($params['is_pre_order'])) {
+                if ($params['is_pre_order'] == 'true' || (int)$params['is_pre_order'] == 1 || $params['is_pre_order'] == true) {
+                    $params['is_pre_order'] = 1;
+                } else {
+                    $params['is_pre_order'] = 0;
+                }
+            }
+
             $model = new \Model\PurchaseOrdersModel();
             $po_number = \Pos\Controllers\PurchasesController::get_po_number();
             $model->po_number = $po_number['serie_nr'];
@@ -105,11 +117,19 @@ class PurchaseController extends BaseController
             if (isset($params['supplier_id']))
                 $model->supplier_id = $params['supplier_id'];
             $model->date_order = date("Y-m-d H:i:s");
+            if (isset($params['due_date'])) {
+                $model->due_date = $params['due_date'];
+            }
             if (isset($params['shipment_id']))
                 $model->shipment_id = $params['shipment_id'];
             if (isset($params['wh_group_id']))
                 $model->wh_group_id = $params['wh_group_id'];
-            $model->status = \Model\PurchaseOrdersModel::STATUS_ON_PROCESS;
+            if (isset($params['is_pre_order']) && $params['is_pre_order'] > 0) {
+                $model->is_pre_order = $params['is_pre_order'];
+                $model->status = \Model\PurchaseOrdersModel::STATUS_PENDING;
+            } else {
+                $model->status = \Model\PurchaseOrdersModel::STATUS_ON_PROCESS;
+            }
             if (isset($params['notes']))
                 $model->notes = $params['notes'];
             $model->created_at = date("Y-m-d H:i:s");
