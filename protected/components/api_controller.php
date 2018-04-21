@@ -68,4 +68,33 @@ class ApiBaseController
 
         return $this->_container->get('settings')['params']['site_url'];
     }
+
+    public function _sendNotification($data)
+    {
+        if (isset($data['message']) && isset($data['recipients'])) {
+            $model = new \Model\NotificationsModel();
+            $model->message = $data['message'];
+            if (isset($data['rel_id']) && isset($data['rel_type'])) {
+                $model->rel_id = $data['rel_id'];
+                $model->rel_type = $data['rel_type'];
+            }
+            $model->created_at = date("Y-m-d H:i:s");
+            $save = \Model\NotificationsModel::model()->save(@$model);
+            if ($save) {
+                if (!is_array($data['recipients'])) {
+                    $data['recipients'] = json_encode($data['recipients']);
+                }
+                foreach ($data['recipients'] as $i => $admin_id) {
+                    $model2 = new \Model\NotificationRecipientsModel();
+                    $model2->admin_id = $admin_id;
+                    $model2->notification_id = $model->id;
+                    $model2->created_at = date("Y-m-d H:i:s");
+                    $save2 = \Model\NotificationRecipientsModel::model()->save($model2);
+                }
+                return true;
+            }
+        }
+
+        return false;
+    }
 }

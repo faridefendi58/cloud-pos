@@ -46,6 +46,9 @@ $app->group('/api', function () use ($user) {
     $this->group('/shipment', function() use ($user) {
         new Api\Controllers\ShipmentController($this, $user);
     });
+    $this->group('/notification', function() use ($user) {
+        new Api\Controllers\NotificationController($this, $user);
+    });
 });
 
 ?>

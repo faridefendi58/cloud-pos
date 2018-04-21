@@ -184,6 +184,31 @@ class PurchaseController extends BaseController
             }
         }
 
+        if ($result['success'] > 0) {
+            // send notification to related user
+            $params = [
+                'rel_type' => \Model\NotificationsModel::TYPE_PURCHASE_ORDER,
+                'rel_id' => $model->id
+            ];
+            if ($model->is_pre_order > 0 && $model->status == \Model\PurchaseOrdersModel::STATUS_PENDING) {
+                if ($model->wh_group_id > 0) {
+                    $whg_model = \Model\WarehouseGroupsModel::model()->findByPk($model->wh_group_id);
+                    if ($whg_model instanceof \RedBeanPHP\OODBBean && !empty($whg_model->pic)) {
+                        $params['recipients'] = array_keys(json_decode($whg_model->pic, true));
+                        $po_model = new \Model\PurchaseOrdersModel();
+                        $po_detail = $po_model->getDetail($model->id);
+                        $params['message'] = "Ada PO (Purchase Order) baru ".$po_detail['po_number']." untuk WH area ". $whg_model->title." ";
+                        $params['message'] .= "yang dipesan oleh ".$po_detail['created_by_name'];
+                        if (!empty($po_detail['due_date'])) {
+                            $params['message'] .= " untuk tanggal ". date("d F Y", strtotime($po_detail['due_date']));
+                        }
+                        $params['message'] .= " Mohon segera ditindaklanjuti.";
+                    }
+                }
+            }
+            $this->_sendNotification($params);
+        }
+
         return $response->withJson($result, 201);
     }
 }
