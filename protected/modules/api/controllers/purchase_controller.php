@@ -3,6 +3,7 @@
 namespace Api\Controllers;
 
 use Components\ApiBaseController as BaseController;
+use function FastRoute\TestFixtures\empty_options_cached;
 
 class PurchaseController extends BaseController
 {
@@ -14,18 +15,27 @@ class PurchaseController extends BaseController
     public function register($app)
     {
         $app->map(['POST'], '/create', [$this, 'create']);
+        $app->map(['GET'], '/list', [$this, 'get_list']);
+        $app->map(['POST'], '/create-shipping', [$this, 'create_shipping']);
     }
 
     public function accessRules()
     {
         return [
             ['allow',
-                'actions' => ['create'],
+                'actions' => ['create', 'list', 'create-shipping'],
                 'users'=> ['@'],
             ]
         ];
     }
 
+    /**
+     * @param $request: admin_id, items, prices, supplier_name, shipment_name, supplier_id,
+     * wh_group_name, due_date, is_pre_order
+     * @param $response
+     * @param $args
+     * @return mixed
+     */
     public function create($request, $response, $args)
     {
         $isAllowed = $this->isAllowed($request, $response);
@@ -186,29 +196,237 @@ class PurchaseController extends BaseController
 
         if ($result['success'] > 0) {
             // send notification to related user
-            $params = [
+            $params2 = [
                 'rel_type' => \Model\NotificationsModel::TYPE_PURCHASE_ORDER,
                 'rel_id' => $model->id
             ];
             if ($model->is_pre_order > 0 && $model->status == \Model\PurchaseOrdersModel::STATUS_PENDING) {
+                $sp_pic = new \Model\SupplierPicsModel();
+                $supliers = $sp_pic->getData(['supplier_id' => $model->supplier_id]);
+                $supplier_pic = [];
+                if (is_array($supliers) && count($supliers) > 0) {
+                    foreach ($supliers as $j => $spl) {
+                        $supplier_pic[$spl['admin_id']] = $spl['admin_name'];
+                    }
+                }
+
                 if ($model->wh_group_id > 0) {
                     $whg_model = \Model\WarehouseGroupsModel::model()->findByPk($model->wh_group_id);
                     if ($whg_model instanceof \RedBeanPHP\OODBBean && !empty($whg_model->pic)) {
-                        $params['recipients'] = array_keys(json_decode($whg_model->pic, true));
+                        $params2['recipients'] = array_keys(json_decode($whg_model->pic, true));
                         $po_model = new \Model\PurchaseOrdersModel();
                         $po_detail = $po_model->getDetail($model->id);
-                        $params['message'] = "Ada PO (Purchase Order) baru ".$po_detail['po_number']." untuk WH area ". $whg_model->title." ";
-                        $params['message'] .= "yang dipesan oleh ".$po_detail['created_by_name'];
+                        $params2['message'] = "Ada PO (Purchase Order) baru ".$po_detail['po_number']." untuk WH area ". $whg_model->title." ";
+                        $params2['message'] .= "yang dipesan oleh ".$po_detail['created_by_name'];
                         if (!empty($po_detail['due_date'])) {
-                            $params['message'] .= " untuk tanggal ". date("d F Y", strtotime($po_detail['due_date']));
+                            $params2['message'] .= " untuk tanggal ". date("d F Y", strtotime($po_detail['due_date'])).".";
                         }
-                        $params['message'] .= " Mohon segera ditindaklanjuti.";
+                        if (count($supplier_pic) > 0) {
+                            $sp_pic = implode(" atau ", $supplier_pic);
+                            $params2['message'] .= " Menunggu konfirmasi dari ". $sp_pic;
+                        }
+                        //send to wh pic
+                        $this->_sendNotification($params2);
                     }
                 }
+
+                $params2['recipients'] = []; // empty the recipients
+                if (count($supplier_pic) > 0) {
+                    $params2['recipients'] = array_keys($supplier_pic);
+                    $po_model = new \Model\PurchaseOrdersModel();
+                    $po_detail = $po_model->getDetail($model->id);
+                    $params2['message'] = "Ada PO (Purchase Order) baru ".$po_detail['po_number']." ";
+                    if ($whg_model instanceof \RedBeanPHP\OODBBean) {
+                        $params2['message'] .= " untuk WH area ". $whg_model->title." ";
+                    }
+                    $params2['message'] .= "yang dipesan oleh ".$po_detail['created_by_name'];
+                    if (!empty($po_detail['due_date'])) {
+                        $params2['message'] .= " untuk tanggal ". date("d F Y", strtotime($po_detail['due_date'])).".";
+                    }
+                    $params2['message'] .= " Mohon segera ditindaklanjuti.";
+                    //send to wh pic
+                    $this->_sendNotification($params2);
+                }
             }
-            $this->_sendNotification($params);
         }
 
         return $response->withJson($result, 201);
+    }
+
+    public function get_list($request, $response, $args)
+    {
+        $isAllowed = $this->isAllowed($request, $response);
+
+        if (!$isAllowed['allow']) {
+            $result = [
+                'success' => 0,
+                'message' => $isAllowed['message'],
+            ];
+            return $response->withJson($result, 201);
+        }
+
+        $result = [];
+        $po_model = new \Model\PurchaseOrdersModel();
+        $params = $request->getParams();
+        $status = \Model\PurchaseOrdersModel::STATUS_ON_PROCESS;
+        $params_data = ['status' => $status];
+        if (isset($params['status'])) {
+            $params_data['status'] = $params['status'];
+        }
+
+        if (isset($params['is_pre_order'])) {
+            $params_data['is_pre_order'] = $params['is_pre_order'];
+        }
+
+        if (isset($params['admin_id'])) {
+            $whsmodel = new \Model\WarehouseStaffsModel();
+            $wh_staff = $whsmodel->getData(['admin_id' => $params['admin_id']]);
+            $wh_groups = [];
+            if (is_array($wh_staff) && count($wh_staff) > 0) {
+                foreach ($wh_staff as $i => $whs) {
+                    $wh_groups[$whs['wh_group_id']] = $whs['wh_group_id'];
+                }
+            }
+            if (count($wh_groups) > 0) {
+                $params_data['wh_group_id'] = $wh_groups;
+            }
+            $sp_pic = new \Model\SupplierPicsModel();
+            $supliers = $sp_pic->getData(['admin_id' => $params['admin_id']]);
+            $suplier_id = [];
+            if (is_array($supliers) && count($supliers) > 0) {
+                foreach ($supliers as $j => $spl) {
+                    $suplier_id[$spl['supplier_id']] = $spl['supplier_id'];
+                }
+            }
+            if (count($suplier_id) > 0) {
+                $params_data['supplier_id'] = $suplier_id;
+            }
+        }
+
+        $result_data = $po_model->getData($params_data);
+        if (is_array($result_data) && count($result_data)>0) {
+            $result['success'] = 1;
+            foreach ($result_data as $i => $po_result) {
+                $result['data'][] = $po_result['po_number'];
+                $result['origin'][$po_result['po_number']] = $po_result['supplier_name'];
+                $result['destination'][$po_result['po_number']] = $po_result['wh_group_name'];
+            }
+        }
+
+        return $response->withJson($result, 201);
+    }
+
+    /**
+     * @param $request : admin_id, issue_number, shipment_name, resi_number, shipping_date
+     * @param $response
+     * @param $args
+     * @return mixed
+     */
+    public function create_shipping($request, $response, $args)
+    {
+        $isAllowed = $this->isAllowed($request, $response);
+
+        if (!$isAllowed['allow']) {
+            $result = [
+                'success' => 0,
+                'message' => $isAllowed['message'],
+            ];
+            return $response->withJson($result, 201);
+        }
+
+        $result = [];
+        $params = $request->getParams();
+        if (is_array($params) && in_array('issue_number', array_keys($params))) {
+            $model = \Model\PurchaseOrdersModel::model()->findByAttributes(['po_number' => $params['issue_number']]);
+            if ($model instanceof \RedBeanPHP\OODBBean) {
+                if (isset($params['shipment_name'])) {
+                    $shmodel = \Model\ShipmentsModel::model()->findByAttributes(['title' => $params['shipment_name']]);
+                    if ($shmodel instanceof \RedBeanPHP\OODBBean) {
+                        $model->shipment_id = $shmodel->id;
+                    }
+                }
+                $model->status = \Model\PurchaseOrdersModel::STATUS_ON_PROCESS;
+                $model->updated_at = date("Y-m-d H:i:s");
+                $model->updated_by = $params['admin_id'];
+                $update = \Model\PurchaseOrdersModel::model()->update($model);
+                if ($update) {
+                    $result['success'] = 1;
+                    // create delivery order
+                    $do_params = [
+                        'po_id' => $model->id,
+                        'admin_id' => $params['admin_id']
+                    ];
+                    if (isset($params['resi_number'])) {
+                        $do_params['resi_number'] = $params['resi_number'];
+                    }
+                    if (isset($params['shipping_date'])) {
+                        $do_params['shipping_date'] = date("Y-m-d H:i:s", strtotime($params['shipping_date']));
+                    }
+                    $do_id = $this->create_delivery_order($do_params);
+                    if ($model->wh_group_id > 0 && $do_id > 0) {
+                        $do_model = new \Model\DeliveryOrdersModel();
+                        $do_detail = $do_model->getDetail($do_id);
+                        $whg_model = \Model\WarehouseGroupsModel::model()->findByPk($model->wh_group_id);
+                        if ($whg_model instanceof \RedBeanPHP\OODBBean && !empty($whg_model->pic)) {
+                            $params['recipients'] = array_keys(json_decode($whg_model->pic, true));
+                            $po_model = new \Model\PurchaseOrdersModel();
+                            $po_detail = $po_model->getDetail($model->id);
+                            $params['message'] = "PO (Purchase Order) ".$po_detail['po_number']." untuk WH area ". $whg_model->title." ";
+                            $params['message'] .= "yang dipesan oleh ".$po_detail['created_by_name'];
+                            $params['message'] .= " telah dikirim oleh ". $do_detail['created_by_name'] ." pada tanggal ". date("d F Y", strtotime($do_detail['shipping_date'])) ." melalui ". $po_detail['shipment_name'] .".";
+                            if (!empty($do_detail['resi_number'])) {
+                                $params['message'] .= " Nomor Resi : ".$do_detail['resi_number'];
+                            }
+                            $params['rel_id'] = $model->id;
+                            $params['rel_type'] = \Model\NotificationsModel::TYPE_PURCHASE_ORDER;
+                            $this->_sendNotification($params);
+                            $result['message'] = 'Berhasil menyimpan data delivery';
+                        }
+                    }
+                } else {
+                    $result['success'] = 0;
+                    $result['message'] = 'Gagal memperbarui data PO.';
+                }
+            } else {
+                $result['success'] = 0;
+                $result['message'] = 'PO tidak ditemukan.';
+            }
+        }
+
+        return $response->withJson($result, 201);
+    }
+
+    /**
+     * @param $data : po_id, resi_number, shipping_date, admin_id
+     * @return bool|mixed
+     */
+    public function create_delivery_order($data)
+    {
+        if (!isset($data['po_id'])) {
+            return false;
+        }
+
+        $model = new \Model\DeliveryOrdersModel();
+        $model->po_id = $data['po_id'];
+        $do_number = \Pos\Controllers\PurchasesController::get_do_number();
+        $model->do_number = $do_number['serie_nr'];
+        $model->do_serie = $do_number['serie'];
+        $model->do_nr = $do_number['nr'];
+        if (isset($data['resi_number'])) {
+            $model->resi_number = $data['resi_number'];
+        }
+        if (isset($data['shipping_date'])) {
+            $model->shipping_date = $data['shipping_date'];
+        } else {
+            $model->shipping_date = date("Y-m-d H:i:s");
+        }
+        $model->created_at = date("Y-m-d H:i:s");
+        $model->created_by = (isset($data['admin_id'])) ? $data['admin_id'] : 1;
+        $save = \Model\DeliveryOrdersModel::model()->save(@$model);
+        if ($save) {
+            return $model->id;
+        }
+
+        return false;
     }
 }

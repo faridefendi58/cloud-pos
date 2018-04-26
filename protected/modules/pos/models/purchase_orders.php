@@ -52,14 +52,35 @@ class PurchaseOrdersModel extends \Model\BaseModel
                 $sql .= ' AND t.status =:status';
                 $params['status'] = $data['status'];
             }
+            if (isset($data['supplier_id'])) {
+                if (is_array($data['supplier_id'])) {
+                    $supplier_id = implode(", ", $data['supplier_id']);
+                    $sql .= ' AND t.supplier_id IN ('.$supplier_id.')';
+                } else {
+                    $sql .= ' AND t.supplier_id =:supplier_id';
+                    $params['supplier_id'] = $data['supplier_id'];
+                }
+            }
+
             if (isset($data['wh_group_id'])) {
                 if (is_array($data['wh_group_id'])) {
                     $group_id = implode(", ", $data['wh_group_id']);
-                    $sql .= ' AND t.wh_group_id IN ('.$group_id.')';
+                    if (!isset($data['supplier_id']))
+                        $sql .= ' AND t.wh_group_id IN ('.$group_id.')';
+                    else
+                        $sql .= ' OR t.wh_group_id IN ('.$group_id.')';
                 } else {
-                    $sql .= ' AND t.wh_group_id =:wh_group_id';
+                    if (!isset($data['supplier_id']))
+                        $sql .= ' AND t.wh_group_id =:wh_group_id';
+                    else
+                        $sql .= ' OR t.wh_group_id =:wh_group_id';
                     $params['wh_group_id'] = $data['wh_group_id'];
                 }
+            }
+
+            if (isset($data['is_pre_order'])) {
+                $sql .= ' AND t.is_pre_order =:is_pre_order';
+                $params['is_pre_order'] = $data['is_pre_order'];
             }
         }
 
@@ -79,12 +100,13 @@ class PurchaseOrdersModel extends \Model\BaseModel
     public function getDetail($id)
     {
         $sql = 'SELECT t.*, a.name AS created_by_name, ab.name AS updated_by_name, 
-            s.name AS supplier_name, wh.title AS wh_group_name, wh.pic AS wh_group_pic  
+            s.name AS supplier_name, wh.title AS wh_group_name, wh.pic AS wh_group_pic, sh.title AS shipment_name  
             FROM {tablePrefix}ext_purchase_order t 
             LEFT JOIN {tablePrefix}admin a ON a.id = t.created_by 
             LEFT JOIN {tablePrefix}admin ab ON ab.id = t.updated_by 
             LEFT JOIN {tablePrefix}ext_supplier s ON s.id = t.supplier_id 
             LEFT JOIN {tablePrefix}ext_warehouse_group wh ON wh.id = t.wh_group_id 
+            LEFT JOIN {tablePrefix}ext_shipment sh ON sh.id = t.shipment_id  
             WHERE t.id =:id';
 
         $sql = str_replace(['{tablePrefix}'], [$this->_tbl_prefix], $sql);

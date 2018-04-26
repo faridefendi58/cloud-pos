@@ -852,4 +852,35 @@ class PurchasesController extends BaseController
 
         return false;
     }
+
+    /**
+     * Geting delivery order number
+     * @return array
+     */
+    public function get_do_number()
+    {
+        $pmodel = new \Model\OptionsModel();
+        $ext_pos = $pmodel->getOption('ext_pos');
+        $prefiks = $ext_pos['do_prefiks'];
+        if (empty($prefiks)) {
+            $prefiks = 'DO-';
+        }
+
+        $wmodel = new \Model\DeliveryOrdersModel();
+        $max_nr = $wmodel->getLastDoNumber($prefiks);
+
+        if (empty($max_nr['max_nr'])) {
+            $next_nr = 1;
+        } else {
+            $next_nr = $max_nr['max_nr'] + 1;
+        }
+
+        $do_number = str_repeat("0", 5 - strlen($max_nr)).$next_nr;
+
+        return [
+            'serie' => $prefiks,
+            'nr' => $next_nr,
+            'serie_nr' => $prefiks.$do_number
+        ];
+    }
 }
