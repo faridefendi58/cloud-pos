@@ -80,10 +80,10 @@ class DeliveryController extends BaseController
             $result['success'] = 1;
             foreach ($result_data as $i => $do_result) {
                 $result['data'][] = $do_result['do_number'];
-                $result['detail'][$do_result['po_number']] = $do_result;
-                $result['po_data'][$do_result['po_number']] = $do_result['po_number'];
-                $result['po_origin'][$do_result['po_number']] = $do_result['supplier_name'];
-                $result['po_destination'][$do_result['po_number']] = $do_result['wh_group_name'];
+                $result['detail'][$do_result['do_number']] = $do_result;
+                $result['po_data'][$do_result['do_number']] = $do_result['po_number'];
+                $result['po_origin'][$do_result['do_number']] = $do_result['supplier_name'];
+                $result['po_destination'][$do_result['do_number']] = $do_result['wh_group_name'];
             }
         }
 
