@@ -14,13 +14,15 @@ class DeliveryController extends BaseController
     public function register($app)
     {
         $app->map(['GET'], '/list', [$this, 'get_list']);
+        $app->map(['POST'], '/update-item', [$this, 'get_update']);
+        $app->map(['POST'], '/delete-item', [$this, 'get_delete']);
     }
 
     public function accessRules()
     {
         return [
             ['allow',
-                'actions' => ['list'],
+                'actions' => ['list', 'update-item', 'delete-item'],
                 'users'=> ['@'],
             ]
         ];
@@ -84,6 +86,76 @@ class DeliveryController extends BaseController
                 $result['po_data'][$do_result['do_number']] = $do_result['po_number'];
                 $result['po_origin'][$do_result['do_number']] = $do_result['supplier_name'];
                 $result['po_destination'][$do_result['do_number']] = $do_result['wh_group_name'];
+            }
+        }
+
+        return $response->withJson($result, 201);
+    }
+
+    public function get_update($request, $response, $args)
+    {
+        $isAllowed = $this->isAllowed($request, $response);
+
+        if (!$isAllowed['allow']) {
+            $result = [
+                'success' => 0,
+                'message' => $isAllowed['message'],
+            ];
+            return $response->withJson($result, 201);
+        }
+
+        $result = [ 'success' => 0 ];
+        $params = $request->getParams();
+        $model = null;
+        if (isset($params['po_item_id'])) {
+            $model = \Model\PurchaseOrderItemsModel::model()->findByPk($params['po_item_id']);
+        }
+
+        if ($model != null) {
+            if (isset($params['quantity'])) {
+                $model->quantity = (int) $params['quantity'];
+            }
+
+            $model->updated_at = date("Y-m-d H:i:s");
+            $model->updated_by = $params['admin_id'];
+            $update = \Model\PurchaseOrderItemsModel::model()->update($model);
+            if ($update) {
+                $result['success'] = 1;
+                $result['message'] = 'Data item berhasil diubah.';
+            } else {
+                $result['message'] = 'Data item gagal diubah.';
+            }
+        }
+
+        return $response->withJson($result, 201);
+    }
+
+    public function get_delete($request, $response, $args)
+    {
+        $isAllowed = $this->isAllowed($request, $response);
+
+        if (!$isAllowed['allow']) {
+            $result = [
+                'success' => 0,
+                'message' => $isAllowed['message'],
+            ];
+            return $response->withJson($result, 201);
+        }
+
+        $result = [ 'success' => 0 ];
+        $params = $request->getParams();
+        $model = null;
+        if (isset($params['po_item_id'])) {
+            $model = \Model\PurchaseOrderItemsModel::model()->findByPk($params['po_item_id']);
+        }
+
+        if ($model != null) {
+            $delete = \Model\PurchaseOrderItemsModel::model()->delete($model);
+            if ($delete) {
+                $result['success'] = 1;
+                $result['message'] = 'Data item berhasil dihapus.';
+            } else {
+                $result['message'] = 'Data item gagal dihapus.';
             }
         }
 
