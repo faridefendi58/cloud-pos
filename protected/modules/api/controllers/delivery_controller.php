@@ -114,6 +114,7 @@ class DeliveryController extends BaseController
         if ($model != null) {
             if (isset($params['quantity'])) {
                 $model->quantity = (int) $params['quantity'];
+                $model->available_qty = (int) $params['quantity'];
             }
 
             $model->updated_at = date("Y-m-d H:i:s");
