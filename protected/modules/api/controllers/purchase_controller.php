@@ -380,7 +380,7 @@ class PurchaseController extends BaseController
                             $params['rel_id'] = $model->id;
                             $params['rel_type'] = \Model\NotificationsModel::TYPE_PURCHASE_ORDER;
                             $this->_sendNotification($params);
-                            $result['message'] = 'Berhasil menyimpan data delivery';
+                            $result['message'] = $params['message'];
                         }
                     }
                 } else {

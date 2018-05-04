@@ -52,28 +52,36 @@ class PurchaseOrdersModel extends \Model\BaseModel
                 $sql .= ' AND t.status =:status';
                 $params['status'] = $data['status'];
             }
+            $has_combine_open = false;
             if (isset($data['supplier_id'])) {
                 if (is_array($data['supplier_id'])) {
                     $supplier_id = implode(", ", $data['supplier_id']);
-                    $sql .= ' AND t.supplier_id IN ('.$supplier_id.')';
+                    $sql .= ' AND {combine_open}t.supplier_id IN ('.$supplier_id.')';
+                    $has_combine_open = true;
                 } else {
-                    $sql .= ' AND t.supplier_id =:supplier_id';
+                    $sql .= ' AND {combine_open}t.supplier_id =:supplier_id';
                     $params['supplier_id'] = $data['supplier_id'];
+                    $has_combine_open = true;
                 }
             }
 
+            $use_or = false;
             if (isset($data['wh_group_id'])) {
                 if (is_array($data['wh_group_id'])) {
                     $group_id = implode(", ", $data['wh_group_id']);
-                    if (!isset($data['supplier_id']))
-                        $sql .= ' AND t.wh_group_id IN ('.$group_id.')';
-                    else
-                        $sql .= ' OR t.wh_group_id IN ('.$group_id.')';
+                    if (!isset($data['supplier_id'])) {
+                        $sql .= ' AND t.wh_group_id IN (' . $group_id . ')';
+                    } else {
+                        $sql .= ' OR t.wh_group_id IN (' . $group_id . '){combine_close}';
+                        $use_or = true;
+                    }
                 } else {
-                    if (!isset($data['supplier_id']))
+                    if (!isset($data['supplier_id'])) {
                         $sql .= ' AND t.wh_group_id =:wh_group_id';
-                    else
-                        $sql .= ' OR t.wh_group_id =:wh_group_id';
+                    } else {
+                        $sql .= ' OR t.wh_group_id =:wh_group_id{combine_close}';
+                        $use_or = true;
+                    }
                     $params['wh_group_id'] = $data['wh_group_id'];
                 }
             }
@@ -86,7 +94,14 @@ class PurchaseOrdersModel extends \Model\BaseModel
 
         $sql .= ' ORDER BY t.date_order DESC';
 
-        $sql = str_replace(['{tablePrefix}'], [$this->_tbl_prefix], $sql);
+        if (!$use_or) {
+            if ($has_combine_open)
+                $sql = str_replace(['{tablePrefix}', '{combine_open}'], [$this->_tbl_prefix, ''], $sql);
+            else
+                $sql = str_replace(['{tablePrefix}'], [$this->_tbl_prefix], $sql);
+        } else {
+            $sql = str_replace(['{tablePrefix}', '{combine_open}', '{combine_close}'], [$this->_tbl_prefix, '(', ')'], $sql);
+        }
 
         $rows = R::getAll( $sql, $params );
 
