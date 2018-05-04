@@ -43,7 +43,11 @@ class NotificationController extends BaseController
         $result = [];
         $params = $request->getParams();
         $pmodel = new \Model\NotificationsModel();
-        $items = $pmodel->getData(['admin_id'=>$params['admin_id'],'status'=>'unread']);
+
+        if (!isset($params['status']))
+            $params['status'] = \Model\NotificationRecipientsModel::STATUS_UNREAD;
+
+        $items = $pmodel->getData(['admin_id'=>$params['admin_id'],'status'=>$params['status']]);
         if (is_array($items)){
             $result['success'] = 1;
             $items2 = [];
