@@ -17,13 +17,17 @@ class ReceiptController extends BaseController
         $app->map(['GET'], '/list-issue', [$this, 'list_issue']);
         $app->map(['GET'], '/list-issue-number', [$this, 'list_issue_number']);
         $app->map(['POST'], '/confirm', [$this, 'confirm']);
+        $app->map(['GET'], '/list', [$this, 'list_receipt']);
     }
 
     public function accessRules()
     {
         return [
             ['allow',
-                'actions' => ['get-issue', 'list-issue', 'list-issue-number', 'confirm'],
+                'actions' => [
+                    'get-issue', 'list-issue', 'list-issue-number', 'confirm',
+                    'list'
+                    ],
                 'users'=> ['@'],
             ]
         ];
@@ -442,5 +446,73 @@ class ReceiptController extends BaseController
                 return ["success" => 0, "message" => "Transfer issue tersebut sudah terkonfirmasi sebelumnya."];
             }
         }
+    }
+
+    /**
+     * @param $request : admin_id, status
+     * @param $response
+     * @param $args
+     * @return mixed
+     */
+    public function list_receipt($request, $response, $args)
+    {
+        $isAllowed = $this->isAllowed($request, $response);
+
+        if (!$isAllowed['allow']) {
+            $result = [
+                'success' => 0,
+                'message' => $isAllowed['message'],
+            ];
+            return $response->withJson($result, 201);
+        }
+
+        $result = [];
+        $params = $request->getParams();
+        $params_data = [];
+        if (isset($params['status'])) {
+            $params_data['status'] = $params['status'];
+        }
+
+        if (isset($params['admin_id'])) {
+            $whsmodel = new \Model\WarehouseStaffsModel();
+            $wh_staff = $whsmodel->getData(['admin_id' => $params['admin_id']]);
+            $wh_groups = [];
+            if (is_array($wh_staff) && count($wh_staff) > 0) {
+                foreach ($wh_staff as $i => $whs) {
+                    $wh_groups[$whs['wh_group_id']] = $whs['wh_group_id'];
+                }
+            }
+            if (count($wh_groups) > 0) {
+                $params_data['wh_group_id'] = $wh_groups;
+            }
+        }
+
+        $pr_model = new \Model\PurchaseReceiptsModel();
+        $result_data = $pr_model->getQuery($params_data);
+        if (is_array($result_data) && count($result_data)>0) {
+            $result['success'] = 1;
+            $pri_model = new \Model\PurchaseReceiptItemsModel();
+            foreach ($result_data as $i => $pr_result) {
+                $result['data'][] = $pr_result['pr_number'];
+                $result['detail'][$pr_result['pr_number']] = $pr_result;
+                $result['type'][$pr_result['pr_number']] = 'purchase_order';
+                $result['items'][$pr_result['pr_number']] = $pri_model->getData($pr_result['id']);
+            }
+        }
+
+        $tr_model = new \Model\TransferReceiptsModel();
+        $result_data2 = $tr_model->getQuery($params_data);
+        if (is_array($result_data2) && count($result_data2)>0) {
+            $result['success'] = 1;
+            $tri_model = new \Model\TransferReceiptItemsModel();
+            foreach ($result_data2 as $i => $tr_result) {
+                $result['data'][] = $tr_result['tr_number'];
+                $result['detail'][$tr_result['tr_number']] = $tr_result;
+                $result['type'][$tr_result['tr_number']] = 'transfer_issue';
+                $result['items'][$tr_result['tr_number']] = $tri_model->getData($tr_result['id']);
+            }
+        }
+
+        return $response->withJson($result, 201);
     }
 }

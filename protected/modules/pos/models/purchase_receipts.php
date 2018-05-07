@@ -153,7 +153,8 @@ class PurchaseReceiptsModel extends \Model\BaseModel
     public function getQuery($data)
     {
         $sql = 'SELECT wh.title AS warehouse_name, t.*, 
-            po.supplier_id, sp.name AS supplier_name, a.name AS completed_by_name 
+            po.supplier_id, sp.name AS supplier_name, a.name AS completed_by_name,
+            po.po_number AS issue_number 
             FROM {tablePrefix}ext_purchase_receipt t 
             LEFT JOIN {tablePrefix}ext_warehouse wh ON wh.id = t.warehouse_id 
             LEFT JOIN {tablePrefix}ext_purchase_order po ON po.id = t.po_id 
@@ -177,6 +178,16 @@ class PurchaseReceiptsModel extends \Model\BaseModel
             $sql .= ' AND DATE_FORMAT(t.completed_at, "%Y-%m-%d") BETWEEN :date_start AND :date_end';
             $params['date_start'] = $data['date_start'];
             $params['date_end'] = $data['date_end'];
+        }
+
+        if (!empty($data['wh_group_id'])) {
+            if (!is_array($data['wh_group_id'])) {
+                $sql .= ' AND wh.group_id =:group_id';
+                $params['group_id'] = $data['wh_group_id'];
+            } else {
+                $group_id = implode(", ", $data['wh_group_id']);
+                $sql .= ' AND wh.group_id IN ('.$group_id.')';
+            }
         }
 
         $sql .= ' ORDER BY t.effective_date DESC';

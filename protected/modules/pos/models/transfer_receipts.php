@@ -192,7 +192,8 @@ class TransferReceiptsModel extends \Model\BaseModel
     public function getQuery($data)
     {
         $sql = 'SELECT wh.title AS warehouse_to_name, t.*, 
-            ti.warehouse_from, wf.title AS warehouse_from_name, a.name AS completed_by_name  
+            ti.warehouse_from, wf.title AS warehouse_from_name, a.name AS completed_by_name,
+            ti.ti_number AS issue_number   
             FROM {tablePrefix}ext_transfer_receipt t 
             LEFT JOIN {tablePrefix}ext_warehouse wh ON wh.id = t.warehouse_id 
             LEFT JOIN {tablePrefix}ext_transfer_issue ti ON ti.id = t.ti_id 
@@ -221,6 +222,16 @@ class TransferReceiptsModel extends \Model\BaseModel
         if (isset($data['transfer_out'])) {
             $sql .= ' OR ti.warehouse_from =:warehouse_from';
             $params['warehouse_from'] = $data['warehouse_id'];
+        }
+
+        if (!empty($data['wh_group_id'])) {
+            if (!is_array($data['wh_group_id'])) {
+                $sql .= ' AND wh.group_id =:group_id';
+                $params['group_id'] = $data['wh_group_id'];
+            } else {
+                $group_id = implode(", ", $data['wh_group_id']);
+                $sql .= ' AND wh.group_id IN ('.$group_id.')';
+            }
         }
 
         $sql .= ' ORDER BY t.effective_date DESC';
