@@ -16,13 +16,14 @@ class DeliveryController extends BaseController
         $app->map(['GET'], '/list', [$this, 'get_list']);
         $app->map(['POST'], '/update-item', [$this, 'get_update']);
         $app->map(['POST'], '/delete-item', [$this, 'get_delete']);
+        $app->map(['POST'], '/confirm-receipt', [$this, 'get_confirm_receipt']);
     }
 
     public function accessRules()
     {
         return [
             ['allow',
-                'actions' => ['list', 'update-item', 'delete-item'],
+                'actions' => ['list', 'update-item', 'delete-item', 'confirm-receipt'],
                 'users'=> ['@'],
             ]
         ];
@@ -157,6 +158,73 @@ class DeliveryController extends BaseController
                 $result['message'] = 'Data item berhasil dihapus.';
             } else {
                 $result['message'] = 'Data item gagal dihapus.';
+            }
+        }
+
+        return $response->withJson($result, 201);
+    }
+
+    public function get_confirm_receipt($request, $response, $args)
+    {
+        $isAllowed = $this->isAllowed($request, $response);
+
+        if (!$isAllowed['allow']) {
+            $result = [
+                'success' => 0,
+                'message' => $isAllowed['message'],
+            ];
+            return $response->withJson($result, 201);
+        }
+
+        $result = ['success' => 0];
+        $params = $request->getParams();
+        if (isset($params['do_number'])) {
+            $model = \Model\DeliveryOrdersModel::model()->findByAttributes(['do_number' => $params['do_number']]);
+            if ($model instanceof \RedBeanPHP\OODBBean) {
+                $po_model = \Model\PurchaseOrdersModel::model()->findByPk($model->po_id);
+                if (isset($params['notes'])) {
+                    $notes = $po_model->notes;
+                    if (!empty($notes))
+                        $notes .= "<br/>";
+                    $notes .= $params['notes'];
+                    $po_model->notes = $notes;
+                }
+                $po_model->received_at = date("Y-m-d H:i:s");
+                $po_model->received_by = $params['admin_id'];
+                $po_model->updated_at = date("Y-m-d H:i:s");
+                $update = \Model\PurchaseOrdersModel::model()->update($po_model);
+                if ($update) {
+                    $model->status = \Model\DeliveryOrdersModel::STATUS_COMPLETED;
+                    $model->completed_at = date("Y-m-d H:i:s");
+                    $model->completed_by = $params['admin_id'];
+                    $update2 = \Model\DeliveryOrdersModel::model()->update($model);
+
+                    $admin_model = \Model\AdminModel::model()->findByPk($params['admin_id']);
+                    // send notification
+                    $notif_params = [];
+                    $notif_params['recipients'] = [$model->created_by];
+                    $whg_model = \Model\WarehouseGroupsModel::model()->findByPk($po_model->wh_group_id);
+                    if ($whg_model instanceof \RedBeanPHP\OODBBean && !empty($whg_model->pic)) {
+                        $pics = array_keys(json_decode($whg_model->pic, true));
+                        $notif_params['recipients'] = array_merge($notif_params['recipients'], $pics);
+                    }
+
+                    if (!in_array($po_model->created_by, $notif_params['recipients']))
+                        array_push($notif_params['recipients'], $po_model->created_by);
+
+                    $notif_params['message'] = "Nomor pengiriman ".$model->do_number." untuk Purchase Order ".$po_model->po_number;
+                    $notif_params['message'] .= " telah diterima oleh ".$admin_model->name." pada tanggal ".date("d F Y H:i", strtotime($po_model->received_at));
+                    if (!empty($params['notes']))
+                        $notif_params['message'] .= " dengan rincian : ".$params['notes'];
+                    $notif_params['rel_id'] = $po_model->id;
+                    $notif_params['rel_type'] = \Model\NotificationsModel::TYPE_PURCHASE_ORDER;
+                    $this->_sendNotification($notif_params);
+
+                    $result['success'] = 1;
+                    $result['message'] = $notif_params['message'];
+                }
+            } else {
+                $result['message'] = 'Nomor pengiriman tidak ditemukan.';
             }
         }
 
