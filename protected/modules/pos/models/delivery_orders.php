@@ -38,12 +38,13 @@ class DeliveryOrdersModel extends \Model\BaseModel
     {
         $sql = 'SELECT t.*, a.name AS admin_name, 
             po.po_number AS po_number, sp.name AS supplier_name, 
-            wg.title AS wh_group_name   
+            wg.title AS wh_group_name, ab.name AS completed_by_name    
             FROM {tablePrefix}ext_delivery_order t 
             LEFT JOIN {tablePrefix}admin a ON a.id = t.created_by 
             LEFT JOIN {tablePrefix}ext_purchase_order po ON po.id = t.po_id 
             LEFT JOIN {tablePrefix}ext_supplier sp ON sp.id = po.supplier_id 
             LEFT JOIN {tablePrefix}ext_warehouse_group wg ON wg.id = po.wh_group_id 
+            LEFT JOIN {tablePrefix}admin ab ON ab.id = t.completed_by 
             WHERE 1';
 
         $params = [];
