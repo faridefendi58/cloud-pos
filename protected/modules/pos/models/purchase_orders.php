@@ -90,6 +90,10 @@ class PurchaseOrdersModel extends \Model\BaseModel
                 $sql .= ' AND t.is_pre_order =:is_pre_order';
                 $params['is_pre_order'] = $data['is_pre_order'];
             }
+
+            if (isset($data['already_received'])) {
+                $sql .= ' AND t.received_at IS NOT NULL';
+            }
         }
 
         $sql .= ' ORDER BY t.date_order DESC';

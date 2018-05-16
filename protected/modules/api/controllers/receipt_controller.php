@@ -90,15 +90,25 @@ class ReceiptController extends BaseController
         }
 
         $result = [];
+        $params = $request->getParams();
+
         $po_model = new \Model\PurchaseOrdersModel();
-        $result_data = $po_model->getData(['status' => \Model\PurchaseOrdersModel::STATUS_ON_PROCESS]);
+
+        $po_params = ['status' => \Model\PurchaseOrdersModel::STATUS_ON_PROCESS];
+        if (isset($params['already_received'])) {
+            $po_params['already_received'] = 1;
+        }
+
+        $result_data = $po_model->getData($po_params);
         if (is_array($result_data) && count($result_data)>0) {
             $result['success'] = 1;
             $result['data']['purchase_order'] = $result_data;
         }
 
         $ti_model = new \Model\TransferIssuesModel();
-        $result_ti_data = $ti_model->getData(['status' => \Model\TransferIssuesModel::STATUS_ON_PROCESS]);
+
+        $ti_params = ['status' => \Model\TransferIssuesModel::STATUS_ON_PROCESS];
+        $result_ti_data = $ti_model->getData($ti_params);
         if (is_array($result_ti_data) && count($result_ti_data)>0) {
             $result['success'] = 1;
             $result['data']['transfer_issue'] = $result_ti_data;
@@ -148,6 +158,11 @@ class ReceiptController extends BaseController
                 $params_data['wh_group_id'] = $wh_groups;
             }
         }
+
+        if (isset($params['already_received'])) {
+            $params_data['already_received'] = 1;
+        }
+
         $result_data = $po_model->getData($params_data);
         if (is_array($result_data) && count($result_data)>0) {
             $result['success'] = 1;
