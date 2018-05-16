@@ -70,7 +70,8 @@ class DeliveryController extends BaseController
             $suplier_id = [];
             if (is_array($supliers) && count($supliers) > 0) {
                 foreach ($supliers as $j => $spl) {
-                    $suplier_id[$spl['supplier_id']] = $spl['supplier_id'];
+                    //$suplier_id[$spl['supplier_id']] = $spl['supplier_id'];
+                    array_push($suplier_id, $spl['supplier_id']);
                 }
             }
             if (count($suplier_id) > 0) {
