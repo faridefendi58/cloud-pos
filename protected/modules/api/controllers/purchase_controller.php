@@ -362,6 +362,9 @@ class PurchaseController extends BaseController
                     if (isset($params['shipping_date'])) {
                         $do_params['shipping_date'] = date("Y-m-d H:i:s", strtotime($params['shipping_date']));
                     }
+                    if (isset($params['notes'])) {
+                        $do_params['notes'] = $params['notes'];
+                    }
                     $do_id = $this->create_delivery_order($do_params);
                     if ($model->wh_group_id > 0 && $do_id > 0) {
                         $do_model = new \Model\DeliveryOrdersModel();
@@ -420,6 +423,11 @@ class PurchaseController extends BaseController
         } else {
             $model->shipping_date = date("Y-m-d H:i:s");
         }
+
+        if (isset($data['notes'])) {
+            $model->notes = $data['notes'];
+        }
+
         $model->created_at = date("Y-m-d H:i:s");
         $model->created_by = (isset($data['admin_id'])) ? $data['admin_id'] : 1;
         $save = \Model\DeliveryOrdersModel::model()->save(@$model);
