@@ -116,6 +116,23 @@ class BaseModel extends \RedBeanPHP\SimpleModel
         return R::getAll($sql, $params);
     }
 
+    public function count($params)
+    {
+        $sql = 'SELECT COUNT(*) AS count FROM '.$this->tableName.' WHERE 1';
+
+        $field = array();
+        foreach ($params as $attr => $val){
+            $field[] = $attr. '= :'. $attr;
+        }
+
+        if (count($field) > 0)
+            $sql .= ' AND '.implode(" AND ", $field);
+
+        $row = R::getRow($sql, $params);
+
+        return $row['count'];
+    }
+
     public function save($bean)
     {
         $validate = $this->validate($bean);

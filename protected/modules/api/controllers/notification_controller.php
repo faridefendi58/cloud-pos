@@ -16,13 +16,14 @@ class NotificationController extends BaseController
     {
         $app->map(['GET'], '/list', [$this, 'get_list']);
         $app->map(['POST'], '/read', [$this, 'get_read']);
+        $app->map(['GET'], '/count', [$this, 'get_count']);
     }
 
     public function accessRules()
     {
         return [
             ['allow',
-                'actions' => ['list', 'read'],
+                'actions' => ['list', 'read', 'count'],
                 'users'=> ['@'],
             ]
         ];
@@ -112,6 +113,38 @@ class NotificationController extends BaseController
             }
         } else {
             $result['message'] = 'Data notifikasi tidak ditemukan.';
+        }
+
+        return $response->withJson($result, 201);
+    }
+
+    public function get_count($request, $response, $args)
+    {
+        $isAllowed = $this->isAllowed($request, $response);
+
+        if (!$isAllowed['allow']) {
+            $result = [
+                'success' => 0,
+                'message' => $isAllowed['message'],
+            ];
+            return $response->withJson($result, 201);
+        }
+
+        $params = $request->getParams();
+        $result = [ 'success' => 0, 'count' => 0 ];
+        if (isset($params['admin_id'])) {
+            $qry_params = [
+                'status' => \Model\NotificationRecipientsModel::STATUS_UNREAD,
+                'admin_id' => $params['admin_id']
+            ];
+            $count = \Model\NotificationRecipientsModel::model()->count($qry_params);
+            if ($count > 0) {
+                $result['success'] = 1;
+                $result['message'] = "Ada ". $count ." notifikasi baru yang belum dibaca.";
+                $result['count'] = (int) $count;
+            } else {
+                $result['message'] = "Tidak ditemukan notifikasi baru.";
+            }
         }
 
         return $response->withJson($result, 201);
