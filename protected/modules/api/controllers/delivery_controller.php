@@ -219,6 +219,9 @@ class DeliveryController extends BaseController
                         $notif_params['message'] .= " dengan rincian : ".$params['notes'];
                     $notif_params['rel_id'] = $po_model->id;
                     $notif_params['rel_type'] = \Model\NotificationsModel::TYPE_PURCHASE_ORDER;
+
+                    $notif_params['issue_number'] = $model->do_number;
+                    $notif_params['rel_activity'] = 'DeliveryActivity';
                     $this->_sendNotification($notif_params);
 
                     $result['success'] = 1;

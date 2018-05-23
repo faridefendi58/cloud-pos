@@ -225,6 +225,9 @@ class PurchaseController extends BaseController
                             $sp_pic = implode(" atau ", $supplier_pic);
                             $params2['message'] .= " Menunggu konfirmasi dari ". $sp_pic;
                         }
+
+                        $params2['issue_number'] = $po_detail['po_number'];
+                        $params2['rel_activity'] = 'DeliveryActivity';
                         //send to wh pic
                         $this->_sendNotification($params2);
                     }
@@ -244,6 +247,9 @@ class PurchaseController extends BaseController
                         $params2['message'] .= " untuk tanggal ". date("d F Y", strtotime($po_detail['due_date'])).".";
                     }
                     $params2['message'] .= " Mohon segera ditindaklanjuti.";
+
+                    $params2['issue_number'] = $po_detail['po_number'];
+                    $params2['rel_activity'] = 'DeliveryActivity';
                     //send to wh pic
                     $this->_sendNotification($params2);
                 }
@@ -382,6 +388,8 @@ class PurchaseController extends BaseController
                             }
                             $params['rel_id'] = $model->id;
                             $params['rel_type'] = \Model\NotificationsModel::TYPE_PURCHASE_ORDER;
+                            $params['issue_number'] = $po_detail['po_number'];
+                            $params['rel_activity'] = 'PurchaseActivity';
                             $this->_sendNotification($params);
                             $result['message'] = $params['message'];
                         }

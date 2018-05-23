@@ -78,6 +78,12 @@ class ApiBaseController
                 $model->rel_id = $data['rel_id'];
                 $model->rel_type = $data['rel_type'];
             }
+
+            if (isset($data['issue_number']) && isset($data['rel_activity'])) {
+                $model->issue_number = $data['issue_number'];
+                $model->rel_activity = $data['rel_activity'];
+            }
+
             $model->created_at = date("Y-m-d H:i:s");
             $save = \Model\NotificationsModel::model()->save(@$model);
             if ($save) {
