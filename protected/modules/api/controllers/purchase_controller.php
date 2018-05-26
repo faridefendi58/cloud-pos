@@ -17,13 +17,14 @@ class PurchaseController extends BaseController
         $app->map(['POST'], '/create', [$this, 'create']);
         $app->map(['GET'], '/list', [$this, 'get_list']);
         $app->map(['POST'], '/create-shipping', [$this, 'create_shipping']);
+        $app->map(['GET'], '/detail', [$this, 'get_detail']);
     }
 
     public function accessRules()
     {
         return [
             ['allow',
-                'actions' => ['create', 'list', 'create-shipping'],
+                'actions' => ['create', 'list', 'create-shipping', 'detail'],
                 'users'=> ['@'],
             ]
         ];
@@ -444,5 +445,109 @@ class PurchaseController extends BaseController
         }
 
         return false;
+    }
+
+    public function get_detail($request, $response, $args)
+    {
+        $isAllowed = $this->isAllowed($request, $response);
+
+        if (!$isAllowed['allow']) {
+            $result = [
+                'success' => 0,
+                'message' => $isAllowed['message'],
+            ];
+            return $response->withJson($result, 201);
+        }
+
+        $result = [ 'success' => 0 ];
+        $params = $request->getParams();
+        if (isset($params['issue_number'])) {
+            $po_model = \Model\PurchaseOrdersModel::model()->findByAttributes(['po_number'=>$params['issue_number']]);
+            if ($po_model instanceof \RedBeanPHP\OODBBean) {
+                $model = new \Model\PurchaseOrdersModel();
+                // po data
+                $data = $model->getDetail($po_model->id);
+                // po history
+                $history = [
+                    [
+                        'title' => $data['po_number'].' diterbitkan oleh '.$data['created_by_name'],
+                        'date' => date("d M Y H:i", strtotime($data['created_at']))
+                    ]
+                ];
+
+                $d_model = new \Model\DeliveryOrdersModel();
+                $delivery = $d_model->getData(['po_id' => $po_model->id]);
+                if (is_array($delivery) && is_array($delivery[0])) {
+                    $supplier_data = [
+                        'title' => $data['po_number'].' diterima oleh '.$delivery[0]['admin_name'],
+                        'date' => date("d M Y H:i", strtotime($delivery[0]['created_at'])),
+                        'detail' => $delivery[0]
+                    ];
+                    array_push($history, $supplier_data);
+
+                    $shipping_data = [
+                        'title' => 'Barang dikirim oleh '.$delivery[0]['admin_name'].' melalui '.$data['shipment_name'],
+                        'date' => date("d M Y", strtotime($delivery[0]['shipping_date'])),
+                        'detail' => $delivery[0]
+                    ];
+                    array_push($history, $shipping_data);
+
+                    if ($data['received_at']) {
+                        $rc_data = [
+                            'title' => 'Barang diterima oleh '.$data['received_by_name'],
+                            'date' => date("d M Y", strtotime($data['received_at'])),
+                            'notes' => $data['notes']
+                        ];
+                        array_push($history, $rc_data);
+                    }
+
+                    $prc_model = new \Model\PurchaseReceiptsModel();
+                    $prc_datas = $prc_model->getData(['po_id' => $po_model->id]);
+                    if (is_array($prc_datas) && count($prc_datas)>0) {
+                        for ($i = 0; $i < count($prc_datas); $i++) {
+                            $prci_model = new \Model\PurchaseReceiptItemsModel();
+
+                            $prc_data = [
+                                'title' => 'Stok diterima oleh warehouse '.$prc_datas[$i]['warehouse_name'],
+                                'date' => date("d M Y H:i", strtotime($prc_datas[$i]['created_at'])),
+                                'data' => $prc_datas[$i]
+                            ];
+
+                            $prc_items = $prci_model->getData($prc_datas[$i]['id']);
+                            $items_titles = [];
+                            if (is_array($prc_items)) {
+                                foreach ($prc_items as $j => $prc_item) {
+                                    $items_titles[] = $prc_item['title'].' '.$prc_item['quantity'].' '.$prc_item['unit'];
+                                }
+                                $prc_data['data']['items'] = $prc_items;
+                            }
+
+                            $items_title = implode(", ", $items_titles);
+
+                            if (!empty($items_title)) {
+                                $prc_data['notes'] = 'Rincian penerimaan : '.$items_title;
+                            }
+                            array_push($history, $prc_data);
+                        }
+                    }
+                }
+
+                //end of history
+                if ($data['status'] == \Model\PurchaseOrdersModel::STATUS_COMPLETED) {
+                    $complete_data = [
+                        'title' => $data['po_number']." sudah selesai.",
+                        'date' => date("d M Y H:i", strtotime($data['competed_at'])),
+                    ];
+                    array_push($history, $complete_data);
+                }
+
+                $result['data'] = $data;
+                $result['history'] = $history;
+            } else {
+                $result['message'] = 'Nomor issue tidak ditemukan.';
+            }
+        }
+
+        return $response->withJson($result, 201);
     }
 }

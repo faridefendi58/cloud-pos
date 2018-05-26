@@ -119,13 +119,15 @@ class PurchaseOrdersModel extends \Model\BaseModel
     public function getDetail($id)
     {
         $sql = 'SELECT t.*, a.name AS created_by_name, ab.name AS updated_by_name, 
-            s.name AS supplier_name, wh.title AS wh_group_name, wh.pic AS wh_group_pic, sh.title AS shipment_name  
+            s.name AS supplier_name, wh.title AS wh_group_name, wh.pic AS wh_group_pic, sh.title AS shipment_name,
+            ac.name AS received_by_name   
             FROM {tablePrefix}ext_purchase_order t 
             LEFT JOIN {tablePrefix}admin a ON a.id = t.created_by 
             LEFT JOIN {tablePrefix}admin ab ON ab.id = t.updated_by 
             LEFT JOIN {tablePrefix}ext_supplier s ON s.id = t.supplier_id 
             LEFT JOIN {tablePrefix}ext_warehouse_group wh ON wh.id = t.wh_group_id 
             LEFT JOIN {tablePrefix}ext_shipment sh ON sh.id = t.shipment_id  
+            LEFT JOIN {tablePrefix}admin ac ON ac.id = t.received_by  
             WHERE t.id =:id';
 
         $sql = str_replace(['{tablePrefix}'], [$this->_tbl_prefix], $sql);

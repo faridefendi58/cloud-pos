@@ -38,7 +38,7 @@ class DeliveryOrdersModel extends \Model\BaseModel
     {
         $sql = 'SELECT t.*, a.name AS admin_name, 
             po.po_number AS po_number, sp.name AS supplier_name, 
-            wg.title AS wh_group_name, ab.name AS completed_by_name    
+            wg.title AS wh_group_name, ab.name AS completed_by_name   
             FROM {tablePrefix}ext_delivery_order t 
             LEFT JOIN {tablePrefix}admin a ON a.id = t.created_by 
             LEFT JOIN {tablePrefix}ext_purchase_order po ON po.id = t.po_id 
