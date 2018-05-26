@@ -541,6 +541,7 @@ class PurchaseController extends BaseController
                     array_push($history, $complete_data);
                 }
 
+                $result['success'] = 1;
                 $result['data'] = $data;
                 $result['history'] = $history;
             } else {
