@@ -541,9 +541,14 @@ class PurchaseController extends BaseController
                     array_push($history, $complete_data);
                 }
 
+                //set the items
+                $it_model = new \Model\PurchaseOrderItemsModel();
+                $po_items = $it_model->getData($po_model->id);
+
                 $result['success'] = 1;
                 $result['data'] = $data;
                 $result['history'] = $history;
+                $result['items'] = $po_items;
             } else {
                 $result['message'] = 'Nomor issue tidak ditemukan.';
             }
