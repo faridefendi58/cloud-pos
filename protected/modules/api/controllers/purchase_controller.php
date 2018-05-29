@@ -281,6 +281,10 @@ class PurchaseController extends BaseController
             $params_data['status'] = $params['status'];
         }
 
+        if (isset($params['all_status'])) {
+            unset($params_data['status']);
+        }
+
         if (isset($params['is_pre_order'])) {
             $params_data['is_pre_order'] = $params['is_pre_order'];
         }
