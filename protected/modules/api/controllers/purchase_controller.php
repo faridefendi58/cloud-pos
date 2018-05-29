@@ -471,7 +471,8 @@ class PurchaseController extends BaseController
                 $history = [
                     [
                         'title' => $data['po_number'].' diterbitkan oleh '.$data['created_by_name'],
-                        'date' => date("d M Y H:i", strtotime($data['created_at']))
+                        'date' => date("d M Y H:i", strtotime($data['created_at'])),
+                        'notes' => '',
                     ]
                 ];
 
@@ -481,14 +482,18 @@ class PurchaseController extends BaseController
                     $supplier_data = [
                         'title' => $data['po_number'].' diterima oleh '.$delivery[0]['admin_name'],
                         'date' => date("d M Y H:i", strtotime($delivery[0]['created_at'])),
-                        'detail' => $delivery[0]
+                        'detail' => $delivery[0],
+                        'data' => array(),
+                        'notes' => ''
                     ];
                     array_push($history, $supplier_data);
 
                     $shipping_data = [
                         'title' => 'Barang dikirim oleh '.$delivery[0]['admin_name'].' melalui '.$data['shipment_name'],
                         'date' => date("d M Y", strtotime($delivery[0]['shipping_date'])),
-                        'detail' => $delivery[0]
+                        'detail' => $delivery[0],
+                        'data' => array(),
+                        'notes' => ''
                     ];
                     array_push($history, $shipping_data);
 
@@ -496,6 +501,7 @@ class PurchaseController extends BaseController
                         $rc_data = [
                             'title' => 'Barang diterima oleh '.$data['received_by_name'],
                             'date' => date("d M Y", strtotime($data['received_at'])),
+                            'data' => array(),
                             'notes' => $data['notes']
                         ];
                         array_push($history, $rc_data);
@@ -526,6 +532,8 @@ class PurchaseController extends BaseController
 
                             if (!empty($items_title)) {
                                 $prc_data['notes'] = 'Rincian penerimaan : '.$items_title;
+                            } else {
+                                $prc_data['notes'] = '';
                             }
                             array_push($history, $prc_data);
                         }
@@ -537,6 +545,8 @@ class PurchaseController extends BaseController
                     $complete_data = [
                         'title' => $data['po_number']." sudah selesai.",
                         'date' => date("d M Y H:i", strtotime($data['competed_at'])),
+                        'data' => array(),
+                        'notes' => ''
                     ];
                     array_push($history, $complete_data);
                 }
