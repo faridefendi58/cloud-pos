@@ -472,6 +472,7 @@ class PurchaseController extends BaseController
                     [
                         'title' => $data['po_number'].' diterbitkan oleh '.$data['created_by_name'],
                         'date' => date("d M Y H:i", strtotime($data['created_at'])),
+                        'data' => array(),
                         'notes' => '',
                     ]
                 ];
