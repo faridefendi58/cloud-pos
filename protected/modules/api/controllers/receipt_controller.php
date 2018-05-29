@@ -441,6 +441,8 @@ class ReceiptController extends BaseController
                         $timodel->status = \Model\TransferIssuesModel::STATUS_COMPLETED;
                         $timodel->updated_at = date("Y-m-d H:i:s");
                         $timodel->updated_by = $model->created_by;
+                        $timodel->completed_at = date("Y-m-d H:i:s");
+                        $timodel->completed_by = $model->created_by;
 
                         $update_status = \Model\TransferIssuesModel::model()->update($timodel);
                     }

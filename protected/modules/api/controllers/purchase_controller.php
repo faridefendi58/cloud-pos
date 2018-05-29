@@ -555,7 +555,7 @@ class PurchaseController extends BaseController
                 if ($data['status'] == \Model\PurchaseOrdersModel::STATUS_COMPLETED) {
                     $complete_data = [
                         'title' => $data['po_number']." sudah selesai.",
-                        'date' => date("d M Y H:i", strtotime($data['competed_at'])),
+                        'date' => date("d M Y H:i", strtotime($data['completed_at'])),
                         'data' => array(),
                         'notes' => ''
                     ];
