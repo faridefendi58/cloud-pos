@@ -481,11 +481,11 @@ class PurchaseController extends BaseController
                 $delivery = $d_model->getData(['po_id' => $po_model->id]);
                 if (is_array($delivery) && is_array($delivery[0])) {
                     $supplier_data = [
-                        'title' => $data['po_number'].' diterima oleh '.$delivery[0]['admin_name'],
+                        'title' => 'Order diterima oleh supplier',
                         'date' => date("d M Y H:i", strtotime($delivery[0]['created_at'])),
                         'detail' => $delivery[0],
                         'data' => array(),
-                        'notes' => ''
+                        'notes' => 'Diterima dan diproses oleh '.$delivery[0]['admin_name']
                     ];
                     array_push($history, $supplier_data);
 
@@ -496,6 +496,12 @@ class PurchaseController extends BaseController
                         'data' => array(),
                         'notes' => ''
                     ];
+                    if (isset($delivery[0]['resi_number'])) {
+                        $shipping_data['notes'] = 'Nomor resi '.$delivery[0]['resi_number'];
+                    } else {
+                        $shipping_data['notes'] = 'Kode pengiriman '.$delivery[0]['do_number'];
+                    }
+
                     array_push($history, $shipping_data);
 
                     if ($data['received_at']) {
