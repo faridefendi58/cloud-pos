@@ -321,6 +321,7 @@ class PurchaseController extends BaseController
                 $result['data'][] = $po_result['po_number'];
                 $result['origin'][$po_result['po_number']] = $po_result['supplier_name'];
                 $result['destination'][$po_result['po_number']] = $po_result['wh_group_name'];
+                $result['detail'][] = $po_result;
             }
         }
 
