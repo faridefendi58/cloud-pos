@@ -114,6 +114,7 @@ class DeliveryController extends BaseController
         }
 
         if ($model != null) {
+            $old_quantity = $model->quantity;
             if (isset($params['quantity'])) {
                 $model->quantity = (int) $params['quantity'];
                 $model->available_qty = (int) $params['quantity'];
@@ -123,6 +124,23 @@ class DeliveryController extends BaseController
             $model->updated_by = $params['admin_id'];
             $update = \Model\PurchaseOrderItemsModel::model()->update($model);
             if ($update) {
+                // create logs
+                $logs_model = new \Model\PurchaseOrderLogsModel();
+                $logs_model->po_id = $model->po_id;
+                $logs_model->notes = 'Jumlah '. $model->title .' diubah dari '. $old_quantity .' menjadi '.
+                    $model->quantity .' '. $model->unit;
+
+                if (!empty($params['admin_id'])) {
+                    $admin_model = \Model\AdminModel::model()->findByPk($params['admin_id']);
+                    if ($admin_model instanceof \RedBeanPHP\OODBBean) {
+                        $logs_model->notes .= ' oleh '. $admin_model->name;
+                    }
+                }
+
+                $logs_model->created_at = date("Y-m-d H:i:s");
+                $logs_model->updated_by = $params['admin_id'];
+                $save_logs = \Model\PurchaseOrderLogsModel::model()->save($logs_model);
+
                 $result['success'] = 1;
                 $result['message'] = 'Data item berhasil diubah.';
             } else {
@@ -153,8 +171,25 @@ class DeliveryController extends BaseController
         }
 
         if ($model != null) {
+            $notes = $model->title .' dengan jumlah '. $model->quantity .' telah dihapus';
             $delete = \Model\PurchaseOrderItemsModel::model()->delete($model);
             if ($delete) {
+                // create logs
+                $logs_model = new \Model\PurchaseOrderLogsModel();
+                $logs_model->po_id = $model->po_id;
+                $logs_model->notes = $notes;
+
+                if (!empty($params['admin_id'])) {
+                    $admin_model = \Model\AdminModel::model()->findByPk($params['admin_id']);
+                    if ($admin_model instanceof \RedBeanPHP\OODBBean) {
+                        $logs_model->notes .= ' oleh '. $admin_model->name;
+                    }
+                }
+
+                $logs_model->created_at = date("Y-m-d H:i:s");
+                $logs_model->updated_by = $params['admin_id'];
+                $save_logs = \Model\PurchaseOrderLogsModel::model()->save($logs_model);
+
                 $result['success'] = 1;
                 $result['message'] = 'Data item berhasil dihapus.';
             } else {

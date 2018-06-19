@@ -442,6 +442,12 @@ class PurchaseController extends BaseController
             $model->notes = $data['notes'];
         }
 
+        $po_logs = new \Model\PurchaseOrderLogsModel();
+        $logs_notes = $po_logs->getData($data['po_id'], true);
+        if (!empty($logs_notes)) {
+            $model->notes .= ', '. $logs_notes;
+        }
+
         $model->created_at = date("Y-m-d H:i:s");
         $model->created_by = (isset($data['admin_id'])) ? $data['admin_id'] : 1;
         $save = \Model\DeliveryOrdersModel::model()->save(@$model);
