@@ -32,7 +32,7 @@ class PurchaseOrderLogsModel extends \Model\BaseModel
      */
     public function getData($po_id = 0, $in_string = false)
     {
-        $sql = 'SELECT t.*, a.name AS admin_name, po.po_number, po.price_netto, p.title AS product_name  
+        $sql = 'SELECT t.*, a.name AS admin_name, po.po_number, po.price_netto   
             FROM {tablePrefix}ext_purchase_order_log t 
             LEFT JOIN {tablePrefix}admin a ON a.id = t.created_by 
             LEFT JOIN {tablePrefix}ext_purchase_order po ON po.id = t.po_id 
