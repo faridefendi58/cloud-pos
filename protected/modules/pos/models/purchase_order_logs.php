@@ -53,7 +53,9 @@ class PurchaseOrderLogsModel extends \Model\BaseModel
         } else {
             $notes = [];
             foreach ($rows as $i => $row) {
-                array_push($notes, $row['notes']);
+                if (!empty($row['notes'])) {
+                    array_push($notes, $row['notes']);
+                }
             }
 
             $txt_notes = implode(", ", $notes);
