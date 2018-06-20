@@ -138,7 +138,7 @@ class DeliveryController extends BaseController
                 }
 
                 $logs_model->created_at = date("Y-m-d H:i:s");
-                $logs_model->updated_by = $params['admin_id'];
+                $logs_model->created_by = $params['admin_id'];
                 $save_logs = \Model\PurchaseOrderLogsModel::model()->save($logs_model);
 
                 $result['success'] = 1;
@@ -187,7 +187,7 @@ class DeliveryController extends BaseController
                 }
 
                 $logs_model->created_at = date("Y-m-d H:i:s");
-                $logs_model->updated_by = $params['admin_id'];
+                $logs_model->created_by = $params['admin_id'];
                 $save_logs = \Model\PurchaseOrderLogsModel::model()->save($logs_model);
 
                 $result['success'] = 1;
