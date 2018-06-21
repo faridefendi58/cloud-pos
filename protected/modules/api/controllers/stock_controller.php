@@ -48,15 +48,23 @@ class StockController extends BaseController
             $model = \Model\WarehousesModel::model()->findByPk($params['warehouse_id']);
         }
 
+        $ps_model = new \Model\ProductStocksModel();
         if ($model instanceof \RedBeanPHP\OODBBean) {
-            $ps_model = new \Model\ProductStocksModel();
-            $stocks = $ps_model->getQuery(['warehouse_id' => $model->id]);
+            $ps_params = ['warehouse_id' => $model->id];
+            $stocks = $ps_model->getQuery($ps_params);
             $result['success'] = 1;
             $result['data'] = $stocks;
         } else {
-            $result['success'] = 0;
-            $result['message'] = 'Warehouse tidak ditemukan.';
-            $result['params'] = $params;
+            $wh_model = new \Model\WarehousesModel();
+            $whs = $wh_model->getData();
+            $stock_lists = [];
+            foreach ($whs as $i => $wh) {
+                $ps_params = ['warehouse_id' => $wh['id']];
+                $stocks = $ps_model->getQuery($ps_params);
+                $stock_lists[$wh['id']] = ['wh_data' => $wh, 'stock_data' => $stocks];
+            }
+            $result['success'] = 1;
+            $result['data'] = $stock_lists;
         }
         
         return $response->withJson($result, 201);
