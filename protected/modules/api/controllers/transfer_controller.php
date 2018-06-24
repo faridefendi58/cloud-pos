@@ -14,13 +14,14 @@ class TransferController extends BaseController
     public function register($app)
     {
         $app->map(['POST'], '/create', [$this, 'create']);
+        $app->map(['GET'], '/list', [$this, 'get_list']);
     }
 
     public function accessRules()
     {
         return [
             ['allow',
-                'actions' => ['create'],
+                'actions' => ['create', 'list'],
                 'users'=> ['@'],
             ]
         ];
@@ -129,6 +130,59 @@ class TransferController extends BaseController
                     "success" => 0,
                     "message" => \Model\TransferIssuesModel::model()->getErrors(false, false, false)
                 ];
+            }
+        }
+
+        return $response->withJson($result, 201);
+    }
+
+    public function get_list($request, $response, $args)
+    {
+        $isAllowed = $this->isAllowed($request, $response);
+
+        if (!$isAllowed['allow']) {
+            $result = [
+                'success' => 0,
+                'message' => $isAllowed['message'],
+            ];
+            return $response->withJson($result, 201);
+        }
+
+        $result = [];
+        $ti_model = new \Model\TransferIssuesModel();
+        $params = $request->getParams();
+        $status = \Model\TransferIssuesModel::STATUS_ON_PROCESS;
+        $params_data = ['status' => $status];
+        if (isset($params['status'])) {
+            $params_data['status'] = $params['status'];
+        }
+
+        if (isset($params['all_status'])) {
+            unset($params_data['status']);
+        }
+
+        if (isset($params['admin_id'])) {
+            $whsmodel = new \Model\WarehouseStaffsModel();
+            $wh_staff = $whsmodel->getData(['admin_id' => $params['admin_id']]);
+            $wh_groups = [];
+            if (is_array($wh_staff) && count($wh_staff) > 0) {
+                foreach ($wh_staff as $i => $whs) {
+                    $wh_groups[$whs['wh_group_id']] = $whs['wh_group_id'];
+                }
+            }
+            if (count($wh_groups) > 0) {
+                $params_data['wh_group_id'] = $wh_groups;
+            }
+        }
+
+        $result_data = $ti_model->getData($params_data);
+        if (is_array($result_data) && count($result_data)>0) {
+            $result['success'] = 1;
+            foreach ($result_data as $i => $ti_result) {
+                $result['data'][] = $ti_result['ti_number'];
+                $result['origin'][$ti_result['ti_number']] = $ti_result['warehouse_from_name'];
+                $result['destination'][$ti_result['ti_number']] = $ti_result['wh_group_name'];
+                $result['detail'][] = $ti_result;
             }
         }
 
