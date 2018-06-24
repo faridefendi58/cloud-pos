@@ -15,13 +15,14 @@ class TransferController extends BaseController
     {
         $app->map(['POST'], '/create', [$this, 'create']);
         $app->map(['GET'], '/list', [$this, 'get_list']);
+        $app->map(['GET'], '/detail', [$this, 'get_detail']);
     }
 
     public function accessRules()
     {
         return [
             ['allow',
-                'actions' => ['create', 'list'],
+                'actions' => ['create', 'list', 'detail'],
                 'users'=> ['@'],
             ]
         ];
@@ -183,6 +184,133 @@ class TransferController extends BaseController
                 $result['origin'][$ti_result['ti_number']] = $ti_result['warehouse_from_name'];
                 $result['destination'][$ti_result['ti_number']] = $ti_result['wh_group_name'];
                 $result['detail'][] = $ti_result;
+            }
+        }
+
+        return $response->withJson($result, 201);
+    }
+
+    public function get_detail($request, $response, $args)
+    {
+        $isAllowed = $this->isAllowed($request, $response);
+
+        if (!$isAllowed['allow']) {
+            $result = [
+                'success' => 0,
+                'message' => $isAllowed['message'],
+            ];
+            return $response->withJson($result, 201);
+        }
+
+        $result = [ 'success' => 0 ];
+        $params = $request->getParams();
+        if (isset($params['issue_number'])) {
+            $po_model = \Model\TransferIssuesModel::model()->findByAttributes(['ti_number'=>$params['issue_number']]);
+            if ($po_model instanceof \RedBeanPHP\OODBBean) {
+                $model = new \Model\TransferIssuesModel();
+                // po data
+                $data = $model->getDetail($po_model->id);
+                // po history
+                $history = [
+                    [
+                        'title' => $data['ti_number'].' diterbitkan oleh '.$data['created_by_name'],
+                        'date' => date("d M Y H:i", strtotime($data['created_at'])),
+                        'data' => array(),
+                        'notes' => '',
+                    ]
+                ];
+
+                /*$d_model = new \Model\DeliveryOrdersModel();
+                $delivery = $d_model->getData(['po_id' => $po_model->id]);
+                if (is_array($delivery) && is_array($delivery[0])) {
+                    $supplier_data = [
+                        'title' => 'Order diterima oleh supplier',
+                        'date' => date("d M Y H:i", strtotime($delivery[0]['created_at'])),
+                        'detail' => $delivery[0],
+                        'data' => array(),
+                        'notes' => 'Diterima dan diproses oleh '.$delivery[0]['admin_name']
+                    ];
+                    array_push($history, $supplier_data);
+
+                    $shipping_data = [
+                        'title' => 'Barang dikirim oleh '.$delivery[0]['admin_name'].' melalui '.$data['shipment_name'],
+                        'date' => date("d M Y", strtotime($delivery[0]['shipping_date'])),
+                        'detail' => $delivery[0],
+                        'data' => array(),
+                        'notes' => ''
+                    ];
+                    if (isset($delivery[0]['resi_number'])) {
+                        $shipping_data['notes'] = 'Nomor resi '.$delivery[0]['resi_number'];
+                    } else {
+                        $shipping_data['notes'] = 'Kode pengiriman '.$delivery[0]['do_number'];
+                    }
+
+                    array_push($history, $shipping_data);
+
+                    if ($data['received_at']) {
+                        $rc_data = [
+                            'title' => 'Barang diterima oleh '.$data['received_by_name'],
+                            'date' => date("d M Y", strtotime($data['received_at'])),
+                            'data' => array(),
+                            'notes' => $data['notes']
+                        ];
+                        array_push($history, $rc_data);
+                    }
+
+                    $prc_model = new \Model\PurchaseReceiptsModel();
+                    $prc_datas = $prc_model->getData(['po_id' => $po_model->id]);
+                    if (is_array($prc_datas) && count($prc_datas)>0) {
+                        for ($i = 0; $i < count($prc_datas); $i++) {
+                            $prci_model = new \Model\PurchaseReceiptItemsModel();
+
+                            $prc_data = [
+                                'title' => 'Stok diterima oleh warehouse '.$prc_datas[$i]['warehouse_name'],
+                                'date' => date("d M Y H:i", strtotime($prc_datas[$i]['created_at'])),
+                                'data' => $prc_datas[$i]
+                            ];
+
+                            $prc_items = $prci_model->getData($prc_datas[$i]['id']);
+                            $items_titles = [];
+                            if (is_array($prc_items)) {
+                                foreach ($prc_items as $j => $prc_item) {
+                                    $items_titles[] = $prc_item['title'].' '.$prc_item['quantity'].' '.$prc_item['unit'];
+                                }
+                                $prc_data['data']['items'] = $prc_items;
+                            }
+
+                            $items_title = implode(", ", $items_titles);
+
+                            if (!empty($items_title)) {
+                                $prc_data['notes'] = 'Rincian penerimaan : '.$items_title;
+                            } else {
+                                $prc_data['notes'] = '';
+                            }
+                            array_push($history, $prc_data);
+                        }
+                    }
+                }*/
+
+                //end of history
+                if ($data['status'] == \Model\TransferIssuesModel::STATUS_COMPLETED) {
+                    $complete_data = [
+                        'title' => $data['ti_number']." sudah selesai.",
+                        'date' => date("d M Y H:i", strtotime($data['completed_at'])),
+                        'data' => array(),
+                        'notes' => ''
+                    ];
+                    array_push($history, $complete_data);
+                }
+
+                //set the items
+                $it_model = new \Model\TransferIssueItemsModel();
+                $po_items = $it_model->getData($po_model->id);
+
+                $result['success'] = 1;
+                $result['data'] = $data;
+                $result['history'] = $history;
+                $result['items'] = $po_items;
+            } else {
+                $result['message'] = 'Nomor issue tidak ditemukan.';
             }
         }
 
