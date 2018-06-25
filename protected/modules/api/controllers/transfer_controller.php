@@ -73,6 +73,13 @@ class TransferController extends BaseController
                 }
             }
 
+            if (isset($params['wh_group_name'])) {
+                $whgmodel = \Model\WarehouseGroupsModel::model()->findByAttributes(['title' => $params['wh_group_name']]);
+                if ($whgmodel instanceof \RedBeanPHP\OODBBean) {
+                    $params['wh_group_id'] = $whgmodel->id;
+                }
+            }
+
             $model = new \Model\TransferIssuesModel();
             $ti_number = \Pos\Controllers\TransfersController::get_ti_number();
             $model->ti_number = $ti_number['serie_nr'];
@@ -82,6 +89,8 @@ class TransferController extends BaseController
             $model->warehouse_from = $params['warehouse_from'];
             if (isset($params['warehouse_to']))
                 $model->warehouse_to = $params['warehouse_to'];
+            if (isset($params['wh_group_id']))
+                $model->wh_group_id = $params['wh_group_id'];
             $model->date_transfer = date("Y-m-d H:i:s");
             $model->status = \Model\TransferIssuesModel::STATUS_ON_PROCESS;
             if (isset($params['notes']))
@@ -131,6 +140,33 @@ class TransferController extends BaseController
                     "success" => 0,
                     "message" => \Model\TransferIssuesModel::model()->getErrors(false, false, false)
                 ];
+            }
+        }
+
+        if ($result['success'] > 0) {
+            // send notification to related user
+            $params2 = [
+                'rel_type' => \Model\NotificationsModel::TYPE_TRANSFER_ISSUE,
+                'rel_id' => $model->id
+            ];
+
+            if ($model->wh_group_id > 0) {
+                $whg_model = \Model\WarehouseGroupsModel::model()->findByPk($model->wh_group_id);
+                if ($whg_model instanceof \RedBeanPHP\OODBBean && !empty($whg_model->pic)) {
+                    $params2['recipients'] = array_keys(json_decode($whg_model->pic, true));
+                    $po_model = new \Model\TransferIssuesModel();
+                    $po_detail = $po_model->getDetail($model->id);
+                    $params2['message'] = "Ada Perpindahan Stok ".$po_detail['ti_number']." untuk WH area ". $whg_model->title." ";
+                    $params2['message'] .= "yang dipesan oleh ".$po_detail['created_by_name'];
+                    if (!empty($po_detail['due_date'])) {
+                        $params2['message'] .= " untuk tanggal ". date("d F Y", strtotime($po_detail['due_date'])).".";
+                    }
+
+                    $params2['issue_number'] = $po_detail['ti_number'];
+                    $params2['rel_activity'] = 'TransferActivity';
+                    //send to wh pic
+                    $this->_sendNotification($params2);
+                }
             }
         }
 
