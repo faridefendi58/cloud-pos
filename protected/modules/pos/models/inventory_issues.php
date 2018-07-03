@@ -52,6 +52,13 @@ class InventoryIssuesModel extends \Model\BaseModel
                 $sql .= ' AND t.warehouse_id =:warehouse_id';
                 $params['warehouse_id'] = $data['warehouse_id'];
             }
+
+            if (isset($data['wh_group_id'])) {
+                if (is_array($data['wh_group_id'])) {
+                    $group_id = implode(", ", $data['wh_group_id']);
+                    $sql .= ' AND wf.group_id IN (' . $group_id . ')';
+                }
+            }
         }
 
         $sql .= ' ORDER BY t.effective_date DESC';

@@ -673,7 +673,7 @@ class InventoriesController extends BaseController
             ], 201);
     }
 
-    private function get_ii_number()
+    public function get_ii_number()
     {
         $pmodel = new \Model\OptionsModel();
         $ext_pos = $pmodel->getOption('ext_pos');
