@@ -181,10 +181,19 @@ class InventoryController extends BaseController
         $result_data = $po_model->getData($params_data);
         if (is_array($result_data) && count($result_data)>0) {
             $result['success'] = 1;
+            $it_models = new \Model\InventoryIssueItemsModel();
             foreach ($result_data as $i => $po_result) {
                 $result['data'][] = $po_result['ii_number'];
                 $result['origin'][$po_result['ii_number']] = $po_result['warehouse_name'];
                 $result['detail'][] = $po_result;
+                $items = $it_models->getData($po_result['id']);
+                $items_in_string = [];
+                if (is_array($items)) {
+                    foreach ($items as $i => $item) {
+                        array_push($items_in_string, $item['title'].' ('.$item['quantity'].')');
+                    }
+                }
+                $result['items'][$po_result['ii_number']] = implode(", ", $items_in_string);
             }
         }
 
