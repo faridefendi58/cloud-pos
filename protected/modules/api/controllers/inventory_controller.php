@@ -89,14 +89,15 @@ class InventoryController extends BaseController
                 $model->notes = $params['notes'];
             if (isset($params['effective_date'])) {
                 $model->effective_date = date("Y-m-d H:i:s", strtotime($params['effective_date']));
+                $model->created_at = $model->effective_date;
             } else {
                 $model->effective_date = date("Y-m-d H:i:s");
+                $model->created_at = date("Y-m-d H:i:s");
             }
-            $model->created_at = date("Y-m-d H:i:s");
             $model->created_by = (isset($params['admin_id'])) ? $params['admin_id'] : 1;
             $save = \Model\InventoryIssuesModel::model()->save(@$model);
             if ($save) {
-                $tot_price = 0;
+                $tot_price = 0; $stock_updated = 0;
                 foreach ($purchase_items as $product_id => $quantity) {
                     $product = \Model\ProductsModel::model()->findByPk($product_id);
                     $imodel[$product_id] = new \Model\InventoryIssueItemsModel();
@@ -106,13 +107,33 @@ class InventoryController extends BaseController
                     $imodel[$product_id]->quantity = $quantity;
                     $imodel[$product_id]->unit = $product->unit;
                     $imodel[$product_id]->price = $product->current_cost;
-                    $imodel[$product_id]->created_at = date("Y-m-d H:i:s");
+                    $imodel[$product_id]->created_at = $model->created_at;
                     $imodel[$product_id]->created_by = $model->created_by;
 
                     if ($product_id > 0 && $imodel[$product_id]->quantity > 0) {
                         $save2 = \Model\InventoryIssueItemsModel::model()->save($imodel[$product_id]);
                         if ($save2) {
                             $tot_price = $tot_price + ($imodel[$product_id]->price * $quantity);
+                            // update stock
+                            $stock_params = ['product_id' => $product_id, 'warehouse_id' => $model->warehouse_id];
+                            $stock = \Model\ProductStocksModel::model()->findByAttributes($stock_params);
+                            $update_stock = false;
+                            if ($stock instanceof \RedBeanPHP\OODBBean) {
+                                $stock->quantity = $stock->quantity - $quantity;
+                                $stock->updated_at = date("Y-m-d H:i:s");
+                                $stock->updated_by = $model->created_by;
+                                $update_stock = \Model\ProductStocksModel::model()->update($stock);
+                            }
+                            if ($update_stock) {
+                                // also update current price
+                                $pmodel = new \Model\ProductsModel();
+                                $current_cost = $pmodel->getCurrentCost($product_id);
+                                $product->current_cost = $current_cost;
+                                $product->updated_at = date("Y-m-d H:i:s");
+                                $product->updated_by = $model->created_by;
+                                $update_product = \Model\ProductsModel::model()->update($product);
+                                $stock_updated = $stock_updated + 1;
+                            }
                         }
                     }
                 }
@@ -125,6 +146,15 @@ class InventoryController extends BaseController
                         'message' => 'Data berhasil disimpan.',
                         "issue_number" => $model->ii_number
                     ];
+                    // update status
+                    if ($stock_updated > 0) {
+                        $ii_model = \Model\InventoryIssuesModel::model()->findByPk($model->id);
+                        if ($ii_model instanceof \RedBeanPHP\OODBBean) {
+                            $ii_model->status = \Model\InventoryIssuesModel::STATUS_COMPLETED;
+                            $ii_model->updated_at = date("Y-m-d H:i:s");
+                            $update_status = \Model\InventoryIssuesModel::model()->update($ii_model);
+                        }
+                    }
                 } else {
                     $result = ["success" => 0, "message" => "Tidak ada item yang dapat disimpan."];
                 }
