@@ -277,6 +277,7 @@ class TransfersController extends BaseController
                     $model[$i]->product_id = $product_id;
                     $model[$i]->title = $product->title;
                     $model[$i]->quantity = $_POST['TransferIssueItems']['quantity'][$i];
+                    $model[$i]->available_qty = $_POST['TransferIssueItems']['quantity'][$i];
                     $model[$i]->unit = $product->unit;
                     $model[$i]->price = $product->current_cost;
                     $model[$i]->created_at = date("Y-m-d H:i:s");
@@ -293,6 +294,7 @@ class TransfersController extends BaseController
                     $pmodel[$i]->product_id = $product_id;
                     $pmodel[$i]->title = $product->title;
                     $pmodel[$i]->quantity = $_POST['TransferIssueItems']['quantity'][$i];
+                    $pmodel[$i]->available_qty = $_POST['TransferIssueItems']['quantity'][$i];
                     $pmodel[$i]->unit = $product->unit;
                     $pmodel[$i]->price = $product->current_cost;
                     $pmodel[$i]->updated_at = date("Y-m-d H:i:s");

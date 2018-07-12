@@ -432,6 +432,13 @@ class ReceiptController extends BaseController
                                 if ($save2) {
                                     $tot_quantity = $tot_quantity + $quantity;
                                     $quantity_max = $quantity_max + $ti_item->quantity;
+                                    // update available_qty
+                                    if ($ti_item->available_qty > 0) {
+                                        $ti_item->available_qty = $ti_item->available_qty - $quantity;
+                                        $ti_item->updated_at = date("Y-m-d H:i:s");
+                                        $ti_item->updated_by = $model->created_by;
+                                        $update_ti_item = \Model\TransferIssueItemsModel::model()->update($ti_item);
+                                    }
                                 }
                             }
                         }
