@@ -18,13 +18,15 @@ class PurchaseController extends BaseController
         $app->map(['GET'], '/list', [$this, 'get_list']);
         $app->map(['POST'], '/create-shipping', [$this, 'create_shipping']);
         $app->map(['GET'], '/detail', [$this, 'get_detail']);
+        $app->map(['POST'], '/update', [$this, 'update']);
+        $app->map(['POST'], '/delete', [$this, 'delete']);
     }
 
     public function accessRules()
     {
         return [
             ['allow',
-                'actions' => ['create', 'list', 'create-shipping', 'detail'],
+                'actions' => ['create', 'list', 'create-shipping', 'detail', 'update', 'delete'],
                 'users'=> ['@'],
             ]
         ];
@@ -583,5 +585,199 @@ class PurchaseController extends BaseController
         }
 
         return $response->withJson($result, 201);
+    }
+
+    public function update($request, $response, $args)
+    {
+        $isAllowed = $this->isAllowed($request, $response);
+
+        if (!$isAllowed['allow']) {
+            $result = [
+                'success' => 0,
+                'message' => $isAllowed['message'],
+            ];
+            return $response->withJson($result, 201);
+        }
+
+        $result = [];
+        $params = $request->getParams();
+
+        $model = null;
+        if (isset($params['id'])) {
+            $model = \Model\PurchaseOrdersModel::model()->findByPk($params['id']);
+        }
+
+        if ($model instanceof \RedBeanPHP\OODBBean) {
+            if ($model->status != \Model\PurchaseOrdersModel::STATUS_PENDING) {
+                $result = ["success" => 0, "message" => "Hanya PO yang masih berstatus PENDING yang dapat diubah."];
+                return $response->withJson($result, 201);
+            }
+
+            if (isset($params['items'])) {
+                $purchase_items = [];
+                $items = explode("-", $params['items']);
+                if (is_array($items)) {
+                    foreach ($items as $i => $item) {
+                        $p_count = explode(",", $item);
+                        if (is_array($p_count)) {
+                            $purchase_items[$p_count[0]] = (int)$p_count[1];
+                        }
+                    }
+                }
+            }
+
+            $purchase_prices = [];
+            if (isset($params['prices'])) {
+                $prices = explode("-", $params['prices']);
+                if (is_array($prices)) {
+                    foreach ($prices as $i => $price) {
+                        $pr_count = explode(",", $price);
+                        if (is_array($pr_count)) {
+                            $purchase_prices[$pr_count[0]] = (int) $pr_count[1];
+                        }
+                    }
+                }
+            }
+
+            if (isset($params['supplier_name'])) {
+                $spmodel = \Model\SuppliersModel::model()->findByAttributes(['name' => $params['supplier_name']]);
+                if ($spmodel instanceof \RedBeanPHP\OODBBean) {
+                    $params['supplier_id'] = $spmodel->id;
+                }
+            }
+
+            if (isset($params['shipment_name'])) {
+                $shmodel = \Model\ShipmentsModel::model()->findByAttributes(['title' => $params['shipment_name']]);
+                if ($shmodel instanceof \RedBeanPHP\OODBBean) {
+                    $params['shipment_id'] = $shmodel->id;
+                }
+            }
+
+            if (empty($params['supplier_id']) || empty($params['shipment_id'])) {
+                $result = ["success" => 0, "message" => "Supplier atau Cara pengiriman tidak boleh kosong."];
+                return $response->withJson($result, 201);
+            }
+
+            if (isset($params['wh_group_name'])) {
+                $whgmodel = \Model\WarehouseGroupsModel::model()->findByAttributes(['title' => $params['wh_group_name']]);
+                if ($whgmodel instanceof \RedBeanPHP\OODBBean) {
+                    $params['wh_group_id'] = $whgmodel->id;
+                }
+            }
+
+            if (isset($params['due_date'])) {
+                $params['due_date'] = date("Y-m-d H:i:s", strtotime($params['due_date']));
+            }
+
+            if (isset($params['supplier_id']))
+                $model->supplier_id = $params['supplier_id'];
+            $model->date_order = date("Y-m-d H:i:s");
+            if (isset($params['due_date'])) {
+                $model->due_date = $params['due_date'];
+            }
+            if (isset($params['shipment_id']))
+                $model->shipment_id = $params['shipment_id'];
+            if (isset($params['wh_group_id']))
+                $model->wh_group_id = $params['wh_group_id'];
+
+            $model->updated_at = date("Y-m-d H:i:s");
+            $model->updated_by = (isset($params['admin_id'])) ? $params['admin_id'] : 1;
+            $save = \Model\PurchaseOrdersModel::model()->update(@$model);
+            if ($save) {
+                if (count($purchase_items) > 0) {
+                    $delete = \Model\PurchaseOrderItemsModel::model()->deleteAllByAttributes(['po_id' => $model->id]);
+                }
+                $tot_price = 0;
+                foreach ($purchase_items as $product_id => $quantity) {
+                    $product = \Model\ProductsModel::model()->findByPk($product_id);
+                    $imodel[$product_id] = new \Model\PurchaseOrderItemsModel();
+                    $imodel[$product_id]->po_id = $model->id;
+                    $imodel[$product_id]->product_id = $product_id;
+                    $imodel[$product_id]->title = $product->title;
+                    $imodel[$product_id]->quantity = $quantity;
+                    $imodel[$product_id]->available_qty = $quantity;
+                    $imodel[$product_id]->unit = $product->unit;
+                    if (isset($purchase_prices[$product_id]))
+                        $imodel[$product_id]->price = $purchase_prices[$product_id];
+                    else
+                        $imodel[$product_id]->price = $product->current_cost;
+                    $imodel[$product_id]->created_at = date("Y-m-d H:i:s");
+                    $imodel[$product_id]->created_by = $model->created_by;
+
+                    if ($product_id > 0 && $imodel[$product_id]->quantity > 0) {
+                        $save2 = \Model\PurchaseOrderItemsModel::model()->save($imodel[$product_id]);
+                        if ($save2) {
+                            $tot_price = $tot_price + ($imodel[$product_id]->price * $quantity);
+                        }
+                    }
+                }
+
+                // updating price of po data
+                if ($tot_price > 0) {
+                    $pomodel = \Model\PurchaseOrdersModel::model()->findByPk($model->id);
+                    $pomodel->price_netto = $tot_price;
+                    $update = \Model\PurchaseOrdersModel::model()->update($pomodel);
+
+                    $result = [
+                        "success" => 1,
+                        "id" => $model->id,
+                        'message' => 'Data berhasi disimpan.',
+                        "issue_number" => $model->po_number
+                    ];
+                } else {
+                    $result = ["success" => 0, "message" => "Tidak ada item yang dapat disimpan."];
+                }
+            } else {
+                $result = [
+                    "success" => 0,
+                    "message" => \Model\PurchaseOrdersModel::model()->getErrors(false, false, false)
+                ];
+            }
+        } else {
+            $result = ["success" => 0, "message" => "PO tidak ditemukan."];
+        }
+
+        return $response->withJson($result, 201);
+    }
+
+    public function delete($request, $response, $args)
+    {
+        $isAllowed = $this->isAllowed($request, $response);
+
+        if (!$isAllowed['allow']) {
+            $result = [
+                'success' => 0,
+                'message' => $isAllowed['message'],
+            ];
+            return $response->withJson($result, 201);
+        }
+
+        $result = [];
+        $params = $request->getParams();
+        if (isset($params['id'])) {
+            $model = \Model\PurchaseOrdersModel::model()->findByPk($params['id']);
+            if ($model instanceof \RedBeanPHP\OODBBean) {
+                if ($model->status != \Model\PurchaseOrdersModel::STATUS_PENDING) {
+                    $result = ["success" => 0, "message" => "Hanya PO yang masih berstatus PENDING yang dapat diubah."];
+                    return $response->withJson($result, 201);
+                }
+
+                $delete = \Model\PurchaseOrdersModel::model()->delete($model);
+                if ($delete) {
+                    $delete_items = \Model\PurchaseOrderItemsModel::model()->deleteAllByAttributes(['po_id' => $params['id']]);
+                    $delete_logs = \Model\PurchaseOrderLogsModel::model()->deleteAllByAttributes(['po_id' => $params['id']]);
+                    return $response->withJson(
+                        [
+                            'status' => 'success',
+                            'message' => 'Data berhasil dihapus.',
+                        ], 201);
+                }
+            } else {
+                $result = ["success" => 0, "message" => "PO tidak ditemukan."];
+                return $response->withJson($result, 201);
+            }
+        }
+
+        return $result;
     }
 }
