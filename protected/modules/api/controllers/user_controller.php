@@ -71,7 +71,9 @@ class UserController extends BaseController
                                 'is_admin' => ($model->group_id == 1)? true : false,
                                 'is_pic' => (count($pics) > 0)? true : false,
                                 'roles' => $roles,
-                                'coverage' => $pics
+                                'coverage' => $pics,
+                                'email' => $model->email,
+                                'phone' => $model->phone
                             ];
                         }
                     } else {
