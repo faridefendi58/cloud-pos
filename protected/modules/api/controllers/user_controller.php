@@ -17,6 +17,8 @@ class UserController extends BaseController
         $app->map(['GET'], '/logout', [$this, 'logout']);
         $app->map(['POST'], '/register', [$this, 'register_user']);
         $app->map(['GET'], '/confirm/[{hash}]', [$this, 'confirm']);
+        $app->map(['POST'], '/update', [$this, 'update']);
+        $app->map(['POST'], '/change-password', [$this, 'change_password']);
     }
 
     public function accessRules()
@@ -27,7 +29,7 @@ class UserController extends BaseController
                 'users'=> ['@'],
             ],
             ['allow',
-                'actions' => ['login', 'register', 'confirm'],
+                'actions' => ['login', 'register', 'confirm', 'update', 'change-password'],
                 'users' => ['*'],
             ]
         ];
@@ -315,5 +317,99 @@ class UserController extends BaseController
         }
 
         return $groups;
+    }
+
+    public function update($request, $response, $args)
+    {
+        $isAllowed = $this->isAllowed($request, $response);
+
+        if (!$isAllowed['allow']) {
+            $result = [
+                'success' => 0,
+                'message' => $isAllowed['message'],
+            ];
+            return $response->withJson($result, 201);
+        }
+
+        $result = [ 'success' => 0 ];
+        $params = $request->getParams();
+        if (isset($params['admin_id'])) {
+            $model = \Model\AdminModel::model()->findByPk( $params['admin_id'] );
+            if ($model instanceof \RedBeanPHP\OODBBean) {
+                if (isset($params['username'])) {
+                    $model->username = $params['username'];
+                }
+                if (isset($params['name'])) {
+                    $model->name = $params['name'];
+                }
+                if (isset($params['email'])) {
+                    $model->email = $params['email'];
+                }
+                if (isset($params['phone'])) {
+                    $model->phone = $params['phone'];
+                }
+                $model->updated_at = date("Y-m-d H:i:s");
+                $save = \Model\AdminModel::model()->update(@$model);
+                if ($save) {
+                    $result = [
+                        "success" => 1,
+                        "id" => $model->id,
+                        'message' => 'Data berhasil disimpan.'
+                    ];
+                }
+            } else {
+                $result['message'] = 'User tidak ditemukan.';
+            }
+        }
+
+        return $response->withJson($result, 201);
+    }
+
+    public function change_password($request, $response, $args)
+    {
+        $isAllowed = $this->isAllowed($request, $response);
+
+        if (!$isAllowed['allow']) {
+            $result = [
+                'success' => 0,
+                'message' => $isAllowed['message'],
+            ];
+            return $response->withJson($result, 201);
+        }
+
+        $result = [ 'success' => 0 ];
+        $params = $request->getParams();
+        if (isset($params['admin_id'])
+            && isset($params['old_password'])
+            && isset($params['new_password'])) {
+
+            $model = \Model\AdminModel::model()->findByPk( $params['admin_id'] );
+            if ($model instanceof \RedBeanPHP\OODBBean) {
+                $has_password = \Model\AdminModel::hasPassword($params['old_password'], $model->salt);
+                if ($has_password != $model->password) {
+                    $result['message'] = 'Password lama yang Anda masukkan salah.';
+                } else {
+                    $has_password_new = \Model\AdminModel::hasPassword($params['new_password'], $model->salt);
+                    $model->password = $has_password_new;
+                    $model->updated_at = date("Y-m-d H:i:s");
+                    $save = \Model\AdminModel::model()->update(@$model);
+                    if ($save) {
+                        $result = [
+                            "success" => 1,
+                            "id" => $model->id,
+                            'message' => 'Password berhasil diubah.'
+                        ];
+                    } else {
+                        $result['message'] = 'Password gagal diubah.';
+                    }
+                }
+            } else {
+                $result['message'] = 'User tidak ditemukan.';
+            }
+        } else {
+            $result['message'] = 'Silakan masukkan password lama dan baru Anda.';
+        }
+
+        return $response->withJson($result, 201);
     }
 }
