@@ -5,6 +5,9 @@ require_once __DIR__ . '/../../../models/base.php';
 
 class ShipmentsModel extends \Model\BaseModel
 {
+    const STATUS_ENABLED = 1;
+    const STATUS_DISABLED = 0;
+
     public static function model($className=__CLASS__)
     {
         return parent::model($className);
@@ -30,18 +33,26 @@ class ShipmentsModel extends \Model\BaseModel
     /**
      * @return array
      */
-    public function getData()
+    public function getData($data = null)
     {
         $sql = 'SELECT t.*, a.name AS admin_name   
             FROM {tablePrefix}ext_shipment t 
             LEFT JOIN {tablePrefix}admin a ON a.id = t.created_by 
             WHERE 1';
 
+        $params = [];
+        if (is_array($data)) {
+            if (isset($data['status'])) {
+                $sql .= ' AND t.active =:status';
+                $params['status'] = $data['status'];
+            }
+        }
+
         $sql .= ' ORDER BY t.id DESC';
 
         $sql = str_replace(['{tablePrefix}'], [$this->_tbl_prefix], $sql);
 
-        $rows = R::getAll( $sql );
+        $rows = R::getAll( $sql, $params );
 
         return $rows;
     }
