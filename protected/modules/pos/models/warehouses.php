@@ -30,7 +30,7 @@ class WarehousesModel extends \Model\BaseModel
     /**
      * @return array
      */
-    public function getData()
+    public function getData($data = null)
     {
         $sql = 'SELECT t.*, a.name AS admin_name, g.title AS group_name, g.pic AS group_pic    
             FROM {tablePrefix}ext_warehouse t 
@@ -38,11 +38,19 @@ class WarehousesModel extends \Model\BaseModel
             LEFT JOIN {tablePrefix}admin a ON a.id = t.created_by 
             WHERE 1';
 
+        $params = [];
+        if (is_array($data)) {
+            if (isset($data['status'])) {
+                $sql .= ' AND t.active =:status';
+                $params['status'] = $data['status'];
+            }
+        }
+
         $sql .= ' ORDER BY t.id DESC';
 
         $sql = str_replace(['{tablePrefix}'], [$this->_tbl_prefix], $sql);
 
-        $rows = R::getAll( $sql );
+        $rows = R::getAll( $sql, $params );
 
         return $rows;
     }
