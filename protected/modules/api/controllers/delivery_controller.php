@@ -17,6 +17,8 @@ class DeliveryController extends BaseController
         $app->map(['POST'], '/update-item', [$this, 'get_update']);
         $app->map(['POST'], '/delete-item', [$this, 'get_delete']);
         $app->map(['POST'], '/confirm-receipt', [$this, 'get_confirm_receipt']);
+        $app->map(['GET'], '/detail', [$this, 'get_detail']);
+        $app->map(['GET'], '/stock', [$this, 'get_stocks']);
     }
 
     public function accessRules()
@@ -214,6 +216,25 @@ class DeliveryController extends BaseController
 
         $result = ['success' => 0];
         $params = $request->getParams();
+
+        $po_item_model = new \Model\PurchaseOrderItemsModel();
+        $issue_items = [];
+        if (isset($params['items'])) {
+            $items = explode("-", $params['items']);
+            if (is_array($items)) {
+                foreach ($items as $i => $item) {
+                    $p_count = explode(",", $item);
+                    if (is_array($p_count)) {
+                        $i_detail = $po_item_model->findByPk($p_count[0]);
+                        if ($i_detail instanceof \RedBeanPHP\OODBBean) {
+                            $prop = $i_detail->getProperties();
+                            array_push($issue_items, $prop);
+                        }
+                    }
+                }
+            }
+        }
+
         if (isset($params['do_number'])) {
             $model = \Model\DeliveryOrdersModel::model()->findByAttributes(['do_number' => $params['do_number']]);
             if ($model instanceof \RedBeanPHP\OODBBean) {
@@ -234,6 +255,40 @@ class DeliveryController extends BaseController
                     $model->completed_at = date("Y-m-d H:i:s");
                     $model->completed_by = $params['admin_id'];
                     $update2 = \Model\DeliveryOrdersModel::model()->update($model);
+                    if ($update2) {
+                        // save the items
+                        $dr_model = new \Model\DeliveryReceiptsModel();
+                        $dr_number = $this->get_dr_number();
+                        $dr_model->dr_number = $dr_number['serie_nr'];
+                        $dr_model->dr_serie = $dr_number['serie'];
+                        $dr_model->dr_nr = $dr_number['nr'];
+                        $dr_model->do_id = $model->id;
+                        if (isset($params['notes'])) {
+                            $dr_model->notes = $params['notes'];
+                        }
+                        $dr_model->received_by = (isset($params['admin_id'])) ? $params['admin_id'] : 1;
+                        $dr_model->created_at = date("Y-m-d H:i:s");
+                        $dr_model->created_by = (isset($params['admin_id'])) ? $params['admin_id'] : 1;
+                        $save_dr = \Model\DeliveryReceiptsModel::model()->save(@$dr_model);
+                        if ($save_dr) {
+                            if (is_array($issue_items) && count($issue_items) > 0) {
+                                foreach ($issue_items as $is => $issue_item) {
+                                    $product_id = $issue_item['product_id'];
+                                    $primodel[$product_id] = new \Model\DeliveryReceiptItemsModel();
+                                    $primodel[$product_id]->dr_id = $dr_model->id;
+                                    $primodel[$product_id]->product_id = $product_id;
+                                    $primodel[$product_id]->title = $issue_item['title'];
+                                    $primodel[$product_id]->quantity = $issue_item['quantity'];
+                                    $primodel[$product_id]->available_qty = $issue_item['quantity'];
+                                    $primodel[$product_id]->unit = $issue_item['unit'];
+                                    $primodel[$product_id]->created_at = date("Y-m-d H:i:s");
+                                    $primodel[$product_id]->created_by = $model->created_by;
+
+                                    $save_ri = \Model\DeliveryReceiptItemsModel::model()->save($primodel[$product_id]);
+                                }
+                            }
+                        }
+                    }
 
                     $admin_model = \Model\AdminModel::model()->findByPk($params['admin_id']);
                     // send notification
@@ -265,6 +320,101 @@ class DeliveryController extends BaseController
             } else {
                 $result['message'] = 'Nomor pengiriman tidak ditemukan.';
             }
+        }
+
+        return $response->withJson($result, 201);
+    }
+
+    public function get_detail($request, $response, $args)
+    {
+        $isAllowed = $this->isAllowed($request, $response);
+
+        if (!$isAllowed['allow']) {
+            $result = [
+                'success' => 0,
+                'message' => $isAllowed['message'],
+            ];
+            return $response->withJson($result, 201);
+        }
+
+        $result = [ 'success' => 0 ];
+        $params = $request->getParams();
+        if (isset($params['issue_number'])) {
+            $do_model = \Model\DeliveryOrdersModel::model()->findByAttributes(['do_number'=>$params['issue_number']]);
+            if ($do_model instanceof \RedBeanPHP\OODBBean) {
+                $data = $do_model->getProperties();
+                $po_model = new \Model\PurchaseOrdersModel();
+                $po_data = $po_model->getDetail($do_model->po_id);
+                $po_item_model = new \Model\PurchaseOrderItemsModel();
+                $po_item_data = $po_item_model->getData($do_model->po_id);
+
+                $result['success'] = 1;
+                $result['data'] = $data;
+                $result['po_data'] = $po_data;
+                $result['po_item_data'] = $po_item_data;
+            } else {
+                $result['message'] = 'Nomor issue tidak ditemukan.';
+            }
+        }
+
+        return $response->withJson($result, 201);
+    }
+
+    private function get_dr_number()
+    {
+        $pmodel = new \Model\OptionsModel();
+        $ext_pos = $pmodel->getOption('ext_pos');
+        $prefiks = $ext_pos['dr_prefiks'];
+        if (empty($prefiks)) {
+            $prefiks = 'DR-';
+        }
+
+        $wmodel = new \Model\DeliveryReceiptsModel();
+        $max_nr = $wmodel->getLastDrNumber($prefiks);
+
+        if (empty($max_nr['max_nr'])) {
+            $next_nr = 1;
+        } else {
+            $next_nr = $max_nr['max_nr'] + 1;
+        }
+
+        $ti_number = str_repeat("0", 5 - strlen($max_nr)).$next_nr;
+
+        return [
+            'serie' => $prefiks,
+            'nr' => $next_nr,
+            'serie_nr' => $prefiks.$ti_number
+        ];
+    }
+
+    /**
+     * Geting list stock on good in transit
+     * @param $request
+     * @param $response
+     * @param $args
+     * @return mixed
+     */
+    public function get_stocks($request, $response, $args)
+    {
+        $isAllowed = $this->isAllowed($request, $response);
+
+        if (!$isAllowed['allow']) {
+            $result = [
+                'success' => 0,
+                'message' => $isAllowed['message'],
+            ];
+            return $response->withJson($result, 201);
+        }
+
+        $result = [ 'success' => 0 ];
+        $params = $request->getParams();
+
+        $model = new \Model\DeliveryReceiptItemsModel();
+        $stocks = $model->getProductStock();
+
+        if (is_array($stocks) && count($stocks) > 0) {
+            $result['success'] = 1;
+            $result['data'] = $stocks;
         }
 
         return $response->withJson($result, 201);

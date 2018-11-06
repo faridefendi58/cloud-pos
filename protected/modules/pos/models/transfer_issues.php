@@ -54,8 +54,12 @@ class TransferIssuesModel extends \Model\BaseModel
             }
 
             if (isset($data['warehouse_from'])) {
-                $sql .= ' AND t.warehouse_from =:warehouse_from';
-                $params['warehouse_from'] = $data['warehouse_from'];
+                if ($data['warehouse_from'] == 0) {
+                    $sql .= ' AND (t.warehouse_from =0 OR t.warehouse_from IS NULL)';
+                } else {
+                    $sql .= ' AND t.warehouse_from =:warehouse_from';
+                    $params['warehouse_from'] = $data['warehouse_from'];
+                }
             }
 
             if (isset($data['date_start']) && isset($data['date_end'])) {

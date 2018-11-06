@@ -11,3 +11,4 @@ index.php
 /themes/default/assets/images/*
 /uploads/*
 *.lock
+robots.txt

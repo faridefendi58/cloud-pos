@@ -59,7 +59,7 @@ class ProductPricesModel extends \Model\BaseModel
 
         $params = [ 'product_id' => $product_id ];
         if ($quantity > 0) {
-            $sql .= ' AND t.quantity =:quantity';
+            $sql .= ' AND (:quantity BETWEEN t.quantity AND t.quantity_max)';
             $params['quantity'] = $quantity;
         }
 

@@ -1,6 +1,6 @@
 {% extends "layout.html" %}
 {% block pagetitle %}
-Transaksi - {{ App.params.site_name }}
+Transaksi Penjualan - {{ App.params.site_name }}
 {% endblock %}
 
 {% block content %}
@@ -9,7 +9,7 @@ Transaksi - {{ App.params.site_name }}
     <div class="page_bar clearfix">
         <div class="row">
             <div class="col-sm-9">
-                <h1 class="page_title">Transaksi</h1>
+                <h1 class="page_title">Daftar Transaksi Penjualan</h1>
                 <p class="text-muted">Halaman daftar semua transaksi penjualan</p>
             </div>
             <div class="col-sm-3 text-right">
@@ -22,35 +22,34 @@ Transaksi - {{ App.params.site_name }}
             <div class="row">
                 <div class="col-md-12">
                     <div class="panel panel-default">
-                        <div class="panel-heading">Daftar Transaksi</div>
+                        <div class="panel-heading">Daftar Transaksi Penjualan</div>
                         <div class="panel-body">
                             <div id="dt_basic_wrapper" class="dataTables_wrapper form-inline no-footer table-responsive" role="grid">
                                 <table id="dt_basic" class="table table-striped dataTable">
                                     <thead>
                                     <tr>
                                         <th>id</th>
-                                        <th>Nama Produk</th>
-                                        <th>Jumlah</th>
-                                        <th>Harga</th>
-                                        <th>Diskon</th>
+                                        <th>Nomor Faktur</th>
+                                        <th>Jenis Transaksi</th>
+                                        <th>Total</th>
                                         <th>Tanggal Transaksi</th>
                                         <th>&nbsp;</th>
                                     </tr>
                                     </thead>
                                     <tbody>
-                                    {% for i, order in orders %}
+                                    {# set inv_model = App.call.initModel("\\Model\\InvoicesModel") #}
+                                    {% for i, invoice in invoices %}
                                     <tr>
                                         <td><center>{{ i+1 }}</center></td>
-                                        <td>{{ order.title }}</td>
-                                        <td style="text-align: center;">{{ order.quantity }}</td>
-                                        <td style="text-align: right;">{{ order.price | number_format(0, ",", ".") }}</td>
-                                        <td style="text-align: right;">{{ order.discount | number_format(0, ",", ".") }}</td>
-                                        <td>{{ order.created_at }}</td>
+                                        <td>{{ App.call.model("\\Model\\InvoicesModel", 'getInvoiceFormatedNumber', {'id':invoice.id}) }}</td>
+                                        <td>{{ App.call.model("\\Model\\InvoicesModel", 'getStatus', {'status':invoice.status}) }}</td>
+                                        <td style="text-align: right;">{{ invoice.total | number_format(0, ",", ".") }}</td>
+                                        <td>{{ invoice.created_at }}</td>
                                         <td>
-                                            <a href="{{ 'pos/transactions/update' | link }}/{{ order.id }}" title="Ubah Transaksi">
+                                            <a href="{{ 'pos/transactions/update' | link }}/{{ invoice.id }}" title="Ubah Transaksi">
                                                 <i class="fa fa-pencil"></i>
                                             </a>
-                                            <a href="{{ 'pos/transactions/delete' | link }}/{{ order.id }}" onclick="return hapus(this);">
+                                            <a href="{{ 'pos/transactions/delete' | link }}/{{ invoice.id }}" onclick="return hapus(this);">
                                                 <i class="fa fa-trash-o"></i>
                                             </a>
                                         </td>

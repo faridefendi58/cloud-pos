@@ -113,4 +113,17 @@ class BaseController
 
         return false;
     }
+
+    /**
+     * unformat money format to base number
+     */
+    public function money_unformat($number, $thousand='.', $decimal=',')
+    {
+        if (strstr($number, $thousand))
+            $number = str_replace($thousand, '', $number);
+        if (strstr($number, $decimal))
+            $number = str_replace($decimal, '.', $number);
+
+        return $number;
+    }
 }

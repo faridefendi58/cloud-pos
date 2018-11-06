@@ -10,11 +10,12 @@
                 </select>
             </div>
             <div class="col-md-7 col-sm-6 text-right">
-                <button class="btn btn-default mar_top1" onclick="listItems();">Pencarian Barang</button>
-                <div class="col-md-4 row hide">
-                    <select class="form-control" onchange="setCurrency(this);" name="currency" id="currency">
-                        <option value="1" selected="selected">Rupiah</option>
-                        <option value="2">US Dollar</option>
+                <div class="col-md-4">
+                    {% set transaction_types = {1:'Faktur Penjualan', 2:'Retur'} %}
+                    <select class="form-control" onchange="transaction.setType(this);" name="transaction_type" id="transaction-type">
+                        {% for id_type, type_name in transaction_types %}
+                        <option value="{{ id_type }}" {% if id_type == transaction_type %}selected="selected"{% endif %}>{{ type_name }}</option>
+                        {% endfor %}
                     </select>
                 </div>
             </div>
@@ -45,62 +46,46 @@
                     <input class="form-control promocode" placeholder="Please insert the promotion code" style="display:none;" name="promocode" id="promocode" type="text">
                 </div>
             </div>
-            <div class="col-md-6 col-sm-12 text-right" id="payment-button" style="display:none">
-                <input onclick="payRequest('/bangido/pos/orders/paymentRequest');" style="min-width:100px;" id="payment-btn" class="btn btn-success btn-primary" name="yt0" value="Pembayaran" type="button">
-                <input onclick="cancelRequest('/bangido/pos/orders/cancelTransaction');" style="min-width:100px;" id="cancel-btn" class="btn btn-default btn-primary" name="yt1" value="Pembatalan Transaksi" type="button">				<div class="row-fluid mt10" id="payment-form"></div>
+            <div class="col-md-6 col-sm-12 text-right" id="payment-button" {% if items_belanja | length == 0 %}style="display:none"{% endif %}>
+                {#<input onclick="return transaction.paymentRequest();" style="min-width:100px;" id="payment-btn" class="btn btn-success btn-primary" name="yt0" value="Pembayaran" type="button">#}
+                <div class="row-fluid mt10" id="payment-form"></div>
             </div>
         </div>
     </div>
     <div class="col-sm-3">
         <div class="row">
             <div class="col-sm-12">
-                <span class="fa fa-group"></span> <b>Select Customer (Optional)</b>
+                <span class="fa fa-group"></span> <b>Pilih Pelanggan (Optional)</b>
                 <select data-live-search="1" class="form-control no-margin" name="find_customer" id="find_customer">
-                    <option value="" selected="selected">Pilih Pelanggan</option>
-                    <option value="1 - noname">1 - noname</option>
+                    <option value="" {% if not selected_customer %}selected="selected"{% endif %}>Pilih Pelanggan</option>
+                    {% for i, customer in customers %}
+                    <option value="{{ customer.id }}" {% if customer.id == selected_customer %}selected="selected"{% endif %}>{{ customer.name }}</option>
+                    {% endfor %}
                 </select>
-                <button class="btn btn-info btn-block" onclick="createCustomer();">Add New Customer</button>
+
+                <div class="clearfix mb10"></div>
+                <button class="btn btn-info btn-block" onclick="createCustomer();">Tambah Pelanggan</button>
             </div>
             <div class="col-sm-12">
                 <div class="table-responsive mt10">
-                    <table class="table table-striped mb30">
+                    <table class="table table-striped mb10">
                         <tbody>
                         <tr>
                             <td><b>Sub Total</b></td>
-                            <td><h3><span id="sub-total" style="font-size:35px;">{{ sub_total | number_format(0, ',', '.') }}</span></h3></td>
+                            <td><h3><span id="sub-total" style="font-size:35px;">{{ sub_total | number_format(2, ',', '.') }}</span></h3></td>
                         </tr>
                         </tbody>
                     </table>
                 </div>
             </div>
+
+            <div class="col-sm-12" id="btn-cancel-container" {% if items_belanja | length == 0 %}style="display:none"{% endif %}>
+                <button class="btn btn-primary col-sm-6" onclick="transaction.holdTransaction();">Penangguhan</button>
+                <input onclick="return transaction.cancelRequest();" id="cancel-btn" class="btn btn-danger col-sm-6" value="Pembatalan" type="button">
+            </div>
         </div>
     </div>
 </div><!-- row -->
-{#<script type="text/javascript">
-$('input[id=\"scan\"]').focus();
-$('select[id=\"scan\"]').focus();
-");
-Yii::app()->clientScript->registerScript('tekan',"
-$('#scan').keypress(function(e){
-if (e.which == 13) {
-pushSearch(this.value,'".Yii::app()->createUrl('/'.Yii::app()->controller->module->id.'/orders/scan')."');
-}
-});
-
-$('#find').keypress(function(e){
-if (e.which == 13) {
-pushFindCustomer(this.value,'".Yii::app()->createUrl('/'.Yii::app()->controller->module->id.'/customer/choose')."');
-}
-});
-$('select[id=\"find_customer\"]').change(function(){
-pushFindCustomer(this.value,'".Yii::app()->createUrl('/'.Yii::app()->controller->module->id.'/customer/choose')."');
-});
-$('#promocode').keypress(function(e){
-if (e.which == 13) {
-pushFindPromoCode(this.value,'".Yii::app()->createUrl('/'.Yii::app()->controller->module->id.'/orders/promocode')."');
-}
-});
-</script>#}
 
 <button class="btn btn-primary btn-lg hidden" data-target="#myModal" data-toggle="modal" id="launch-modal"> Launch Modal </button>
 <div id="myModal" class="modal fade" aria-hidden="true" aria-labelledby="myModalLabel" role="dialog" tabindex="-1">
@@ -118,6 +103,7 @@ pushFindPromoCode(this.value,'".Yii::app()->createUrl('/'.Yii::app()->controller
         </div>
     </div>
 </div>
+<script src="{{ 'js/jquery.maskMoney.min.js' | admin_asset_url }}"></script>
 
 {% block endbodyjs %}
 <script type="text/javascript">
@@ -125,6 +111,25 @@ pushFindPromoCode(this.value,'".Yii::app()->createUrl('/'.Yii::app()->controller
         tisa_enhanced_select.init();
         $('select[id="scan"]').change(function(){
             transaction.pushSearch(this.value);
+        });
+        $('input[name="discount"]').change(function () {
+            transaction.pushDiscount(this);
+            return false;
+        });
+        var has_cart = "{{ items_belanja | length }}";
+        if (parseInt(has_cart) > 0) {
+            transaction.paymentRequest();
+        } else {
+            $('#payment-form').empty();
+        }
+        $('input[name="tax"]').change(function () {
+            transaction.pushTax(this);
+        });
+        $('.submit-payment').click(function () {
+            alert(this);
+        });
+        $('select[name="find_customer"]').change(function () {
+            transaction.setCustomer(this);
         });
     });
     tisa_enhanced_select = {
@@ -140,11 +145,12 @@ pushFindPromoCode(this.value,'".Yii::app()->createUrl('/'.Yii::app()->controller
     transaction = {
         pushSearch: function (item) {
             $.ajax({
+                'beforeSend': function() { Loading.show(); },
+                'complete': function() { Loading.hide(); },
                 'url': "{{ 'pos/transactions/scan' | link }}",
                 'type':'post',
                 'data':{"item":item},
                 'success': function(data){
-                    console.log(data);
                     if(data.status=='success'){
                         transaction.refreshChart();
                         $('span[id="sub-total"]').html(transaction.moneyFormat(data.sub_total));
@@ -152,6 +158,7 @@ pushFindPromoCode(this.value,'".Yii::app()->createUrl('/'.Yii::app()->controller
                         $("input[id='scan']").val("");
                         $('#list-item').find("input.input-block-level").val("");
                         $('#list-item').find(".filter-option").html('Pilih Nama Barang');
+                        transaction.paymentRequest();
                     }else{
                         $("input[id='scan']").val("");
                         $("input[id='scan']").focus();
@@ -163,8 +170,8 @@ pushFindPromoCode(this.value,'".Yii::app()->createUrl('/'.Yii::app()->controller
         deleteItem: function (id) {
             if(confirm('Anda yakin ingin menghapus item ini ?')){
                 $.ajax({
-                    //'beforeSend': function() { Loading.show(); },
-                    //'complete': function() { Loading.hide(); },
+                    'beforeSend': function() { Loading.show(); },
+                    'complete': function() { Loading.hide(); },
                     'url': "{{ 'pos/transactions/delete-item' | link }}/"+id,
                     'type':'post',
                     'data':{"id":id},
@@ -181,6 +188,8 @@ pushFindPromoCode(this.value,'".Yii::app()->createUrl('/'.Yii::app()->controller
         },
         refreshChart: function () {
             $.ajax({
+                'beforeSend': function() { Loading.show(); },
+                'complete': function() { Loading.hide(); },
                 'url': "{{ 'pos/transactions/cart' | link }}",
                 'type':'get',
                 'success': function(data){
@@ -192,7 +201,7 @@ pushFindPromoCode(this.value,'".Yii::app()->createUrl('/'.Yii::app()->controller
             });
         },
         moneyFormat: function (num) {
-            return num.toString().replace(/(\d)(?=(\d{3})+(?!\d))/g, "$1.");
+            return num.toString().replace(/(\d)(?=(\d{3})+(?!\d))/g, "$1.")+',00';
         },
         pushQty: function (id,data) {
             var $this = $(data);
@@ -200,6 +209,8 @@ pushFindPromoCode(this.value,'".Yii::app()->createUrl('/'.Yii::app()->controller
             if(typeof qty == "undefined")
                 var qty = $this.val();
             $.ajax({
+                'beforeSend': function() { Loading.show(); },
+                'complete': function() { Loading.hide(); },
                 'url' : "{{ 'pos/transactions/update-qty' | link }}",
                 'type' : 'post',
                 'data' : {"id":id, "qty":qty},
@@ -207,169 +218,177 @@ pushFindPromoCode(this.value,'".Yii::app()->createUrl('/'.Yii::app()->controller
                     console.log(data);
                     if (data.status == 'success'){
                         $('input[id="qty"]').html(data.div);
-                        $('span[id="sub-total"]').html(data.subtotal);
-                        $('#discount-'+id).html(data.discount);
-                        $('#total-item-'+id).html(data.total);
-                        $("input[id=\'scan\']").focus();
+                        $('span[id="sub-total"]').html(transaction.moneyFormat(data.subtotal));
+                        $('#discount-'+id).find('input').val(data.discount_percentage);
+                        $('#total-item-'+id).html(transaction.moneyFormat(data.total));
+                        $("input[id='scan']").focus();
+                        $('input[id="PaymentForm_amount_tendered"]').val(transaction.moneyFormat(data.total));
                     } else
                         $this.val(1);
                 },
             });
             return false;
+        },
+        pushDiscount: function (data) {
+            var $this = $(data);
+            var id = $this.attr('rel_id');
+            $.ajax({
+                'beforeSend': function() { Loading.show(); },
+                'complete': function() { Loading.hide(); },
+                'url': "{{ 'pos/transactions/discount' | link }}",
+                'type':'post',
+                'data':{'id':id,'value':$this.val()},
+                'dataType': 'json',
+                'success': function(data){
+                    if (data.status == 'success'){
+                        $('#total-item-'+id).html(data.total);
+                        $("input[id='scan']").focus();
+                        $('input[id="PaymentForm_amount_tendered"]').val(data.total);
+                    }
+                },
+            });
+            return false;
+        },
+        setType: function (data) {
+            var $this = $(data);
+            $.ajax({
+                'beforeSend': function() { Loading.show(); },
+                'complete': function() { Loading.hide(); },
+                'url': "{{ 'pos/transactions/set-type' | link }}",
+                'type':'post',
+                'data':{'type':$this.val()},
+                'dataType': 'json',
+                'success': function(data){
+                    if ( data.status=='success' ){
+                        window.location.reload(true);
+                    }
+                },
+            });
+            return false;
+        },
+        holdTransaction: function () {
+            
+        },
+        cancelRequest: function () {
+            if(confirm('Anda yakin ingin membatalkan transaksi ini ?')){
+                $.ajax({
+                    'beforeSend': function() { Loading.show(); },
+                    'complete': function() { Loading.hide(); },
+                    'url': "{{ 'pos/transactions/cancel-transaction' | link }}",
+                    'type':'post',
+                    'dataType': 'json',
+                    'success': function(data){
+                        if ( data.status=='success' ){
+                            window.location.reload(true);
+                        }
+                    },
+                });
+                return false;
+            }
+        },
+        paymentRequest: function () {
+            var id = "{{ params.id }}";
+            $.ajax({
+                'beforeSend': function() { Loading.show(); },
+                'complete': function() { Loading.hide(); },
+                'url': "{{ 'pos/transactions/payment-request' | link }}",
+                'type':'post',
+                'data':{'id':id},
+                'success': function(data){
+                    $('#payment-form').html(data);
+                    $('input[id="PaymentForm_amount_tendered"]').focus();
+                    $('input[id="PaymentForm_amount_tendered"]').trigger('click');
+                    $('#btn-cancel-container').show();
+                },
+            });
+            return false;
+        },
+        changeRequest: function (amount_tendered) {
+            $.ajax({
+                'beforeSend': function() { Loading.show(); },
+                'complete': function() { Loading.hide(); },
+                'url': "{{ 'pos/transactions/change-request' | link }}",
+                'type':'post',
+                'data':{"amount_tendered":amount_tendered},
+                'success': function(data){
+                    $('#change').html(data);
+                    $('.submit-payment').removeAttr('disabled');
+                    setTimeout(function () {
+                        $('.submit-payment').focus();
+                    }, 100);
+                },
+            });
+            return false;
+        },
+        pushTax: function (data) {
+            var $this = $(data);
+            $.ajax({
+                'beforeSend': function() { Loading.show(); },
+                'complete': function() { Loading.hide(); },
+                'url': "{{ 'pos/transactions/tax' | link }}",
+                'type':'post',
+                'data':{"taxt":$this.val()},
+                'success': function(data){
+
+                },
+            });
+        },
+        setCustomer: function (data) {
+            var $this = $(data);
+            $.ajax({
+                'beforeSend': function() { Loading.show(); },
+                'complete': function() { Loading.hide(); },
+                'url': "{{ 'pos/transactions/set-customer' | link }}",
+                'type':'post',
+                'data':{"customer_id":$this.val()},
+                'success': function(data){
+
+                },
+            });
         }
     }
-    function pushQty(id,data,action)
-    {
-        var $this=$(data);
-        var qty=data.value;
-        if(typeof qty=="undefined")
-            var qty=$this.val();
-        $.ajax({
-            'beforeSend': function() { Loading.show(); },
-            'complete': function() { Loading.hide(); },
-            'url': action,
-            'type':'post',
-            'dataType': 'json',
-            'data':{"id":id,"qty":qty},
-            'success': function(data){
-                if(data.status=='success'){
-                    $('input[id="qty"]').html(data.div);
-                    $('span[id="sub-total"]').html(data.subtotal);
-                    $('#discount-'+id).html(data.discount);
-                    $('#total-item-'+id).html(data.total);
-                    $("input[id=\'scan\']").focus();
-                }else
-                    $this.val(1);
-            },
-        });
-        return false;
+    Loading = {
+        show: function () {
+            $('.loader').show();
+        },
+        hide: function () {
+            $('.loader').hide();
+        }
     }
+
     function checkSearch(data,action)
     {
         if(data.value!==''){
             pushSearch(data.value,action);
         }
     }
-    function payRequest(action)
-    {
-        var id="<?php echo $_GET['id'];?>";//when update request
-        $.ajax({
-            'beforeSend': function() { Loading.show(); },
-            'complete': function() { Loading.hide(); },
-            'url': action,
-            'type':'post',
-            'dataType': 'json',
-            'data':{'id':id},
-            'success': function(data){
-                if(data.status=='success'){
-                    $('#payment-form').html(data.div);
-                    $('input[id="PaymentForm_amount_tendered"]').focus();
-                }
-            },
-        });
-        return false;
+
+    function moneyUnformat(money_string) {
+        return money_string
+            .replace(/,/g , "__COMMA__") // Replace `,` by some unique string
+            .replace(/\./g, '')         // Replace `.` by `,`
+            .replace(/__COMMA__/g, '.');
     }
-    function changeRequest(amount_tendered,action)
-    {
-        $.ajax({
-            'beforeSend': function() { Loading.show(); },
-            'complete': function() { Loading.hide(); },
-            'url': action,
-            'type':'post',
-            'dataType': 'json',
-            'data':{"amount_tendered":amount_tendered},
-            'success': function(data){
-                if(data.status=='success'){
-                    $('#change').html(data.div);
-                    $('.submit-payment').removeAttr('disabled');
-                    $('#submit-payment-area').css('display','block');
-                    //$('.submit-payment').focus();
-                    $('#payment-btn-help').focus();
-                }else
-                    alert(data.div);
-            },
-        });
-        return false;
-    }
-    function cancelRequest()
-    {
-        if(confirm('Are you sure to cancel transactions ?')){
-            $.ajax({
-                'beforeSend': function() { Loading.show(); },
-                'complete': function() { Loading.hide(); },
-                'url': "<?php echo Yii::app()->createUrl('/'.Yii::app()->controller->module->id.'/orders/cancelTransaction",
-                'type':'post',
-                'dataType': 'json',
-                'success': function(data){
-                    if(data.status=='success'){
-                        $('#sales-frame table.items tbody').html(data.div);
-                        $('span[id="sub-total"]').html(data.subtotal);
-                        $('#payment-form').empty();
-                        $('#payment-button').css('display','none');
-                        $("input[id=\'scan\']").focus();
-                        $("#promocode").val('');
-                        $("#promocode").hide();
-                        //window.location.reload(true);
-                    }
-                },
-            });
-            return false;
-        }
-    }
-    function listItems()
-    {
-        $.ajax({
-            'url': "{{ 'pos/transactions/view-items' | link }}",
-            'type':'post',
-            'dataType': 'json',
-            'success': function(data){
-                if(data.status=='success'){
-                    $('.modal-content .modal-footer').hide();
-                    $('.modal-content .modal-title').html("List Items");
-                    $('.modal-content #div-for-items').html(data.div);
-                    $('#launch-modal').trigger('click');
-                    $("input[id=\'items_name\']").focus();
-                }
-            },
-        });
-        return false;
-    }
+
     function createCustomer()
     {
         $.ajax({
-            'url': "<?php echo Yii::app()->createUrl('/'.Yii::app()->controller->module->id.'/customer/create",
-            'type':'post',
-            'dataType': 'json',
-            'success': function(data){
-                if(data.status=='success'){
-                    $('.modal-content .modal-footer').hide();
-                    $('.modal-content .modal-title').html("Add New Customer");
-                    $('.modal-content #div-for-items').html(data.div);
-                    $('#launch-modal').trigger('click');
-                    $("input[id=\'Customer_name\']").focus();
-                }
-            },
-        });
-        return false;
-    }
-    function lookupCustomer()
-    {
-        $.ajax({
             'beforeSend': function() { Loading.show(); },
             'complete': function() { Loading.hide(); },
-            'url': "<?php echo Yii::app()->createUrl('/'.Yii::app()->controller->module->id.'/customers/view",
+            'url': "{{ 'pos/customers/create' | link }}",
             'type':'post',
-            'dataType': 'json',
+            //'dataType': 'json',
             'success': function(data){
-                if(data.status=='success'){
-                    $('#dialogItems #div-for-items').html(data.div);
-                    $('#ui-dialog-title-dialogItems').html('Customers');
-                    $('#dialogItems').dialog('open');
-                }
+                $('.modal-content .modal-footer').hide();
+                $('.modal-content .modal-title').html("Tambah Pelanggan");
+                $('.modal-content #div-for-items').html(data);
+                $('#launch-modal').trigger('click');
+                $("input[id='Customer_name']").focus();
             },
         });
         return false;
     }
+    
     function pushFindCustomer(nama,url)
     {
         $.ajax({
@@ -409,61 +428,21 @@ pushFindPromoCode(this.value,'".Yii::app()->createUrl('/'.Yii::app()->controller
         });
         return false;
     }
-    function pushDiscount(data)
-    {
-        var $this=$(data);
-        $.ajax({
-            'beforeSend': function() { Loading.show(); },
-            'complete': function() { Loading.hide(); },
-            'url': "<?php echo Yii::app()->createUrl('/'.Yii::app()->controller->module->id.'/orders/createDiscount",
-            'type':'post',
-            'data':{'id':$this.attr('rel_id'),'value':$this.val()},
-            'dataType': 'json',
-            'success': function(data){
-                if(data.status=='success'){
-                    var url="<?php echo Yii::app()->createUrl('/'.Yii::app()->controller->module->id.'/orders/updateQty";
-                    pushQty($this.attr('rel_id'),$this.parent().parent().find('#qty'),url);
-                }
-            },
-        });
-        return false;
-    }
-    function setCurrency(data)
-    {
-        var $this=$(data);
-        $.ajax({
-            'beforeSend': function() { Loading.show(); },
-            'complete': function() { Loading.hide(); },
-            'url': "<?php echo Yii::app()->createUrl('/'.Yii::app()->controller->module->id.'/orders/setCurrency",
-            'type':'post',
-            'data':{'value':$this.val()},
-            'dataType': 'json',
-            'success': function(data){
-                if(data.status=='success'){
-                    window.location.reload(true);
-                }
-            },
-        });
-        return false;
-    }
-</script>
-<script type="text/javascript">
+
     $(document).ready(function(){
         function setfocus(){
-            $("input[id=\'items_name\']").focus();
+            $("input[id='items_name']").focus();
         }
 
         document.onkeydown = function(e){
             setfocus();
-            if (e.keyCode==17){//--Tombol_CTRL---
-                //$('#find-btn').click();
-                //listItems();
-                $("#list-item").find('button.selectpicker').click();
+            if (e.keyCode == 33){//--Tombol_PgUp---
+                $("#list-item").find('#scan').trigger('click');
             }
-            else if (e.keyCode==9){//--Tombol_TAB---
+            else if (e.keyCode == 34){//--Tombol_PgDn---
                 $('#payment-btn').click();
             }
-            else if (e.keyCode==18){//--Tombol_ALT---
+            else if (e.keyCode == 18){//--Tombol_ALT---
                 $('#cancel-btn').click();
             }
             else if (e.keyCode==27){//--Tombol_ESC---
@@ -471,13 +450,13 @@ pushFindPromoCode(this.value,'".Yii::app()->createUrl('/'.Yii::app()->controller
                 $('button[data-dismiss="modal"]').trigger('click');
                 $('#cancel-btn').click();
             }
-            else if (e.keyCode==36){//--Tombol_Home---
-                lookupCustomer();
+            else if (e.keyCode == 36){//--Tombol_Home---
+                
             }
-            else if (e.keyCode==45){//--Tombol_Ins---
+            else if (e.keyCode == 45){//--Tombol_Ins---
                 createCustomer();
             }
-            else if (e.keyCode==112){//--Tombol_F1---
+            else if (e.keyCode == 112){//--Tombol_F1---
                 $('#find-customer').toggle();
             }
             else {

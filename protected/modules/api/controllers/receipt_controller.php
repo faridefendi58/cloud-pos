@@ -138,38 +138,40 @@ class ReceiptController extends BaseController
         }
 
         $result = [];
-        $po_model = new \Model\PurchaseOrdersModel();
         $params = $request->getParams();
-        $status = \Model\PurchaseOrdersModel::STATUS_ON_PROCESS;
-        $params_data = ['status' => $status];
-        if (isset($params['status'])) {
-            $params_data['status'] = $params['status'];
-        }
-        if (isset($params['admin_id'])) {
-            $whsmodel = new \Model\WarehouseStaffsModel();
-            $wh_staff = $whsmodel->getData(['admin_id' => $params['admin_id']]);
-            $wh_groups = [];
-            if (is_array($wh_staff) && count($wh_staff) > 0) {
-                foreach ($wh_staff as $i => $whs) {
-                    $wh_groups[$whs['wh_group_id']] = $whs['wh_group_id'];
+        if (!isset($params['just_transfer_issue'])) {
+            $po_model = new \Model\PurchaseOrdersModel();
+            $status = \Model\PurchaseOrdersModel::STATUS_ON_PROCESS;
+            $params_data = ['status' => $status];
+            if (isset($params['status'])) {
+                $params_data['status'] = $params['status'];
+            }
+            if (isset($params['admin_id'])) {
+                $whsmodel = new \Model\WarehouseStaffsModel();
+                $wh_staff = $whsmodel->getData(['admin_id' => $params['admin_id']]);
+                $wh_groups = [];
+                if (is_array($wh_staff) && count($wh_staff) > 0) {
+                    foreach ($wh_staff as $i => $whs) {
+                        $wh_groups[$whs['wh_group_id']] = $whs['wh_group_id'];
+                    }
+                }
+                if (count($wh_groups) > 0) {
+                    $params_data['wh_group_id'] = $wh_groups;
                 }
             }
-            if (count($wh_groups) > 0) {
-                $params_data['wh_group_id'] = $wh_groups;
+
+            if (isset($params['already_received'])) {
+                $params_data['already_received'] = 1;
             }
-        }
 
-        if (isset($params['already_received'])) {
-            $params_data['already_received'] = 1;
-        }
-
-        $result_data = $po_model->getData($params_data);
-        if (is_array($result_data) && count($result_data)>0) {
-            $result['success'] = 1;
-            foreach ($result_data as $i => $po_result) {
-                $result['data'][] = $po_result['po_number'];
-                $result['origin'][$po_result['po_number']] = $po_result['supplier_name'];
-                $result['destination'][$po_result['po_number']] = $po_result['wh_group_name'];
+            $result_data = $po_model->getData($params_data);
+            if (is_array($result_data) && count($result_data)>0) {
+                $result['success'] = 1;
+                foreach ($result_data as $i => $po_result) {
+                    $result['data'][] = $po_result['po_number'];
+                    $result['origin'][$po_result['po_number']] = $po_result['supplier_name'];
+                    $result['destination'][$po_result['po_number']] = $po_result['wh_group_name'];
+                }
             }
         }
 

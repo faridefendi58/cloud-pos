@@ -3,6 +3,7 @@
 namespace Api\Controllers;
 
 use Components\ApiBaseController as BaseController;
+use PHPMailer\PHPMailer\Exception;
 
 class TransferController extends BaseController
 {
@@ -169,6 +170,17 @@ class TransferController extends BaseController
                     $this->_sendNotification($params2);
                 }
             }
+
+            //remove git stock if transfered from git
+            if ($model->warehouse_from == 0 || empty($model->warehouse_from)) {
+                try {
+                    $substract_stock = true;
+                    $dr_model = new \Model\DeliveryReceiptItemsModel();
+                    foreach ($transfer_items as $product_id => $quantity) {
+                        $substract_stock &= $dr_model->subtracting_stok($product_id, $quantity);
+                    }
+                } catch (Exception $e) {}
+            }
         }
 
         return $response->withJson($result, 201);
@@ -211,6 +223,10 @@ class TransferController extends BaseController
             if (count($wh_groups) > 0) {
                 $params_data['wh_group_id'] = $wh_groups;
             }
+        }
+
+        if (isset($params['warehouse_from'])) {
+            $params_data['warehouse_from'] = $params['warehouse_from'];
         }
 
         $result_data = $ti_model->getData($params_data);

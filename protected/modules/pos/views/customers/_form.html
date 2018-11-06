@@ -1,0 +1,55 @@
+<form method="post" id="customers-form" class="mt20" action="{% if model.id %}{{ 'pos/customers/update' | link }}/{{ model.id }}{% else %}{{ 'pos/customers/create' | link }}{% endif %}">
+    <div class="alert alert-success" style="display: none;"></div>
+
+    <p>Kolom bertanda <span class="red">*</span> tidak boleh dikosongi</p>
+
+    <div class="form-group">
+        <label for="name">Nama Pelanggan <span class="required">*</span></label>
+        <input type="text" id="name" name="Customers[name]" class="form-control" id="Customers_name"
+               {% if model.name %}value="{{ model.name }}"{% endif %} required>
+    </div>
+    <div class="form-group">
+        <label for="email">Alamat Email <span class="required">*</span></label>
+        <input type="text" id="email" name="Customers[email]" class="form-control" {% if model.phone %}value="{{ model.phone }}"{% endif %} required>
+    </div>
+    <div class="form-group">
+        <label for="phone">Nomor Telepon <span class="required">*</span></label>
+        <input type="text" id="phone" name="Customers[phone]" class="form-control" {% if model.phone %}value="{{ model.phone }}"{% endif %} required>
+    </div>
+    <div class="form-group">
+        <label for="address">Alamat <span class="required">*</span></label>
+        <textarea name="Customers[address]" id="address" cols="10" rows="3" class="form-control" required>{% if model and model.address %}{{ model.address }}{% endif %}</textarea>
+    </div>
+    <div class="form-group">
+        <input type="submit" value="Simpan" class="btn btn-info">
+    </div>
+</form>
+
+<script type="text/javascript">
+    $(function () {
+        $('#customers-form').submit(function (e) {
+            e.preventDefault();
+            var url = $(this).attr('action');
+            $.ajax({
+                'url': url,
+                'type':'post',
+                'data': $('#customers-form').serialize(),
+                'success': function(data) {
+                    if (data.status == 'success') {
+                        var alert_success = $('#customers-form').find('.alert-success');
+                        alert_success.html(data.message);
+                        alert_success.show();
+                        setTimeout(function () {
+                            alert_success.hide();
+                            alert_success.empty();
+                            $('#customers-form')[0].reset();
+                            window.location.reload(true);
+                        }, 1000);
+                    }
+                }
+            });
+
+            return false;
+        });
+    });
+</script>

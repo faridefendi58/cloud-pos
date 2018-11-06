@@ -5,21 +5,27 @@
 
 {% for i, item in items_belanja %}
     {% set harga_bruto = item.unit_price * item.qty %}
-    {% set harga_netto = harga_bruto - item.discount %}
-    {% set discount = harga_bruto - harga_netto %}
+    {% set harga_netto = (item.unit_price - item.discount) * item.qty %}
+    {% set discount = (harga_bruto - harga_netto)/harga_bruto * 100 | round(2) %}
 
     <tr class="even">
         <td style="text-align:center;">{{ no }}</td>
         {#<td>{{ item.barcode }}</td>#}
         <td>{{ item.name }}</td>
-        <td style="text-align:right;">{{ item.unit_price | number_format(0, ',', '.') }}</td>
+        <td style="text-align:right;">{{ item.unit_price | number_format(2, ',', '.') }}</td>
         <td style="text-align:center;">
-            <input type="text" name="qty" value="{{ item.qty }}" onchange="transaction.pushQty('{{ i }}', this)" class="form-control" size="3" maxlength="3">
+            <input type="text" name="qty" value="{{ item.qty }}" onchange="transaction.pushQty('{{ i }}', this)"
+                   class="form-control" size="3" maxlength="3" onclick="this.select();">
         </td>
         <td style="text-align:right;" id="discount-{{ i }}" class="overwrite">
-            <input type="text" name="discount" value="{{ discount }}" class="form-control text-right" size="10" maxlength="10" rel_id="{{ i }}">
+            <div class="input-group">
+                <input type="text" name="discount" value="{{ discount }}"
+                       class="form-control text-right" size="3" maxlength="3"
+                       rel_id="{{ i }}" onclick="this.select();" aria-describedby="basic-addon2">
+                <span class="input-group-addon" id="basic-addon2">%</span>
+            </div>
         </td>
-        <td style="text-align:right;" id="total-item-{{ i }}">{{ harga_netto | number_format(0, ',', '.') }}</td>
+        <td style="text-align:right;" id="total-item-{{ i }}">{{ harga_netto | number_format(2, ',', '.') }}</td>
         <td style="text-align:center;" class="table-action">
             <a href="javascript:void(0);" onclick="transaction.deleteItem('{{ i }}');"><i class="fa fa-trash-o"></i></a>
         </td>
@@ -28,9 +34,9 @@
 {% endfor %}
 <script type="text/javascript">
     $(function(){
-        $('input[id="discount"]').keypress(function(e){
+        $('input[name="discount"]').keypress(function(e){
             if(e.which == 13) {
-                pushDiscount(this);
+                transaction.pushDiscount(this);
                 return false;
             }
         });

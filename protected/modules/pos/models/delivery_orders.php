@@ -72,13 +72,25 @@ class DeliveryOrdersModel extends \Model\BaseModel
                     $group_id = implode(", ", $data['wh_group_id']);
                     if (!isset($data['supplier_id']))
                         $sql .= ' AND po.wh_group_id IN ('.$group_id.')';
-                    else
-                        $sql .= ' OR po.wh_group_id IN ('.$group_id.')';
+                    else {
+                        if (strpos($sql, 'AND po.supplier_id') !== false) {
+                            $sql = str_replace(
+                                ['AND po.supplier_id'],
+                                ['AND (po.supplier_id'], $sql);
+                            $sql .= ' OR po.wh_group_id IN ('.$group_id.'))';
+                        }
+                    }
                 } else {
                     if (!isset($data['supplier_id']))
                         $sql .= ' AND po.wh_group_id =:wh_group_id';
-                    else
-                        $sql .= ' OR po.wh_group_id =:wh_group_id';
+                    else {
+                        if (strpos($sql, 'AND po.supplier_id') !== false) {
+                            $sql = str_replace(
+                                ['AND po.supplier_id'],
+                                ['AND (po.supplier_id'], $sql);
+                            $sql .= ' OR po.wh_group_id =:wh_group_id)';
+                        }
+                    }
                     $params['wh_group_id'] = $data['wh_group_id'];
                 }
             }
