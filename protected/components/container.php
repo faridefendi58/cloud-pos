@@ -27,6 +27,9 @@ require __DIR__ . '/tool.php';
 // Static
 require __DIR__ . '/static.php';
 
+// Translation
+require __DIR__ . '/translate.php';
+
 //trailling slash
 use Psr\Http\Message\RequestInterface as Request;
 use Psr\Http\Message\ResponseInterface as Response;
@@ -123,6 +126,9 @@ function addFilter($env, $c)
         new \Twig_SimpleFilter('admin_asset_url', function ($string) use ($base_url, $admin_module) {
             return $base_url .'/protected/modules/'. $admin_module .'/assets/'. $string;
         }),
+        new \Twig_SimpleFilter('module_path', function ($string) use ($base_url) {
+            return $base_url .'/protected/modules/'. $string;
+        }),
         new \Twig_SimpleFilter('alink', function ($string) use ($base_url, $admin_module) {
             return $base_url .'/'. $admin_module. '/' .$string;
         }),
@@ -190,4 +196,5 @@ function addGlobal($env, $c, $user = null)
     ];
 
     $env->addGlobal('App', $globals);
+    $env->addGlobal('trans', new \Components\CTranslate($c, $user));
 }

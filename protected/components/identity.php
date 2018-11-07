@@ -7,12 +7,14 @@ class UserIdentity
     public $session_id;
     public $id;
     public $name;
-    
+    public $language;
+
     public function __construct($app)
     {
         $this->session_id = md5($app->getContainer()->get('settings')['name']);
         $this->id = $this->getId();
         $this->name = $this->getName();
+        $this->language = $this->getLanguage();
     }
     
     public function isGuest()
@@ -35,7 +37,8 @@ class UserIdentity
             'id' => $model->id,
             'username' => $model->username,
             'email' => $model->email,
-            'group_id' => $model->group_id
+            'group_id' => $model->group_id,
+            'language' => $model->language
         ];
 
         if ($remember) {
@@ -69,6 +72,15 @@ class UserIdentity
     {
         if (!empty($_SESSION[$this->session_id])){
             return $_SESSION[$this->session_id]['user']['username'];
+        }
+
+        return null;
+    }
+
+    public function getLanguage()
+    {
+        if (!empty($_SESSION[$this->session_id])){
+            return $_SESSION[$this->session_id]['user']['language'];
         }
 
         return null;
