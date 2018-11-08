@@ -144,9 +144,6 @@ function addFilter($env, $c)
                 return substr($string, 0, $length) . ' ...';
             }
         }),
-        new \Twig_SimpleFilter('node_modules', function ($string) {
-            return $_SERVER['DOCUMENT_ROOT'] .'/node_modules/'. $string;
-        }),
     ];
 
     $uri_path = $c->get('request')->getUri()->getPath();

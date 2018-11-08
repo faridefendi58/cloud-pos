@@ -33,9 +33,9 @@
     <!-- Tab Container with Tab links -->
     <div class="mdl-layout__tab-bar mdl-js-ripple-effect mdl-color--grey-300">
         <!-- class is-active to show currently active tab -->
-        <a href="#fixed-tab-1" class="mdl-layout__tab is-active">Asia</a>
-        <a href="#fixed-tab-2" class="mdl-layout__tab">Europe</a>
-        <a href="#fixed-tab-3" class="mdl-layout__tab">America</a>
+        <a href="#fixed-tab-1" class="mdl-layout__tab">{{ trans.get('mobile', 'Item List') }}</a>
+        <a href="#fixed-tab-2" class="mdl-layout__tab is-active">{{ trans.get('mobile', 'Transaction') }}</a>
+        <a href="#fixed-tab-3" class="mdl-layout__tab">{{ trans.get('mobile', 'Payment') }}</a>
     </div>
 </header>
 {% endblock %}
@@ -46,18 +46,24 @@
             mdl-layout--fixed-tabs">
     <main class="mdl-layout__content">
         <!-- Tab 1 -->
-        <section class="mdl-layout__tab-panel is-active" id="fixed-tab-1">
-            <div class="page-content"><h1>India</h1></div>
+        <section class="mdl-layout__tab-panel" id="fixed-tab-1">
+            <div class="page-content">
+                This is list of the items
+            </div>
         </section>
 
         <!-- Tab 2 -->
-        <section class="mdl-layout__tab-panel" id="fixed-tab-2">
-            <div class="page-content"><h1>Germany</h1></div>
+        <section class="mdl-layout__tab-panel is-active" id="fixed-tab-2">
+            <div class="page-content">
+                This area for transaction
+            </div>
         </section>
 
         <!-- Tab 3 -->
         <section class="mdl-layout__tab-panel" id="fixed-tab-3">
-            <div class="page-content"><h1>Canada</h1></div>
+            <div class="page-content">
+                This area for payment
+            </div>
         </section>
 
     </main>
