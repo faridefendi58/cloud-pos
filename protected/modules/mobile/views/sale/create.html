@@ -1,0 +1,71 @@
+{% extends "layout.html" %}
+{% block pagetitle %}
+{{ trans.get('mobile', 'Sale Transaction') }} - {{ App.params.site_name }}
+{% endblock %}
+
+{% block header %}
+<header class="demo-header mdl-layout__header mdl-color--grey-100 mdl-color-text--white mdl-layout--fixed-tabs">
+    <div class="mdl-layout__header-row">
+        <span class="mdl-layout-title">{% block pagesection %}Home{% endblock %}</span>
+        <div class="mdl-layout-spacer"></div>
+        <div class="mdl-textfield mdl-js-textfield mdl-textfield--expandable">
+            <label class="mdl-button mdl-js-button mdl-button--icon" for="search">
+                <i class="material-icons">search</i>
+            </label>
+            <div class="mdl-textfield__expandable-holder">
+                <input class="mdl-textfield__input" type="text" id="search">
+                <label class="mdl-textfield__label" for="search">Enter your query...</label>
+            </div>
+        </div>
+        {% if not App.user.isGuest() %}
+        <button class="mdl-button mdl-js-button mdl-js-ripple-effect mdl-button--icon" id="hdrbtn">
+            <i class="material-icons">notifications</i>
+        </button>
+        <ul class="mdl-menu mdl-js-menu mdl-js-ripple-effect mdl-menu--bottom-right" for="hdrbtn">
+            <li class="mdl-menu__item">About</li>
+            <li class="mdl-menu__item">Contact</li>
+            <li class="mdl-menu__item">
+                <a href="{{ 'mobile/default/logout' }}">Logout</a>
+            </li>
+        </ul>
+        {% endif %}
+    </div>
+    <!-- Tab Container with Tab links -->
+    <div class="mdl-layout__tab-bar mdl-js-ripple-effect mdl-color--grey-300">
+        <!-- class is-active to show currently active tab -->
+        <a href="#fixed-tab-1" class="mdl-layout__tab is-active">Asia</a>
+        <a href="#fixed-tab-2" class="mdl-layout__tab">Europe</a>
+        <a href="#fixed-tab-3" class="mdl-layout__tab">America</a>
+    </div>
+</header>
+{% endblock %}
+
+{% block content %}
+<!-- Layout Container with Fixed Header and Tabs -->
+<div class="mdl-layout mdl-js-layout mdl-layout--fixed-header
+            mdl-layout--fixed-tabs">
+    <main class="mdl-layout__content">
+        <!-- Tab 1 -->
+        <section class="mdl-layout__tab-panel is-active" id="fixed-tab-1">
+            <div class="page-content"><h1>India</h1></div>
+        </section>
+
+        <!-- Tab 2 -->
+        <section class="mdl-layout__tab-panel" id="fixed-tab-2">
+            <div class="page-content"><h1>Germany</h1></div>
+        </section>
+
+        <!-- Tab 3 -->
+        <section class="mdl-layout__tab-panel" id="fixed-tab-3">
+            <div class="page-content"><h1>Canada</h1></div>
+        </section>
+
+    </main>
+</div>
+{% endblock %}
+
+{% block endbodyjs %}
+<script type="text/javascript">
+
+</script>
+{% endblock %}

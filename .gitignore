@@ -12,3 +12,5 @@ index.php
 /uploads/*
 *.lock
 robots.txt
+/node_modules/
+*-lock.json

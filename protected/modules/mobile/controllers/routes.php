@@ -28,6 +28,9 @@ $app->group('/mobile', function () use ($user) {
     $this->group('/default', function() use ($user) {
         new Mobile\Controllers\DefaultController($this, $user);
     });
+    $this->group('/sale', function() use ($user) {
+        new Mobile\Controllers\SaleController($this, $user);
+    });
 });
 
 ?>

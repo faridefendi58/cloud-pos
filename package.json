@@ -1,0 +1,25 @@
+{
+  "name": "cloudpos",
+  "version": "1.0.0",
+  "description": "Cloud POS Inventory Management and POS.",
+  "main": "index.php",
+  "license": "MIT",
+  "authors": [
+    "Farid Efendi <faridefendi - at - slightsite.com>"
+  ],
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/faridefendi58/cloud-pos"
+  },
+  "keywords": [
+    "point-of-sale",
+    "POS"
+  ],
+  "devDependencies": {},
+  "dependencies": {
+    "@material/tab-scroller": "^0.41.0"
+  }
+}
