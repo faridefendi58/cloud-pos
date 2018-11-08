@@ -1,3 +1,3 @@
 $( document ).ready(function() {
-    $('#page-load-indicator').removeClass('is-active').hide();
+    //$('#page-load-indicator').removeClass('is-active').hide();
 });

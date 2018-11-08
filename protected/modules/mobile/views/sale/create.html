@@ -55,7 +55,7 @@
         <!-- Tab 2 -->
         <section class="mdl-layout__tab-panel is-active" id="fixed-tab-2">
             <div class="page-content">
-                This area for transaction
+                {% include "sale/_form.html" %}
             </div>
         </section>
 
@@ -70,7 +70,45 @@
 </div>
 {% endblock %}
 
+{% block footer %}
+<style>
+    .mdl-button-group{
+        position: relative;
+        display: inline-block;
+        vertical-align: middle;
+
+    button{
+        background-color: #eee;
+        display: inline-block;
+        float: left;
+        margin: 0px;
+        box-shadow: none;
+        border-radius: 0px;
+    }
+
+    button:hover {
+        color: green;
+    }
+
+    }
+</style>
+<footer class="mdl-mini-footer mdl-color--blue-grey-100 mdl-color-text--blue-grey-50">
+    <div class="mdl-button-group">
+        <button class="mdl-button mdl-js-button mdl-button--raised mdl-button--colored">
+            Suspend
+        </button>
+        <button class="mdl-button mdl-js-button mdl-button--raised mdl-button--accent">
+            Cancel
+        </button>
+        <button class="mdl-button mdl-js-button mdl-button--raised mdl-button--primary">
+            Payment
+        </button>
+    </div>
+</footer>
+{% endblock %}
+
 {% block endbodyjs %}
+<script src="{{ 'mobile/assets/js/jquery-3.3.1.min.js' | module_path }}"></script>
 <script type="text/javascript">
 
 </script>
