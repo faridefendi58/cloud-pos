@@ -1481,6 +1481,7 @@ iframe{display:block;width:100%;border:none}
 iframe.heightSet{overflow:hidden}
 .demo-wrapper{margin:24px}
 .demo-wrapper iframe{border:1px solid rgba(0,0,0,.5)}
+#page-load-indicator{position: absolute;top:50%;left: 45%;z-index: 999;}
 .mr-10{margin-right: 10px;}
 .mr-20{margin-right: 20px;}
 .mr-30{margin-right: 30px;}
