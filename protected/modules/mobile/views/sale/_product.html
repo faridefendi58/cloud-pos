@@ -1,0 +1,13 @@
+{% set products = App.call.model("\\Model\\ProductsModel", 'getData', {'status':1}) %}
+<div class="mdl-grid">
+    {% for i,product in products %}
+    <div class="demo-card-square mdl-card mdl-card__square mdl-shadow--2dp mdl-cell mdl-cell--2-col graybox">
+        <div class="mdl-card__title mdl-card--expand no-image"></div>
+        <div class="mdl-card__actions mdl-card--border">
+            <a class="mdl-button mdl-button--small mdl-button--colored mdl-js-button mdl-js-ripple-effect">
+                {{ product.title }}
+            </a>
+        </div>
+    </div>
+    {% endfor %}
+</div>
