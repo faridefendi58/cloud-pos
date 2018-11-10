@@ -145,28 +145,29 @@
                         transaction.paymentRequest();*/
                     }
                 },
+                complete: function() {
+                    $(this).data('requestRunning', false);
+                }
             });
             return false;
         },
         deleteItem: function (id) {
-            if(confirm("{{ trans.get('global', 'Are you sure you want to delete this item ?') }}")){
-                $.ajax({
-                    'beforeSend': function() { Loading.show(); },
-                    'complete': function() { Loading.hide(); },
-                    'url': "{{ 'pos/transactions/delete-item' | link }}/"+id,
-                    'type':'post',
-                    'data':{"id":id},
-                    'success': function(data){
-                        console.log(data);
-                        if(data.status=='success'){
-                            showToast(data.message);
-                            transaction.refreshChart();
-                            $('span[id="sub-total"]').html(transaction.moneyFormat(data.sub_total));
-                        }
-                    },
-                });
-                return false;
-            }
+            $.ajax({
+                'beforeSend': function() { Loading.show(); },
+                'complete': function() { Loading.hide(); },
+                'url': "{{ 'pos/transactions/delete-item' | link }}/"+id,
+                'type':'post',
+                'data':{"id":id},
+                'success': function(data){
+                    console.log(data);
+                    if(data.status=='success'){
+                        showToast(data.message);
+                        transaction.refreshChart();
+                        $('span[id="sub-total"]').html(transaction.moneyFormat(data.sub_total));
+                    }
+                },
+            });
+            return false;
         },
         refreshChart: function () {
             $.ajax({
@@ -177,6 +178,7 @@
                 'success': function(data){
                     console.log(data);
                     $('#cart-items').html(data);
+                    initItemAction();
                     //$('span[id="sub-total"]').html(data.sub_total);
                 },
             });
@@ -198,12 +200,12 @@
                 'success' : function(data){
                     console.log(data);
                     if (data.status == 'success'){
+                        transaction.refreshChart();
                         $('input[id="qty"]').html(data.div);
-                        $('span[id="sub-total"]').html(transaction.moneyFormat(data.subtotal));
+                        /*$('span[id="sub-total"]').html(transaction.moneyFormat(data.subtotal));
                         $('#discount-'+id).find('input').val(data.discount_percentage);
                         $('#total-item-'+id).html(transaction.moneyFormat(data.total));
-                        $("input[id='scan']").focus();
-                        $('input[id="PaymentForm_amount_tendered"]').val(transaction.moneyFormat(data.total));
+                        $('input[id="PaymentForm_amount_tendered"]').val(transaction.moneyFormat(data.total));*/
                     } else
                         $this.val(1);
                 },
@@ -383,40 +385,124 @@
         return false;
     }
 
-    $(document).ready(function(){
-        function setfocus(){
-            $("input[id='items_name']").focus();
-        }
+    function initItemAction() {
+        $('.cart-item-qty').click(function () {
+            $(this).select();
+        });
 
-        document.onkeydown = function(e){
-            setfocus();
-            if (e.keyCode == 33){//--Tombol_PgUp---
-                $("#list-item").find('#scan').trigger('click');
-            }
-            else if (e.keyCode == 34){//--Tombol_PgDn---
-                $('#payment-btn').click();
-            }
-            else if (e.keyCode == 18){//--Tombol_ALT---
-                $('#cancel-btn').click();
-            }
-            else if (e.keyCode==27){//--Tombol_ESC---
-                //$('#dialogItems').dialog('close');
-                $('button[data-dismiss="modal"]').trigger('click');
-                $('#cancel-btn').click();
-            }
-            else if (e.keyCode == 36){//--Tombol_Home---
+        $('.cart-item-delete').click(function () {
+            var id = $(this).attr("attr-id");
+            showDialog({
+                title: 'Delete item',
+                text: "<p>are you sure?</p>",
+                negative: {
+                    title: 'Batal'
+                },
+                positive: {
+                    title: 'Delete'
+                },
+                cancelable: false,
+                call_back: 'deleteItem',
+                item_id: id
+            });
+        });
+    }
 
-            }
-            else if (e.keyCode == 45){//--Tombol_Ins---
-                createCustomer();
-            }
-            else if (e.keyCode == 112){//--Tombol_F1---
-                $('#find-customer').toggle();
-            }
-            else {
-                setfocus();
-            }
+    function showDialog(options) {
+        options = $.extend({
+            id: 'orrsDiag',
+            title: null,
+            text: null,
+            negative: false,
+            positive: false,
+            cancelable: true,
+            contentStyle: null,
+            onLoaded: false
+        }, options);
+
+        // remove existing dialogs
+        $('.dialog-container').remove();
+        $(document).unbind("keyup.dialog");
+
+        $('<div id="' + options.id + '" class="dialog-container"><div class="mdl-card mdl-shadow--16dp"></div></div>').appendTo("body");
+        var dialog = $('#orrsDiag');
+        var content = dialog.find('.mdl-card');
+        if (options.contentStyle != null) content.css(options.contentStyle);
+        if (options.title != null) {
+            $('<h5>' + options.title + '</h5>').appendTo(content);
         }
+        if (options.text != null) {
+            $(options.text).appendTo(content);
+        }
+        if (options.negative || options.positive) {
+            var buttonBar = $('<div class="mdl-card__actions dialog-button-bar"></div>');
+            if (options.negative) {
+                options.negative = $.extend({
+                    id: 'negative',
+                    title: 'Cancel',
+                    onClick: function () {
+                        return false;
+                    }
+                }, options.negative);
+                var negButton = $('<button class="mdl-button mdl-js-button mdl-js-ripple-effect" id="' + options.negative.id + '">' + options.negative.title + '</button>');
+                negButton.click(function (e) {
+                    e.preventDefault();
+                    if (!options.negative.onClick(e))
+                        hideDialog(dialog)
+                });
+                negButton.appendTo(buttonBar);
+            }
+            if (options.positive) {
+                options.positive = $.extend({
+                    id: 'positive',
+                    title: 'OK',
+                    onClick: function () {
+                        if (options.call_back == 'deleteItem') {
+                            transaction.deleteItem(options.item_id);
+                        }
+                        return false;
+                    }
+                }, options.positive);
+                var posButton = $('<button class="mdl-button mdl-button--colored mdl-js-button mdl-js-ripple-effect" id="' + options.positive.id + '">' + options.positive.title + '</button>');
+                posButton.click(function (e) {
+                    e.preventDefault();
+                    if (!options.positive.onClick(e))
+                        hideDialog(dialog)
+                });
+                posButton.appendTo(buttonBar);
+            }
+            buttonBar.appendTo(content);
+        }
+        componentHandler.upgradeDom();
+        if (options.cancelable) {
+            dialog.click(function () {
+                hideDialog(dialog);
+            });
+            $(document).bind("keyup.dialog", function (e) {
+                if (e.which == 27)
+                    hideDialog(dialog);
+            });
+            content.click(function (e) {
+                e.stopPropagation();
+            });
+        }
+        setTimeout(function () {
+            dialog.css({opacity: 1});
+            if (options.onLoaded)
+                options.onLoaded();
+        }, 1);
+    }
+
+    function hideDialog(dialog) {
+        $(document).unbind("keyup.dialog");
+        dialog.css({opacity: 0});
+        setTimeout(function () {
+            dialog.remove();
+        }, 400);
+    }
+
+    $(function () {
+        initItemAction();
     });
 </script>
 {% endblock %}
