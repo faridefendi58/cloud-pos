@@ -39,8 +39,8 @@
     <!-- Tab Container with Tab links -->
     <div class="mdl-layout__tab-bar mdl-js-ripple-effect mdl-color--grey-300">
         <!-- class is-active to show currently active tab -->
-        <a href="#fixed-tab-1" class="mdl-layout__tab">{{ trans.get('mobile', 'Item List') }}</a>
-        <a href="#fixed-tab-2" class="mdl-layout__tab is-active">{{ trans.get('mobile', 'Cart') }}</a>
+        <a href="#fixed-tab-1" class="mdl-layout__tab mdl-cell--hide-tablet mdl-cell--hide-desktop">{{ trans.get('mobile', 'Item List') }}</a>
+        <a href="#fixed-tab-2" class="mdl-layout__tab is-active">{{ trans.get('mobile', 'Transaction') }}</a>
         <a href="#fixed-tab-3" class="mdl-layout__tab">{{ trans.get('mobile', 'Payment') }}</a>
     </div>
 </header>
@@ -56,13 +56,21 @@
             mdl-layout--fixed-tabs">
     <main class="mdl-layout__content">
         <!-- Tab 1 -->
-        <section class="mdl-layout__tab-panel" id="fixed-tab-1">
-            {% include "sale/_product.html" %}
+        <section class="mdl-layout__tab-panel mdl-cell--hide-tablet mdl-cell--hide-desktop" id="fixed-tab-1">
+            {% set products = App.call.model("\\Model\\ProductsModel", 'getData', {'status':1}) %}
+            {% include "sale/_product.html" with {'products':products} %}
         </section>
 
         <!-- Tab 2 -->
         <section class="mdl-layout__tab-panel is-active" id="fixed-tab-2">
-            {% include "sale/_form.html" %}
+            <div class="mdl-grid">
+                <div class="mdl-cell mdl-cell--12-col mdl-cell--4-col-tablet mdl-cell--6-col-desktop">
+                    {% include "sale/_form.html" %}
+                </div>
+                <div class="mdl-cell mdl-cell--12-col mdl-cell--4-col-tablet mdl-cell--6-col-desktop mdl-cell--hide-phone">
+                    {% include "sale/_product_desktop.html" with {'products':products} %}
+                </div>
+            </div>
         </section>
 
         <!-- Tab 3 -->
