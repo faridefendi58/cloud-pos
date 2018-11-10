@@ -10,15 +10,15 @@
             {% set warehouses = App.call.model("\\Model\\WarehousesModel", 'getData', {'status':1}) %}
             {% block pagesection %}
             <div class="mdl-selectfield mdl-js-selectfield">
-  <select id="warehouse_id" class="mdl-selectfield__select">
-    <option value=""></option>
-      {% for w,warehouse in warehouses %}
-    <option value="option1">{{ warehouse.title }}</option>
-      {% endfor %}
-  </select>
-  <label class="mdl-selectfield__label" for="warehouse_id">Warehouse</label>
-  <span class="mdl-selectfield__error">Select a value</span>
-</div>{% endblock %}
+              <select id="warehouse_id" class="mdl-selectfield__select">
+                  {% for w,warehouse in warehouses %}
+                <option value="option1">{{ warehouse.title }}</option>
+                  {% endfor %}
+              </select>
+              <label class="mdl-selectfield__label" for="warehouse_id">Warehouse</label>
+              <span class="mdl-selectfield__error">Select a value</span>
+            </div>
+            {% endblock %}
         </span>
         <div class="mdl-layout-spacer"></div>
         <div class="mdl-textfield mdl-js-textfield mdl-textfield--expandable">
@@ -64,8 +64,8 @@
         <!-- Tab 2 -->
         <section class="mdl-layout__tab-panel is-active" id="fixed-tab-2">
             <div class="mdl-grid">
-                <div class="mdl-cell mdl-cell--12-col mdl-cell--4-col-tablet mdl-cell--6-col-desktop">
-                    {% include "sale/_form.html" %}
+                <div class="mdl-cell mdl-cell--12-col mdl-cell--4-col-tablet mdl-cell--6-col-desktop" id="cart-items">
+                    {% include "sale/_items.html" with {'items_belanja':items_belanja} %}
                 </div>
                 <div class="mdl-cell mdl-cell--12-col mdl-cell--4-col-tablet mdl-cell--6-col-desktop mdl-cell--hide-phone">
                     {% include "sale/_product_desktop.html" with {'products':products} %}
@@ -82,10 +82,13 @@
 
     </main>
 </div>
+<div aria-live="assertive" aria-atomic="true" aria-relevant="text" class="mdl-snackbar mdl-js-snackbar">
+    <div class="mdl-snackbar__text"></div>
+    <button type="button" class="mdl-snackbar__action"></button>
+</div>
 {% endblock %}
 
 {% block footer %}
-
 <footer class="mdl-mini-footer mdl-shadow--2dp mdl-color-text--blue-grey-50">
     {#<div class="mdl-button-group">
         <button class="mdl-button mdl-js-button mdl-button--raised mdl-button--colored">
@@ -121,6 +124,299 @@
 <script src="{{ 'mobile/assets/js/jquery-3.3.1.min.js' | module_path }}"></script>
 <script src="{{ 'mobile/assets/lib/mdl-selectfield/mdl-selectfield.min.js' | module_path }}"></script>
 <script type="text/javascript">
+    transaction = {
+        addToCart: function (item) {
+            $.ajax({
+                'beforeSend': function() { Loading.show(); },
+                'complete': function() { Loading.hide(); },
+                'url': "{{ 'pos/transactions/scan' | link }}",
+                'type':'post',
+                'data':{"item":item},
+                'success': function(data){
+                    console.log(data);
+                    if(data.status=='success'){
+                        showToast(data.message);
+                        transaction.refreshChart();
+                        /*$('span[id="sub-total"]').html(transaction.moneyFormat(data.sub_total));
+                        $('#payment-button').css('display','block');
+                        $("input[id='scan']").val("");
+                        $('#list-item').find("input.input-block-level").val("");
+                        $('#list-item').find(".filter-option").html('Pilih Nama Barang');
+                        transaction.paymentRequest();*/
+                    }
+                },
+            });
+            return false;
+        },
+        deleteItem: function (id) {
+            if(confirm("{{ trans.get('global', 'Are you sure you want to delete this item ?') }}")){
+                $.ajax({
+                    'beforeSend': function() { Loading.show(); },
+                    'complete': function() { Loading.hide(); },
+                    'url': "{{ 'pos/transactions/delete-item' | link }}/"+id,
+                    'type':'post',
+                    'data':{"id":id},
+                    'success': function(data){
+                        console.log(data);
+                        if(data.status=='success'){
+                            showToast(data.message);
+                            transaction.refreshChart();
+                            $('span[id="sub-total"]').html(transaction.moneyFormat(data.sub_total));
+                        }
+                    },
+                });
+                return false;
+            }
+        },
+        refreshChart: function () {
+            $.ajax({
+                'beforeSend': function() { Loading.show(); },
+                'complete': function() { Loading.hide(); },
+                'url': "{{ 'mobile/sale/cart' | link }}",
+                'type':'get',
+                'success': function(data){
+                    console.log(data);
+                    $('#cart-items').html(data);
+                    //$('span[id="sub-total"]').html(data.sub_total);
+                },
+            });
+        },
+        moneyFormat: function (num) {
+            return num.toString().replace(/(\d)(?=(\d{3})+(?!\d))/g, "$1.")+',00';
+        },
+        pushQty: function (id,data) {
+            var $this = $(data);
+            var qty = data.value;
+            if(typeof qty == "undefined")
+                var qty = $this.val();
+            $.ajax({
+                'beforeSend': function() { Loading.show(); },
+                'complete': function() { Loading.hide(); },
+                'url' : "{{ 'pos/transactions/update-qty' | link }}",
+                'type' : 'post',
+                'data' : {"id":id, "qty":qty},
+                'success' : function(data){
+                    console.log(data);
+                    if (data.status == 'success'){
+                        $('input[id="qty"]').html(data.div);
+                        $('span[id="sub-total"]').html(transaction.moneyFormat(data.subtotal));
+                        $('#discount-'+id).find('input').val(data.discount_percentage);
+                        $('#total-item-'+id).html(transaction.moneyFormat(data.total));
+                        $("input[id='scan']").focus();
+                        $('input[id="PaymentForm_amount_tendered"]').val(transaction.moneyFormat(data.total));
+                    } else
+                        $this.val(1);
+                },
+            });
+            return false;
+        },
+        pushDiscount: function (data) {
+            var $this = $(data);
+            var id = $this.attr('rel_id');
+            $.ajax({
+                'beforeSend': function() { Loading.show(); },
+                'complete': function() { Loading.hide(); },
+                'url': "{{ 'pos/transactions/discount' | link }}",
+                'type':'post',
+                'data':{'id':id,'value':$this.val()},
+                'dataType': 'json',
+                'success': function(data){
+                    if (data.status == 'success'){
+                        $('#total-item-'+id).html(data.total);
+                        $("input[id='scan']").focus();
+                        $('input[id="PaymentForm_amount_tendered"]').val(data.total);
+                    }
+                },
+            });
+            return false;
+        },
+        setType: function (data) {
+            var $this = $(data);
+            $.ajax({
+                'beforeSend': function() { Loading.show(); },
+                'complete': function() { Loading.hide(); },
+                'url': "{{ 'pos/transactions/set-type' | link }}",
+                'type':'post',
+                'data':{'type':$this.val()},
+                'dataType': 'json',
+                'success': function(data){
+                    if ( data.status=='success' ){
+                        window.location.reload(true);
+                    }
+                },
+            });
+            return false;
+        },
+        holdTransaction: function () {
 
+        },
+        cancelRequest: function () {
+            if(confirm('Anda yakin ingin membatalkan transaksi ini ?')){
+                $.ajax({
+                    'beforeSend': function() { Loading.show(); },
+                    'complete': function() { Loading.hide(); },
+                    'url': "{{ 'pos/transactions/cancel-transaction' | link }}",
+                    'type':'post',
+                    'dataType': 'json',
+                    'success': function(data){
+                        if ( data.status=='success' ){
+                            window.location.reload(true);
+                        }
+                    },
+                });
+                return false;
+            }
+        },
+        paymentRequest: function () {
+            var id = "{{ params.id }}";
+            $.ajax({
+                'beforeSend': function() { Loading.show(); },
+                'complete': function() { Loading.hide(); },
+                'url': "{{ 'pos/transactions/payment-request' | link }}",
+                'type':'post',
+                'data':{'id':id},
+                'success': function(data){
+                    $('#payment-form').html(data);
+                    $('input[id="PaymentForm_amount_tendered"]').focus();
+                    $('input[id="PaymentForm_amount_tendered"]').trigger('click');
+                    $('#btn-cancel-container').show();
+                },
+            });
+            return false;
+        },
+        changeRequest: function (amount_tendered) {
+            $.ajax({
+                'beforeSend': function() { Loading.show(); },
+                'complete': function() { Loading.hide(); },
+                'url': "{{ 'pos/transactions/change-request' | link }}",
+                'type':'post',
+                'data':{"amount_tendered":amount_tendered},
+                'success': function(data){
+                    $('#change').html(data);
+                    $('.submit-payment').removeAttr('disabled');
+                    setTimeout(function () {
+                        $('.submit-payment').focus();
+                    }, 100);
+                },
+            });
+            return false;
+        },
+        pushTax: function (data) {
+            var $this = $(data);
+            $.ajax({
+                'beforeSend': function() { Loading.show(); },
+                'complete': function() { Loading.hide(); },
+                'url': "{{ 'pos/transactions/tax' | link }}",
+                'type':'post',
+                'data':{"taxt":$this.val()},
+                'success': function(data){
+
+                },
+            });
+        },
+        setCustomer: function (data) {
+            var $this = $(data);
+            $.ajax({
+                'beforeSend': function() { Loading.show(); },
+                'complete': function() { Loading.hide(); },
+                'url': "{{ 'pos/transactions/set-customer' | link }}",
+                'type':'post',
+                'data':{"customer_id":$this.val()},
+                'success': function(data){
+
+                },
+            });
+        }
+    }
+
+    function checkSearch(data,action)
+    {
+        if(data.value!==''){
+            addToCart(data.value,action);
+        }
+    }
+
+    function moneyUnformat(money_string) {
+        return money_string
+            .replace(/,/g , "__COMMA__") // Replace `,` by some unique string
+            .replace(/\./g, '')         // Replace `.` by `,`
+            .replace(/__COMMA__/g, '.');
+    }
+
+    function createCustomer()
+    {
+        $.ajax({
+            'beforeSend': function() { Loading.show(); },
+            'complete': function() { Loading.hide(); },
+            'url': "{{ 'pos/customers/create' | link }}",
+            'type':'post',
+            //'dataType': 'json',
+            'success': function(data){
+                $('.modal-content .modal-footer').hide();
+                $('.modal-content .modal-title').html("Tambah Pelanggan");
+                $('.modal-content #div-for-items').html(data);
+                $('#launch-modal').trigger('click');
+                $("input[id='Customer_name']").focus();
+            },
+        });
+        return false;
+    }
+
+    function pushFindCustomer(nama,url)
+    {
+        $.ajax({
+            'beforeSend': function() { Loading.show(); },
+            'complete': function() { Loading.hide(); },
+            'url': url,
+            'type':'post',
+            'data':{'nama':nama},
+            'dataType': 'json',
+            'success': function(data){
+                if(data.status=='success'){
+                    $('#customer-name').html(data.div);
+                    $('#customer-name').css('display','block');
+                    $('#find-customer').css('display','none');
+                    $("input[id=\'scan\']").focus();
+                }
+            },
+        });
+        return false;
+    }
+
+    $(document).ready(function(){
+        function setfocus(){
+            $("input[id='items_name']").focus();
+        }
+
+        document.onkeydown = function(e){
+            setfocus();
+            if (e.keyCode == 33){//--Tombol_PgUp---
+                $("#list-item").find('#scan').trigger('click');
+            }
+            else if (e.keyCode == 34){//--Tombol_PgDn---
+                $('#payment-btn').click();
+            }
+            else if (e.keyCode == 18){//--Tombol_ALT---
+                $('#cancel-btn').click();
+            }
+            else if (e.keyCode==27){//--Tombol_ESC---
+                //$('#dialogItems').dialog('close');
+                $('button[data-dismiss="modal"]').trigger('click');
+                $('#cancel-btn').click();
+            }
+            else if (e.keyCode == 36){//--Tombol_Home---
+
+            }
+            else if (e.keyCode == 45){//--Tombol_Ins---
+                createCustomer();
+            }
+            else if (e.keyCode == 112){//--Tombol_F1---
+                $('#find-customer').toggle();
+            }
+            else {
+                setfocus();
+            }
+        }
+    });
 </script>
 {% endblock %}

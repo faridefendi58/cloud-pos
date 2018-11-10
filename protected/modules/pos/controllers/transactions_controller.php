@@ -183,7 +183,7 @@ class TransactionsController extends BaseController
             return $response->withJson(
                 [
                     'status' => 'success',
-                    'message' => 'Data berhasil dihapus.',
+                    'message' => $this->_trans->get('global', 'Your data has been successfully deleted.'),
                 ], 201);
         }
     }
@@ -198,55 +198,50 @@ class TransactionsController extends BaseController
             if (!$model instanceof \RedBeanPHP\OODBBean)
                 $success = false;
             $stmodel = new \Model\ProductStocksModel();
-            $stock = $stmodel->getTotalStock($model->id);
-            if ($stock > 0) {
-                $prmodel = new \Model\ProductPricesModel();
-                $unit_price = $prmodel->getPrice($model->id, 1);
-                if ($_SESSION['transaction_type'] == \Model\InvoicesModel::STATUS_REFUND) {
-                    $unit_price = -1 * $unit_price;
-                }
-                $items = [
-                    'id' => $model->id,
-                    'barcode' => $model->id,
-                    'name' => $model->title,
-                    'desc' => $model->description,
-                    'cost_price' => $model->current_cost,
-                    'unit_price' => $unit_price,
-                    'qty' => 1,
-                    'discount' => 0,
-                    'currency' => 1,
-                    'change_value' => 1,
-                ];
-
-                $items_belanja = $_SESSION['items_belanja'];
-                $new_items_belanja = [];
-                if (count($items_belanja) > 0) {
-                    $any = 0;
-                    foreach ($items_belanja as $index=>$data) {
-                        if ($data['id'] == $items['id']){
-                            $data['qty'] = $data['qty']+1;
-                            $any = $any+1;
-                        }
-                        $new_items_belanja[] = $data;
-                    }
-                    if ($any <= 0)
-                        array_push( $new_items_belanja, $items );
-                } else {
-                    array_push( $new_items_belanja, $items );
-                }
-
-                $_SESSION['items_belanja'] = $new_items_belanja;
-
-                return $response->withJson(
-                    [
-                        'status' => 'success',
-                        'message' => 'Data berhasil disimpan.',
-                        'sub_total' => $this->getSubTotal()
-                    ], 201);
-            } else {
-                $success = false;
-                $message = 'Stok habis.';
+            //$stock = $stmodel->getTotalStock($model->id);
+            $prmodel = new \Model\ProductPricesModel();
+            $unit_price = $prmodel->getPrice($model->id, 1);
+            if ($_SESSION['transaction_type'] == \Model\InvoicesModel::STATUS_REFUND) {
+                $unit_price = -1 * $unit_price;
             }
+            $items = [
+                'id' => $model->id,
+                'barcode' => $model->id,
+                'name' => $model->title,
+                'desc' => $model->description,
+                'cost_price' => $model->current_cost,
+                'unit_price' => $unit_price,
+                'qty' => 1,
+                'discount' => 0,
+                'currency' => 1,
+                'change_value' => 1,
+            ];
+
+            $items_belanja = $_SESSION['items_belanja'];
+            $new_items_belanja = [];
+            if (count($items_belanja) > 0) {
+                $any = 0;
+                foreach ($items_belanja as $index=>$data) {
+                    if ($data['id'] == $items['id']){
+                        $data['qty'] = $data['qty']+1;
+                        $any = $any+1;
+                    }
+                    $new_items_belanja[] = $data;
+                }
+                if ($any <= 0)
+                    array_push( $new_items_belanja, $items );
+            } else {
+                array_push( $new_items_belanja, $items );
+            }
+
+            $_SESSION['items_belanja'] = $new_items_belanja;
+
+            return $response->withJson(
+                [
+                    'status' => 'success',
+                    'message' => ucfirst(strtolower($model->title)).' '. $this->_trans->get('global', 'is sucessfully added.'),
+                    'sub_total' => $this->getSubTotal()
+                ], 201);
         }
     }
 
@@ -275,7 +270,7 @@ class TransactionsController extends BaseController
         return $response->withJson(
             [
                 'status' => 'success',
-                'message' => 'Data berhasil dihapus.',
+                'message' => $this->_trans->get('global', 'Your data has been successfully deleted.'),
                 'sub_total' => $this->getSubTotal()
             ], 201);
     }

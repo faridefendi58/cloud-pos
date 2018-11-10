@@ -1,0 +1,30 @@
+<table class="mdl-data-table mdl-js-data-table mdl-shadow--2dp mt-10">
+    <thead>
+    <tr>
+        <th class="mdl-data-table__cell--non-numeric">Material</th>
+        <th class="mdl-cell--hide-tablet">Qty</th>
+        <th>Unit price</th>
+        <th>&nbsp;</th>
+    </tr>
+    </thead>
+    <tbody>
+    {% for ib, cart in items_belanja %}
+    <tr>
+        <td class="mdl-data-table__cell--non-numeric">{{ cart.name }}</td>
+        <td class="mdl-cell--hide-tablet">{{ cart.qty }}</td>
+        <td>{{ cart.unit_price }}</td>
+        <td>
+            <a href="javascript:void(0);" OnClick="transaction.deleteItem('{{ ib }}');">
+                <i class="material-icons">
+                    delete_outline
+                </i>
+            </a>
+        </td>
+    </tr>
+    {% else %}
+    <tr>
+        <td colspan="4">{{ trans.get('mobile', 'No item found.') }}</td>
+    </tr>
+    {% endfor %}
+    </tbody>
+</table>

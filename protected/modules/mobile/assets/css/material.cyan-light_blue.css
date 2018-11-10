@@ -725,7 +725,7 @@ input.mdl-button[type=submit]{-webkit-appearance:none}
 .mdl-card__actions.mdl-card--border{border-top:1px solid rgba(0,0,0,.1)}
 .mdl-card--expand{-webkit-flex-grow:1;-ms-flex-positive:1;flex-grow:1}
 .mdl-card__menu{position:absolute;right:16px;top:16px}
-.mdl-card__square{min-height:150px;}
+.mdl-card__square{min-height:150px;cursor: pointer;}
 .mdl-checkbox{position:relative;z-index:1;display:inline-block;height:24px;margin:0;padding:0}
 .mdl-checkbox.is-upgraded{padding-left:24px}
 .mdl-checkbox__input{line-height:24px}
@@ -1406,7 +1406,7 @@ input.mdl-button[type=submit]{-webkit-appearance:none}
     .mdl-cell--7-offset,.mdl-cell--7-offset-tablet.mdl-cell--7-offset-tablet{margin-left:calc(87.5% + 8px)}
     .mdl-grid.mdl-grid--no-spacing>.mdl-cell--7-offset,.mdl-grid.mdl-grid--no-spacing>.mdl-cell--7-offset-tablet.mdl-cell--7-offset-tablet{margin-left:87.5%}
     .mdl-button--small {height: 10px !important;line-height: 10px !important;}
-    .mdl-card__square {min-height: 110px;margin-top: 2px;}
+    .mdl-card__square {min-height: 110px;margin-top: 2px;cursor: pointer;}
 }
 @media (min-width:840px){
     .mdl-grid{padding:8px}
@@ -1472,7 +1472,7 @@ input.mdl-button[type=submit]{-webkit-appearance:none}
     .mdl-cell--11-offset,.mdl-cell--11-offset-desktop.mdl-cell--11-offset-desktop{margin-left:calc(91.6666666667% + 8px)}
     .mdl-grid.mdl-grid--no-spacing>.mdl-cell--11-offset,.mdl-grid.mdl-grid--no-spacing>.mdl-cell--11-offset-desktop.mdl-cell--11-offset-desktop{margin-left:91.6666666667%}
     .mdl-button--small {height: 10px !important;line-height: 10px !important;}
-    .mdl-card__square {min-height: 110px;margin-top: 2px;}
+    .mdl-card__square {min-height: 110px;margin-top: 2px;cursor: pointer;}
 }
 body{margin:0}
 .styleguide-demo h1{margin:48px 24px 0}
@@ -1495,6 +1495,8 @@ iframe.heightSet{overflow:hidden}
 .no-image {background-image: url(../images/no_image.png);background-size: contain;background-repeat: no-repeat;background-position: center;}
 .mdl-button--small {height: 28px;padding: 0px;width:100%;font-size: 12px;text-align: center;line-height: 28px;}
 .mdl-data-table {table-layout:fixed;width:100%;}
+.loader {display:none;position:fixed;top:40%;left:40%;z-index:999;}
+.loader .mdl-spinner {width: 50px;height: 50px;}
 .mr-10{margin-right: 10px;}
 .mr-20{margin-right: 20px;}
 .mr-30{margin-right: 30px;}

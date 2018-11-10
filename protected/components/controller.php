@@ -9,6 +9,7 @@ class BaseController
     protected $_user;
     protected $_login_url = '/panel-admin/default/login';
     protected $_extensions;
+    protected $_trans;
 
     public function __construct($app, $user)
     {
@@ -19,6 +20,8 @@ class BaseController
         if (!empty($container->get('settings')['params']['extensions'])) {
             $this->_extensions = json_decode($container->get('settings')['params']['extensions'], true);
         }
+
+        $this->_trans = new \Components\CTranslate($this->_container, $this->_user);
 
         $this->register($app);
     }

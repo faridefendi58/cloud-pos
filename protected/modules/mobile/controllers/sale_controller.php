@@ -16,6 +16,22 @@ class SaleController extends BaseController
     public function register($app)
     {
         $app->map(['GET', 'POST'], '/create', [$this, 'create']);
+        $app->map(['GET'], '/cart', [$this, 'cart']);
+    }
+
+    public function accessRules()
+    {
+        return [
+            ['allow',
+                'actions' => [
+                    'create', 'cart'
+                ],
+                'users'=> ['@'],
+            ],
+            ['deny',
+                'users' => ['*'],
+            ],
+        ];
     }
 
     public function create($request, $response, $args)
@@ -24,8 +40,30 @@ class SaleController extends BaseController
             return $response->withRedirect($this->_login_url);
         }
 
-        return $this->_container->module->render($response, 'sale/create.html', [
+        $items_belanja = $_SESSION['items_belanja'];
 
+        return $this->_container->module->render($response, 'sale/create.html', [
+            'items_belanja' => $items_belanja
         ]);
+    }
+
+    public function cart($request, $response, $args)
+    {
+        $isAllowed = $this->isAllowed($request, $response, $args);
+        if ($isAllowed instanceof \Slim\Http\Response)
+            return $isAllowed;
+
+        if(!$isAllowed){
+            return $this->notAllowedAction();
+        }
+
+        $items_belanja = $_SESSION['items_belanja'];
+
+        return $this->_container->module->render(
+            $response,
+            'sale/_items.html',
+            [
+                'items_belanja' => $items_belanja
+            ]);
     }
 }
