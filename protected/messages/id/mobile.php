@@ -7,6 +7,9 @@ return [
     'Change Password' => 'Ubah Password',
     'Update Profile' => 'Ubah Profil',
     'Logout' => 'Logout',
-    'Sale Transaction' => 'Transaksi Penjualan'
+    'Sale Transaction' => 'Transaksi Penjualan',
+    'Item List' => 'Produk',
+    'Transaction' => 'Transaksi',
+    'Payment' => 'Pembayaran',
 ];
 ?>

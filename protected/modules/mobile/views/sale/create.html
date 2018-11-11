@@ -89,33 +89,12 @@
 {% endblock %}
 
 {% block footer %}
-<footer class="mdl-mini-footer mdl-shadow--2dp mdl-color-text--blue-grey-50">
-    {#<div class="mdl-button-group">
-        <button class="mdl-button mdl-js-button mdl-button--raised mdl-button--colored">
-            Suspend
-        </button>
-        <button class="mdl-button mdl-js-button mdl-button--raised mdl-button--accent">
-            Cancel
-        </button>
-        <!--<button class="mdl-button mdl-js-button mdl-button--raised mdl-button--primary">
-            Payment
-        </button>-->
-    </div>#}
+<footer class="mdl-mini-footer mdl-shadow--2dp">
     <div class="mdl-mini-footer--left-section">
+        <span id="tot-qty">{{ tot_qty }}</span> items
     </div>
     <div class="mdl-mini-footer--right-section">
-        <button class="mdl-mini-footer--social-btn">
-            <i class="material-icons" role="presentation">clear</i>
-            <span class="visuallyhidden">Clear</span>
-        </button>
-        <button class="mdl-mini-footer--social-btn">
-            <i class="material-icons" role="presentation">block</i>
-            <span class="visuallyhidden">Suspend</span>
-        </button>
-        <button class="mdl-mini-footer--social-btn">
-            <i class="material-icons" role="presentation">attach_money</i>
-            <span class="visuallyhidden">attach_money</span>
-        </button>
+        Total : <span id="sub-total" class="text-bold">{{ sub_total | number_format(2, ',', '.') }}</span>
     </div>
 </footer>
 {% endblock %}
@@ -138,8 +117,8 @@
                     if(data.status=='success'){
                         showToast(data.message);
                         transaction.refreshChart();
-                        /*$('span[id="sub-total"]').html(transaction.moneyFormat(data.sub_total));
-                        $('#payment-button').css('display','block');
+                        $('span[id="sub-total"]').html(transaction.moneyFormat(data.sub_total));
+                        /*$('#payment-button').css('display','block');
                         $("input[id='scan']").val("");
                         $('#list-item').find("input.input-block-level").val("");
                         $('#list-item').find(".filter-option").html('Pilih Nama Barang');
@@ -184,7 +163,12 @@
                     console.log(data);
                     $('#cart-items').html(data);
                     initItemAction();
-                    //$('span[id="sub-total"]').html(data.sub_total);
+                    $('span[id="sub-total"]').html(data.sub_total);
+                    var tot_qty = 0;
+                    $('.cart-item-qty').each(function () {
+                        tot_qty += parseInt($(this).val());
+                    });
+                    $('span[id="tot-qty"]').html(tot_qty);
                 },
             });
         },
@@ -207,8 +191,8 @@
                     if (data.status == 'success'){
                         transaction.refreshChart();
                         $('input[id="qty"]').html(data.div);
-                        /*$('span[id="sub-total"]').html(transaction.moneyFormat(data.subtotal));
-                        $('#discount-'+id).find('input').val(data.discount_percentage);
+                        $('span[id="sub-total"]').html(transaction.moneyFormat(data.subtotal));
+                        /*$('#discount-'+id).find('input').val(data.discount_percentage);
                         $('#total-item-'+id).html(transaction.moneyFormat(data.total));
                         $('input[id="PaymentForm_amount_tendered"]').val(transaction.moneyFormat(data.total));*/
                     } else

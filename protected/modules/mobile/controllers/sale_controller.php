@@ -43,7 +43,9 @@ class SaleController extends BaseController
         $items_belanja = $_SESSION['items_belanja'];
 
         return $this->_container->module->render($response, 'sale/create.html', [
-            'items_belanja' => $items_belanja
+            'items_belanja' => $items_belanja,
+            'sub_total' => $this->getSubTotal(),
+            'tot_qty' => $this->getTotalQty()
         ]);
     }
 
@@ -65,5 +67,29 @@ class SaleController extends BaseController
             [
                 'items_belanja' => $items_belanja
             ]);
+    }
+
+    private function getSubTotal($items_belanja = null)
+    {
+        if (empty($items_belanja))
+            $items_belanja = $_SESSION['items_belanja'];
+        $tot_price = 0;
+        foreach ($items_belanja as $i => $item) {
+            $tot_price = $tot_price + ($item['qty']*$item['unit_price']);
+        }
+
+        return $tot_price;
+    }
+
+    private function getTotalQty($items_belanja = null)
+    {
+        if (empty($items_belanja))
+            $items_belanja = $_SESSION['items_belanja'];
+        $tot_qty = 0;
+        foreach ($items_belanja as $i => $item) {
+            $tot_qty = $tot_qty + $item['qty'];
+        }
+
+        return $tot_qty;
     }
 }
