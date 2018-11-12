@@ -17,6 +17,7 @@ class SaleController extends BaseController
     {
         $app->map(['GET', 'POST'], '/create', [$this, 'create']);
         $app->map(['GET'], '/cart', [$this, 'cart']);
+        $app->map(['GET'], '/customer', [$this, 'customer']);
     }
 
     public function accessRules()
@@ -64,6 +65,26 @@ class SaleController extends BaseController
         return $this->_container->module->render(
             $response,
             'sale/_items.html',
+            [
+                'items_belanja' => $items_belanja
+            ]);
+    }
+
+    public function customer($request, $response, $args)
+    {
+        $isAllowed = $this->isAllowed($request, $response, $args);
+        if ($isAllowed instanceof \Slim\Http\Response)
+            return $isAllowed;
+
+        if(!$isAllowed){
+            return $this->notAllowedAction();
+        }
+
+        $items_belanja = $_SESSION['items_belanja'];
+
+        return $this->_container->module->render(
+            $response,
+            'sale/_customer.html',
             [
                 'items_belanja' => $items_belanja
             ]);

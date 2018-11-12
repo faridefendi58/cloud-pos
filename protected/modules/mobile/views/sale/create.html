@@ -31,7 +31,10 @@
             </div>
         </div>#}
         {% if not App.user.isGuest() %}
-        <button class="mdl-button mdl-js-button mdl-js-ripple-effect mdl-button--icon" id="hdrbtn">
+        <button id='btn-customer' class="mdl-button mdl-button--icon mdl-js-button mdl-button--raised mdl-js-ripple-effect modal__trigger"
+                data-modal-src="{{ 'mobile/sale/customer' | link }}"
+                data-modal="#modal2"
+                data-modal-target='#ajaxContent'>
             <i class="material-icons">person_pin</i>
         </button>
         {% endif %}
@@ -48,6 +51,7 @@
 
 {% block content %}
 <link rel="stylesheet" href="{{ 'mobile/assets/lib/mdl-selectfield/mdl-selectfield.min.css' | module_path }}">
+<link rel="stylesheet" href="{{ 'mobile/assets/lib/material-modal/material-modal.min.css' | module_path }}">
 <style>
     #fixed-tab-3 td, th {width: 100%;white-space: nowrap;overflow: hidden;text-overflow: ellipsis;-o-text-overflow: ellipsis;}
 </style>
@@ -86,6 +90,9 @@
     <div class="mdl-snackbar__text"></div>
     <button type="button" class="mdl-snackbar__action"></button>
 </div>
+
+<div id="ajaxContent"></div>
+
 {% endblock %}
 
 {% block footer %}
@@ -102,6 +109,7 @@
 {% block endbodyjs %}
 <script src="{{ 'mobile/assets/js/jquery-3.3.1.min.js' | module_path }}"></script>
 <script src="{{ 'mobile/assets/lib/mdl-selectfield/mdl-selectfield.min.js' | module_path }}"></script>
+<script src="{{ 'mobile/assets/lib/material-modal/material-modal.min.js' | module_path }}"></script>
 <script type="text/javascript">
     transaction = {
         addToCart: function (item) {

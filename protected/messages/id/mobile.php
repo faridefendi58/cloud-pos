@@ -11,5 +11,6 @@ return [
     'Item List' => 'Produk',
     'Transaction' => 'Transaksi',
     'Payment' => 'Pembayaran',
+    'No item found.' => 'Tidak ditemukan data.'
 ];
 ?>

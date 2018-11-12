@@ -65,7 +65,7 @@
     <div class="demo-drawer mdl-layout__drawer mdl-color--blue-grey-900 mdl-color-text--blue-grey-50">
         {% if not App.user.isGuest() %}
         <header class="demo-drawer-header">
-            <img src="{{ 'uploads/images/user.jpg' | link }}" class="demo-avatar">
+            <i class="material-icons">person</i>
             <div class="demo-avatar-dropdown">
                 <span>{{ App.user.name }}</span>
                 <div class="mdl-layout-spacer"></div>
@@ -80,7 +80,7 @@
                     <a class="mdl-menu__item" href="#">
                         <i class="material-icons mr-20">account_circle</i> {{ trans.get('mobile', 'Update Profile') }}
                     </a>
-                    <a class="mdl-menu__item" href="{{ 'mobile/default/logout' }}">
+                    <a class="mdl-menu__item" href="{{ 'mobile/default/logout' | link }}">
                         <i class="material-icons mr-20">power_settings_new</i> {{ trans.get('mobile', 'Logout') }}
                     </a>
                 </ul>
