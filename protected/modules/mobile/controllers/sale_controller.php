@@ -18,6 +18,7 @@ class SaleController extends BaseController
         $app->map(['GET', 'POST'], '/create', [$this, 'create']);
         $app->map(['GET'], '/cart', [$this, 'cart']);
         $app->map(['GET'], '/customer', [$this, 'customer']);
+        $app->map(['GET'], '/get-customer', [$this, 'get_customer']);
     }
 
     public function accessRules()
@@ -25,7 +26,7 @@ class SaleController extends BaseController
         return [
             ['allow',
                 'actions' => [
-                    'create', 'cart'
+                    'create', 'cart', 'get-customer'
                 ],
                 'users'=> ['@'],
             ],
@@ -80,14 +81,52 @@ class SaleController extends BaseController
             return $this->notAllowedAction();
         }
 
-        $items_belanja = $_SESSION['items_belanja'];
+        /*$model = new \Model\CustomersModel();
+        $params = [
+            'limit' => 100,
+            'status' => \Model\CustomersModel::STATUS_ACTIVE
+        ];
+
+        $customers = $model->getData($params);*/
 
         return $this->_container->module->render(
             $response,
             'sale/_customer.html',
             [
-                'items_belanja' => $items_belanja
+                //'customers' => $customers
             ]);
+    }
+
+    public function get_customer($request, $response, $args)
+    {
+        $isAllowed = $this->isAllowed($request, $response, $args);
+        if ($isAllowed instanceof \Slim\Http\Response)
+            return $isAllowed;
+
+        if(!$isAllowed){
+            return $this->notAllowedAction();
+        }
+
+        $model = new \Model\CustomersModel();
+        $params = [
+            'name' => $request->getParams()['name'],
+            'status' => \Model\CustomersModel::STATUS_ACTIVE,
+            'field' => 't.name, t.telephone, t.address'
+        ];
+
+        $items = [];
+        //if (!empty($params['name'])) {
+            $customers = $model->getData($params);
+
+        foreach ($customers as $i => $customer) {
+            $items['data'][] = [
+                $customer['name'],
+                $customer['phone'],
+                $customer['address'],
+            ];
+        }
+
+        return $response->withJson($items, 201);
     }
 
     private function getSubTotal($items_belanja = null)

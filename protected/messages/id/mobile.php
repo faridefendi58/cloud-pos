@@ -11,6 +11,11 @@ return [
     'Item List' => 'Produk',
     'Transaction' => 'Transaksi',
     'Payment' => 'Pembayaran',
-    'No item found.' => 'Tidak ditemukan data.'
+    'No item found.' => 'Tidak ditemukan data.',
+    'Name' => 'Nama Lengkap',
+    'Email' => 'Alamat Email',
+    'Phone' => 'Nomor Telepon',
+    'Address' => 'Alamat',
+    'Customer' => 'Pelanggan'
 ];
 ?>

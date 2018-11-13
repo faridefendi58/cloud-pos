@@ -53,7 +53,7 @@
 <link rel="stylesheet" href="{{ 'mobile/assets/lib/mdl-selectfield/mdl-selectfield.min.css' | module_path }}">
 <link rel="stylesheet" href="{{ 'mobile/assets/lib/material-modal/material-modal.min.css' | module_path }}">
 <style>
-    #fixed-tab-3 td, th {width: 100%;white-space: nowrap;overflow: hidden;text-overflow: ellipsis;-o-text-overflow: ellipsis;}
+    #fixed-tab-2 td, th {width: 100%;white-space: nowrap;overflow: hidden;text-overflow: ellipsis;-o-text-overflow: ellipsis;}
 </style>
 <!-- Layout Container with Fixed Header and Tabs -->
 <div class="mdl-layout mdl-js-layout mdl-layout--fixed-header
@@ -90,12 +90,10 @@
     <div class="mdl-snackbar__text"></div>
     <button type="button" class="mdl-snackbar__action"></button>
 </div>
-
-<div id="ajaxContent"></div>
-
 {% endblock %}
 
 {% block footer %}
+<div id="ajaxContent" style="display: block;"></div>
 <footer class="mdl-mini-footer mdl-shadow--2dp mdl-color--grey-300">
     <div class="mdl-mini-footer--left-section">
         <span id="tot-qty">{{ tot_qty }}</span> items
@@ -106,10 +104,16 @@
 </footer>
 {% endblock %}
 
+{% block beforemainjs %}
+<script src="{{ 'mobile/assets/lib/material-modal/material-modal.min.js' | module_path }}"></script>
+{% endblock %}
+
 {% block endbodyjs %}
 <script src="{{ 'mobile/assets/js/jquery-3.3.1.min.js' | module_path }}"></script>
 <script src="{{ 'mobile/assets/lib/mdl-selectfield/mdl-selectfield.min.js' | module_path }}"></script>
-<script src="{{ 'mobile/assets/lib/material-modal/material-modal.min.js' | module_path }}"></script>
+<script src="{{ 'mobile/assets/lib/datatable/jquery.dataTables.min.js' | module_path }}"></script>
+<script src="{{ 'mobile/assets/lib/datatable/dataTables.material.min.js' | module_path }}"></script>
+
 <script type="text/javascript">
     transaction = {
         addToCart: function (item) {
@@ -535,6 +539,15 @@
 
     $(function () {
         initItemAction();
+        $('#btn-customer').click(function () {
+            $('.data-table').DataTable( {
+                "ajax": "{{ 'mobile/sale/get-customer' | link }}?limit=2",
+                "pageLength": 2,
+                "info": false,
+            } );
+            $('.dataTables_paginate').parent().parent().remove();
+            $('.dataTables_length').parent().remove();
+        });
     });
 </script>
 {% endblock %}

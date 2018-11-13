@@ -1,10 +1,11 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+
 <div id="modal2" class="modal modal__bg">
     <div class="modal__dialog">
         <div class="modal__content">
             <div class="modal__header">
                 <div class="modal__title">
-                    <h2 class="modal__title-text">Add Customer</h2>
+                    <h2 class="modal__title-text">{{ trans.get('mobile', 'Customer') }}</h2>
                 </div>
 
                 <span class="mdl-button mdl-button--icon mdl-js-button  material-icons mdl-js-ripple-effect  modal__close"></span>
@@ -12,19 +13,65 @@
 
 
             <div class="modal__text">
-                <p>
-                    Lorem ipsum dolor sit amet, consectetur adipisicing elit.
-                    Debitis laboriosam accusantium facere suscipit, alias accusamus corrupti consequatur at porro,
-                    voluptates commodi sed omnis voluptatem, ex officiis illum, architecto fugiat id?
-                </p>
+                <table
+                        class="mdl-data-table data-table"
+                        >
+                    <thead>
+                    <tr>
+                        <th class = "mdl-data-table__cell--non-numeric">Name</th>
+                        <th>Phone</th>
+                        <th>Address</th></tr>
+                    </thead>
+
+                    <tbody>
+                    {# for c, customer in customers %}
+                    <tr>
+                        <td class = "mdl-data-table__cell--non-numeric">{{ customer.name }}</td>
+                        <td>{{ customer.phone }}</td>
+                        <td>{{ customer.address }}</td>
+                    </tr>
+                    {% endfor #}
+                    </tbody>
+                </table>
+                <form action="#" id="customer-form" style="display: none;">
+                    <div class="mdl-textfield mdl-js-textfield">
+                        <input class="mdl-textfield__input" type="text" id="customer-name" />
+                        <label class="mdl-textfield__label" for="customer-name">{{ trans.get('mobile', 'Name') }}</label>
+                    </div>
+                    <div class="mdl-textfield mdl-js-textfield">
+                        <input class="mdl-textfield__input" type="text" id="customer-email" />
+                        <label class="mdl-textfield__label" for="customer-email">{{ trans.get('mobile', 'Email') }}</label>
+                    </div>
+                    <div class="mdl-textfield mdl-js-textfield">
+                        <input class="mdl-textfield__input" type="text" id="customer-phone" />
+                        <label class="mdl-textfield__label" for="customer-phone">{{ trans.get('mobile', 'Phone') }}</label>
+                    </div>
+                    <div class="mdl-textfield mdl-js-textfield">
+                        <textarea class="mdl-textfield__input" type="text" rows= "1" id="customer-address" ></textarea>
+                        <label class="mdl-textfield__label" for="customer-address">{{ trans.get('mobile', 'Address') }}</label>
+                    </div>
+                </form>
             </div>
 
-            <div class="modal__footer">
-                <a class="mdl-button mdl-button--colored mdl-js-button mdl-js-ripple-effect  modal__close">
-                    Close
-                </a>
+            <div class="modal__footer no-padding" style="display: none;">
+                <div class="mdl-grid no-padding">
+                    <div class="mdl-cell mdl-cell--2-col">
+                        <a class="mdl-button mdl-button--colored mdl-js-button mdl-js-ripple-effect  modal__close">
+                            {{ trans.get('global', 'Cancel') }}
+                        </a>
+                    </div>
+                    <div class="mdl-cell mdl-cell--2-col">
+                        <a class="mdl-button mdl-button--colored mdl-js-button mdl-js-ripple-effect">
+                            {{ trans.get('global', 'Submit') }}
+                        </a>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 </div>
-</div>
+<script type="text/javascript">
+    $(function () {
+
+    });
+</script>
