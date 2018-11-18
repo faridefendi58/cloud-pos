@@ -47,10 +47,18 @@ class ProductController extends BaseController
         $items = $pmodel->getData(['status' => \Model\ProductsModel::STATUS_ENABLED]);
         if (is_array($items)){
             $result['success'] = 1;
+            $ppmodel = new \Model\ProductPricesModel();
             if (is_array($params) && isset($params['simply']) && $params['simply'] == 1) {
                 $result['data'] = [];
                 foreach ($items as $i => $item) {
-                    array_push($result['data'], ['id' => $item['id'], 'title' => $item['title'], 'unit' => $item['unit']]);
+                    array_push(
+                        $result['data'], [
+                            'id' => $item['id'],
+                            'title' => $item['title'],
+                            'unit' => $item['unit'],
+                            'price' => $ppmodel->getPrice($item['id'])
+                            ]
+                    );
                 }
             } else {
                 $result['data'] = $items;
@@ -64,10 +72,9 @@ class ProductController extends BaseController
                 }
             }
 
-            if (is_array($params) && isset($params['with_price'])) {
-                $ppmodel = new \Model\ProductPricesModel();
+            if (is_array($params) && isset($params['with_discount'])) {
                 foreach ($items as $i => $item) {
-                    $result['price'][] = $ppmodel->getData($item['id']);
+                    $result['discount'][] = $ppmodel->getData($item['id']);
                 }
             }
         } else {
