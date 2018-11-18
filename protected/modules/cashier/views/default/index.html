@@ -1,0 +1,467 @@
+{% extends "layout.html" %}
+{% block pagetitle %}
+Dashboard - {{ App.params.site_name }}
+{% endblock %}
+
+{% block pagesection %}{{ trans.get('mobile', 'Dashboard') }}{% endblock %}
+
+{% block content %}
+<main class="mdl-layout__content mdl-color--grey-200">
+    <div class="page-content"><!-- Your content goes here -->
+        <div class="mdl-grid">
+
+            <!--  info box 2  -->
+            <div class="mdl-cell mdl-cell--3-col-desktop">
+                <div class="info-box-2 ft-white mdl-color--purple mdl-shadow--2dp">
+                    <div class="info-box-icon">
+                        <i class="x-icon material-icons">monetization_on</i>
+                    </div>
+                    <div class="info-box-body">
+                        <div class="info-box-title pb-2">Passive Income</div>
+                        <div class="info-box-subtitle ft-bold pb-2">$2,368,457.00</div>
+                        <div class="ft-12 mdl-color-text--grey-300">Lorem ipsum dolor sit amet</div>
+                    </div>
+                </div>
+            </div><!-- end mdl-cell -->
+
+            <div class="mdl-cell mdl-cell--3-col-desktop">
+                <div class="info-box-2 ft-white mdl-color--blue-700 mdl-shadow--2dp">
+                    <div class="info-box-icon">
+                        <i class="x-icon material-icons">attach_money</i>
+                    </div>
+                    <div class="info-box-body">
+                        <div class="info-box-title pb-2">WithDraw</div>
+                        <div class="info-box-subtitle ft-bold pb-2">$68,473.00</div>
+                        <div class="ft-12 mdl-color-text--grey-300 pb-2">Lorem ipsum dolor sit amet</div>
+                    </div>
+                </div>
+            </div><!-- end mdl-cell -->
+
+            <div class="mdl-cell mdl-cell--3-col-desktop">
+                <div class="info-box-2 ft-white mdl-color--red-700 mdl-shadow--2dp">
+                    <div class="info-box-icon">
+                        <i class="x-icon material-icons">money_off</i>
+                    </div>
+                    <div class="info-box-body">
+                        <div class="info-box-title pb-2">Tax</div>
+                        <div class="info-box-subtitle ft-bold pb-2">$1,353.00</div>
+                        <div class="ft-12 mdl-color-text--grey-300 pb-2">Lorem ipsum dolor sit amet</div>
+                    </div>
+                </div>
+            </div><!-- end mdl-cell -->
+
+            <div class="mdl-cell mdl-cell--3-col-desktop">
+                <div class="info-box-2 ft-white mdl-color--orange-700 mdl-shadow--2dp">
+                    <div class="info-box-icon">
+                        <i class="x-icon material-icons">done_all</i>
+                    </div>
+                    <div class="info-box-body">
+                        <div class="info-box-title pb-2">Total Income</div>
+                        <div class="info-box-subtitle ft-bold pb-2">$4,353,535.00</div>
+                        <div class="ft-12 mdl-color-text--grey-300 pb-2">Lorem ipsum dolor sit amet</div>
+                    </div>
+                </div>
+            </div><!-- end mdl-cell -->
+            <!--  end info box 2  -->
+
+
+            <div class="mdl-cell mdl-cell--8-col">
+                <div class="mdl-card mdl-shadow--2dp">
+                    <div class="mdl-card__title">
+                        Managed Services
+                    </div>
+                    <div class="mdl-card__supporting-text h-250px">
+                        <canvas id="serverLoad" class="w-100"></canvas>
+                    </div>
+                    <div class="mdl-card__menu">
+                        <button class="mdl-button mdl-button--icon mdl-js-button mdl-js-ripple-effect">
+                            <i class="x-icon material-icons ft-20">more_vert</i>
+                        </button>
+                    </div>
+                </div> <!-- end mdl-card -->
+            </div> <!-- end mdl-cell -->
+
+
+            <div class="mdl-cell mdl-cell--4-col">
+                <div class="mdl-card mdl-shadow--2dp">
+                    <div class="mdl-card__title">
+                        <span class="x-icon material-icons mr-2">public</span>
+                        Browser Usage
+                    </div>
+                    <div class="mdl-card__supporting-text h-250px">
+                        <canvas id="donut" class="pb-4"></canvas>
+                    </div>
+                </div> <!-- end mdl-card -->
+            </div> <!-- end mdl-cell -->
+
+
+            <div class="mdl-cell mdl-cell--4-col-phone mdl-cell--4-col-desktop">
+                <div class="mdl-card mdl-shadow--2dp">
+                    <div class="mdl-card__title ft-white mdl-color--orange-900">
+                        <span class="x-icon material-icons mr-2">public</span>Browser Stats
+                    </div>
+                    <div class="mdl-card__supporting-text pb-2 scroll">
+                        <div class="mdl-list mdl-list-flush m-0">
+                            <a href="#" class="mdl-list__item">
+                                <span class="mdl-list__item-primary-content ft-15">Cras justo odio</span>
+                                <span class="ft-12">33%</span>
+                            </a>
+                            <a href="#" class="mdl-list__item">
+                                <span class="mdl-list__item-primary-content ft-15">Dapibus ac facilisis in</span>
+                                <span class="ft-12">13%</span>
+                            </a>
+                            <a href="#" class="mdl-list__item">
+                                <span class="mdl-list__item-primary-content ft-15">Morbi leo risus</span>
+                                <span class="ft-12">8%</span>
+                            </a>
+                            <a href="#" class="mdl-list__item">
+                                <span class="mdl-list__item-primary-content ft-15">Porta ac consectetur ac</span>
+                                <span class="ft-12">27%</span>
+                            </a>
+                            <a href="#" class="mdl-list__item">
+                                <span class="mdl-list__item-primary-content ft-15">Lorem ipsum dolor sit amet</span>
+                                <span class="ft-12">42%</span>
+                            </a>
+                        </div>
+                    </div>
+                </div> <!-- end mdl-card -->
+            </div> <!-- end mdl-cell -->
+
+
+            <div class="mdl-cell mdl-cell--4-col">
+                <div class="mdl-card mdl-shadow--2dp">
+                    <div class="mdl-card__title mdl-color--pink-700 ft-white">
+                        <span class="x-icon material-icons mr-2">playlist_add_check</span>
+                        To Do List
+                    </div>
+                    <div class="mdl-card__supporting-text h-250px">
+                        <div class="d-flex py-0">
+                            <div class="w-100">
+                                <div class="mdl-textfield mdl-js-textfield w-100">
+                                    <input class="mdl-textfield__input" type="text" id="demo_todoList"
+                                           placeholder="Input Text">
+                                    <label class="mdl-textfield__label" for="demo_todoList"></label>
+                                </div>
+                            </div>
+                            <div class="w-25 ml-1 d-flex align-self__center">
+                                <button id="btn-demo_todoList"
+                                        class="mdl-button mdl-js-button mdl-button--fab mdl-button--mini-fab"><span
+                                        class="x-icon material-icons ft-20">send</span></button>
+                            </div>
+                        </div>
+
+                        <ul class="mdl-list mdl-list-flush m-0 h-200px scroll demo_ul_todoList">
+                            <li class="mdl-list__item">
+                                <span class="mdl-list__item-primary-content ft-15">Consulting</span>
+                                <span class="x-icon x-badge__close material-icons">close</span>
+                            </li>
+                            <li class="mdl-list__item">
+                                <span class="mdl-list__item-primary-content ft-15">EDU Management</span>
+                                <span class="x-icon x-badge__close material-icons">close</span>
+                            </li>
+                            <li class="mdl-list__item">
+                                <span class="mdl-list__item-primary-content ft-15">Footer Display Issue</span>
+                                <span class="x-icon x-badge__close material-icons">close</span>
+                            </li>
+                            <li class="mdl-list__item">
+                                <span class="mdl-list__item-primary-content ft-15">Porta ac consectetur ac</span>
+                                <span class="x-icon x-badge__close material-icons">close</span>
+                            </li>
+                            <li class="mdl-list__item">
+                                <span class="mdl-list__item-primary-content ft-15">Lorem ipsum dolor sit amet</span>
+                                <span class="x-icon x-badge__close material-icons">close</span>
+                            </li>
+                        </ul>
+
+                    </div>
+                </div> <!-- end mdl-card -->
+            </div> <!-- end mdl-cell -->
+
+
+            <div class="mdl-cell mdl-cell--4-col-phone mdl-cell--4-col-desktop">
+                <div class="mdl-card mdl-shadow--2dp">
+                    <div class="mdl-card__title ft-white mdl-color--blue">
+                        <span class="x-icon material-icons mr-2">chat_bubble_outline</span>Recent Messages
+                    </div>
+                    <div class="mdl-card__supporting-text scroll h-250px">
+                        <div class="mdl-list mdl-list-flush ">
+                            <a href="#" class="mdl-list__item mdl-media w-100 pr-2">
+                                <div class="mdl-media-left">
+                                    <img src="images/face/male.png" class="x-img-avatar">
+                                </div>
+                                <div class="mdl-media-body">
+                                    <div class="mdl-media-title ft-14">Justine Hunter</div>
+                                    <div class="mdl-color-text--grey ft-12">
+                                        Hi,
+                                        <br>
+                                        Lorem ipsum dolor sit amet,
+                                    </div>
+                                </div>
+                                <span class="mdl-color-text--grey ft-12 align-self__start">07:02</span>
+                            </a>
+
+                            <a href="#" class="mdl-list__item mdl-media w-100 pr-2">
+                                <div class="mdl-media-left">
+                                    <img src="images/face/female.html" class="x-img-avatar">
+                                </div>
+                                <div class="mdl-media-body">
+                                    <div class="mdl-media-title ft-14">Stephenie Owen</div>
+                                    <div class="mdl-color-text--grey ft-12 text-justify">
+                                        Hey bro,
+                                        <br>
+                                        Ut enim ad minim veniam,
+                                        quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo
+                                        consequat.
+                                    </div>
+                                </div>
+                                <span class="mdl-color-text--grey ft-12 align-self__start">14:02</span>
+                            </a>
+
+                            <a href="#" class="mdl-list__item mdl-media w-100 pr-2">
+                                <div class="mdl-media-left">
+                                    <img src="images/face/male.png" class="x-img-avatar">
+                                </div>
+                                <div class="mdl-media-body">
+                                    <div class="mdl-media-title ft-14">Ivan Petrov</div>
+                                    <div class="mdl-color-text--grey ft-12 text-justify">
+                                        Dear Sir,
+                                        <br>
+                                        Duis aute irure dolor in reprehenderit in voluptate velit esse
+                                        cillum dolore eu fugiat nulla pariatur.
+                                    </div>
+                                </div>
+                                <span class="mdl-color-text--grey ft-12 align-self__start">14:02</span>
+                            </a>
+
+                            <a href="#" class="mdl-list__item mdl-media w-100 pr-2">
+                                <div class="mdl-media-left">
+                                    <img src="images/face/female.html" class="x-img-avatar">
+                                </div>
+                                <div class="mdl-media-body">
+                                    <div class="mdl-media-title ft-14">Sherina Hunter</div>
+                                    <div class="mdl-color-text--grey ft-12 text-justify">
+                                        Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod
+                                        tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam
+                                    </div>
+                                </div>
+                                <span class="mdl-color-text--grey ft-12 align-self__start">07:02</span>
+                            </a>
+
+                        </div>
+                    </div>
+                </div> <!-- end mdl-card -->
+            </div> <!-- end mdl-cell -->
+
+
+        </div> <!-- end mdl-grid -->
+
+
+        <div class="x-sidebar-right scroll pr-3 mdl-shadow--2dp">
+            <div class="mdl-grid mdl-grid--no-spacing">
+
+                <div class="mdl-cell mdl-cell--12-col">
+                    <div class="mdl-card">
+                        <div class="mdl-card__supporting-text pl-0">
+
+                            <div class="mdl-tabs mdl-js-tabs px-2">
+                                <div class="mdl-tabs__tab-bar">
+                                    <a href="#demo_setting_1" class="mdl-tabs__tab is-active w-100"><i
+                                            class="x-icon material-icons">color_lens</i></a>
+                                    <a href="#demo_setting_2" class="mdl-tabs__tab w-100"><i
+                                            class="x-icon material-icons">people_outline</i></a>
+                                </div>
+
+                                <div class="mdl-tabs__panel is-active" id="demo_setting_1">
+                                    <div class="mdl-color-text--grey mt-4 ml-3">Choose Layout Themes</div>
+                                    <div class="mdl-list mdl-list-flush m-0">
+                                        <label class="mdl-list__item" for="opt-theme-light">
+                                            <span class="mdl-list__item-primary-content">Basic Theme</span>
+                                            <span class="mdl-list__item-secondary-action">
+                            <div class="demo-list-radio mdl-radio mdl-js-radio mdl-js-ripple-effect">
+                              <input type="radio" id="opt-theme-light" class="mdl-radio__button" value=""
+                                     name="opt-layout-theme" checked/>
+                            </div>
+                          </span>
+                                        </label>
+                                        <label class="mdl-list__item" for="opt-theme-dark">
+                                            <span class="mdl-list__item-primary-content">Dark Theme</span>
+                                            <span class="mdl-list__item-secondary-action">
+                            <div class="demo-list-radio mdl-radio mdl-js-radio mdl-js-ripple-effect">
+                              <input type="radio" id="opt-theme-dark" class="mdl-radio__button" value="dark-theme"
+                                     name="opt-layout-theme"/>
+                            </div>
+                          </span>
+                                        </label>
+                                        <label class="mdl-list__item" for="opt-full-theme-dark">
+                                            <span class="mdl-list__item-primary-content">Full Dark Theme</span>
+                                            <span class="mdl-list__item-secondary-action">
+                            <div class="demo-list-radio mdl-radio mdl-js-radio mdl-js-ripple-effect">
+                              <input type="radio" id="opt-full-theme-dark" class="mdl-radio__button"
+                                     value="dark-theme-full" name="opt-layout-theme"/>
+                            </div>
+                          </span>
+                                        </label>
+                                    </div>
+
+                                    <div class="mdl-color-text--grey mt-4 ml-3">Choose Sidebar Skins</div>
+                                    <div class="mdl-list mdl-list-flush m-0">
+                                        <label class="mdl-list__item" for="opt-sidebar-light">
+                                            <span class="mdl-list__item-primary-content">Basic</span>
+                                            <span class="mdl-list__item-secondary-action">
+                            <div class="demo-list-radio mdl-radio mdl-js-radio mdl-js-ripple-effect">
+                              <input type="radio" id="opt-sidebar-light" class="mdl-radio__button" value=""
+                                     name="opt-layout-sidebar" checked/>
+                            </div>
+                          </span>
+                                        </label>
+                                        <label class="mdl-list__item" for="opt-sidebar-dark">
+                                            <span class="mdl-list__item-primary-content">Dark</span>
+                                            <span class="mdl-list__item-secondary-action">
+                            <div class="demo-list-radio mdl-radio mdl-js-radio mdl-js-ripple-effect">
+                              <input type="radio" id="opt-sidebar-dark" class="mdl-radio__button" value="dark-sidebar"
+                                     name="opt-layout-sidebar"/>
+                            </div>
+                          </span>
+                                        </label>
+                                        <label class="mdl-list__item" for="opt-full-sidebar-dark">
+                                            <span class="mdl-list__item-primary-content">Full Dark</span>
+                                            <span class="mdl-list__item-secondary-action">
+                            <div class="demo-list-radio mdl-radio mdl-js-radio mdl-js-ripple-effect">
+                              <input type="radio" id="opt-full-sidebar-dark" class="mdl-radio__button"
+                                     value="dark-sidebar-full" name="opt-layout-sidebar"/>
+                            </div>
+                          </span>
+                                        </label>
+                                    </div>
+
+                                    <div class="mdl-color-text--grey  mt-4 ml-3">Choose Skins</div>
+                                    <div class="mdl-grid">
+                                        <div class="mdl-cell--3-col-desktop mdl-cell--2-col-tablet mdl-cell--1-col-phone p-2">
+                                            <div class="h-50px w-100 bg-indigo btn-choose__skin"></div>
+                                        </div>
+                                        <div class="mdl-cell--3-col-desktop mdl-cell--2-col-tablet mdl-cell--1-col-phone p-2">
+                                            <div class="h-50px w-100 bg-blue btn-choose__skin"></div>
+                                        </div>
+                                        <div class="mdl-cell--3-col-desktop mdl-cell--2-col-tablet mdl-cell--1-col-phone p-2">
+                                            <div class="h-50px w-100 bg-light_blue btn-choose__skin"></div>
+                                        </div>
+                                        <div class="mdl-cell--3-col-desktop mdl-cell--2-col-tablet mdl-cell--1-col-phone p-2">
+                                            <div class="h-50px w-100 bg-cyan btn-choose__skin"></div>
+                                        </div>
+                                        <div class="mdl-cell--3-col-desktop mdl-cell--2-col-tablet mdl-cell--1-col-phone p-2">
+                                            <div class="h-50px w-100 bg-teal btn-choose__skin"></div>
+                                        </div>
+                                        <div class="mdl-cell--3-col-desktop mdl-cell--2-col-tablet mdl-cell--1-col-phone p-2">
+                                            <div class="h-50px w-100 bg-green btn-choose__skin"></div>
+                                        </div>
+                                        <div class="mdl-cell--3-col-desktop mdl-cell--2-col-tablet mdl-cell--1-col-phone p-2">
+                                            <div class="h-50px w-100 bg-light_green btn-choose__skin"></div>
+                                        </div>
+                                        <div class="mdl-cell--3-col-desktop mdl-cell--2-col-tablet mdl-cell--1-col-phone p-2">
+                                            <div class="h-50px w-100 bg-lime btn-choose__skin"></div>
+                                        </div>
+                                        <div class="mdl-cell--3-col-desktop mdl-cell--2-col-tablet mdl-cell--1-col-phone p-2">
+                                            <div class="h-50px w-100 bg-yellow btn-choose__skin"></div>
+                                        </div>
+                                        <div class="mdl-cell--3-col-desktop mdl-cell--2-col-tablet mdl-cell--1-col-phone p-2">
+                                            <div class="h-50px w-100 bg-amber btn-choose__skin"></div>
+                                        </div>
+                                        <div class="mdl-cell--3-col-desktop mdl-cell--2-col-tablet mdl-cell--1-col-phone p-2">
+                                            <div class="h-50px w-100 bg-orange btn-choose__skin"></div>
+                                        </div>
+                                        <div class="mdl-cell--3-col-desktop mdl-cell--2-col-tablet mdl-cell--1-col-phone p-2">
+                                            <div class="h-50px w-100 bg-brown btn-choose__skin"></div>
+                                        </div>
+                                        <div class="mdl-cell--3-col-desktop mdl-cell--2-col-tablet mdl-cell--1-col-phone p-2">
+                                            <div class="h-50px w-100 bg-blue_grey btn-choose__skin"></div>
+                                        </div>
+                                        <div class="mdl-cell--3-col-desktop mdl-cell--2-col-tablet mdl-cell--1-col-phone p-2">
+                                            <div class="h-50px w-100 bg-grey btn-choose__skin"></div>
+                                        </div>
+                                        <div class="mdl-cell--3-col-desktop mdl-cell--2-col-tablet mdl-cell--1-col-phone p-2">
+                                            <div class="h-50px w-100 bg-deep_orange btn-choose__skin"></div>
+                                        </div>
+                                        <div class="mdl-cell--3-col-desktop mdl-cell--2-col-tablet mdl-cell--1-col-phone p-2">
+                                            <div class="h-50px w-100 bg-red btn-choose__skin"></div>
+                                        </div>
+                                        <div class="mdl-cell--3-col-desktop mdl-cell--2-col-tablet mdl-cell--1-col-phone p-2">
+                                            <div class="h-50px w-100 bg-pink btn-choose__skin"></div>
+                                        </div>
+                                        <div class="mdl-cell--3-col-desktop mdl-cell--2-col-tablet mdl-cell--1-col-phone p-2">
+                                            <div class="h-50px w-100 bg-purple btn-choose__skin"></div>
+                                        </div>
+                                        <div class="mdl-cell--3-col-desktop mdl-cell--2-col-tablet mdl-cell--1-col-phone p-2">
+                                            <div class="h-50px w-100 bg-dark btn-choose__skin"></div>
+                                        </div>
+                                        <div class="mdl-cell--3-col-desktop mdl-cell--2-col-tablet mdl-cell--1-col-phone p-2">
+                                            <div class="h-50px w-100 bg-white btn-choose__skin"></div>
+                                        </div>
+                                    </div>
+                                </div> <!-- end mdl-tabs__panel -->
+
+
+                                <div class="mdl-tabs__panel ps-relative" id="demo_setting_2">
+
+                                    <!-- chat contacts -->
+                                    <div class="mdl-list mdl-list-flush m-0">
+                                        <a href="#" class="mdl-list__item mdl-list__item--two-line">
+                            <span class="mdl-list__item-primary-content">
+                              <i class="material-icons mdl-list__item-avatar">person</i>
+                              <span>Bryan Cranston</span>
+                              <span class="mdl-list__item-sub-title">online</span>
+                            </span>
+                                            <i class="x-icon material-icons ft-20">chevron_right</i>
+                                        </a>
+                                        <a href="#" class="mdl-list__item mdl-list__item--two-line">
+                            <span class="mdl-list__item-primary-content">
+                              <i class="material-icons mdl-list__item-avatar">person</i>
+                              <span>Aaron Paul</span>
+                              <span class="mdl-list__item-sub-title">online</span>
+                            </span>
+                                            <i class="x-icon material-icons ft-20">chevron_right</i>
+                                        </a>
+                                        <a href="#" class="mdl-list__item mdl-list__item--two-line">
+                            <span class="mdl-list__item-primary-content">
+                              <i class="material-icons mdl-list__item-avatar">person</i>
+                              <span>Bob Odenkirk</span>
+                              <span class="mdl-list__item-sub-title">online</span>
+                            </span>
+                                            <span class="mdl-list__item-secondary-content">
+                          </span>
+                                            <i class="x-icon material-icons ft-20">chevron_right</i>
+                                        </a>
+                                        <a href="#" class="mdl-list__item mdl-list__item--two-line">
+                            <span class="mdl-list__item-primary-content">
+                              <i class="material-icons mdl-list__item-avatar">person</i>
+                              <span>Corey Hunter</span>
+                              <span class="mdl-list__item-sub-title">online</span>
+                            </span>
+                                            <span class="mdl-list__item-secondary-content">
+                          </span>
+                                            <i class="x-icon material-icons ft-20">chevron_right</i>
+                                        </a>
+                                        <a href="#" class="mdl-list__item mdl-list__item--two-line">
+                            <span class="mdl-list__item-primary-content">
+                              <i class="material-icons mdl-list__item-avatar">person</i>
+                              <span>Ivan Petrov</span>
+                              <span class="mdl-list__item-sub-title">online</span>
+                            </span>
+                                            <span class="mdl-list__item-secondary-content">
+                          </span>
+                                            <i class="x-icon material-icons ft-20">chevron_right</i>
+                                        </a>
+                                    </div> <!-- end chat contacts -->
+
+                                </div> <!-- end mdl-tabs__panel -->
+                            </div>
+
+                        </div>
+                    </div> <!-- end mdl-card -->
+                </div> <!-- end mdl-cell -->
+
+            </div> <!-- end mdl-grid -->
+        </div> <!-- end x-sidebar-right -->
+
+    </div> <!-- end page-content -->
+</main>
+{% endblock %}

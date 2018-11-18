@@ -1,0 +1,221 @@
+{% if not App.user.isGuest() %}
+<div class="mdl-layout__drawer flat">
+        <span class="mdl-layout-title ft-16 text-bold">
+          {#<img src="{{ 'uploads/images/ic_launcher-web.png' | link }}" class="demo-logo">#}
+          {{ App.params.site_name }}
+        </span>
+    <nav class="mdl-navigation scroll">
+        <div class="mdl-navigation__item">
+            <a class="mdl-navigation__link active" href="{{ 'cashier' | link }}"><span
+                    class="x-icon material-icons">dashboard</span>Dashboard</a>
+        </div>
+        <div class="mdl-navigation__item mdl-navigation__toggle">
+            <a class="mdl-navigation__link " href="#"><span
+                    class="x-icon material-icons">view_quilt</span>{{ trans.get('mobile', 'Transaction') }}</a>
+            <ul class="mdl-navigation__dropdown">
+                <li class="mdl-navigation__item">
+                    <a class="mdl-navigation__link " href="{{ 'cashier/sale/create' | link }}"><i
+                            class="x-icon material-icons">chevron_right</i>{{ trans.get('mobile', 'Sales') }}</a>
+                </li>
+                <li class="mdl-navigation__item">
+                    <a class="mdl-navigation__link " href="{{ 'cashier' | link }}"><i
+                            class="x-icon material-icons">chevron_right</i>{{ trans.get('mobile', 'Receiving') }}</a>
+                </li>
+            </ul>
+        </div>
+        <div class="mdl-navigation__item mdl-navigation__toggle">
+            <a class="mdl-navigation__link " href="#"><span class="x-icon material-icons">album</span>Icons</a>
+            <ul class="mdl-navigation__dropdown">
+                <li class="mdl-navigation__item">
+                    <a class="mdl-navigation__link " href="pages/icons/ionicons.html"><i
+                            class="x-icon material-icons">chevron_right</i>Ionicons</a>
+                </li>
+                <li class="mdl-navigation__item">
+                    <a class="mdl-navigation__link " href="pages/icons/material-icons.html"><i
+                            class="x-icon material-icons">chevron_right</i>Material Icons</a>
+                </li>
+            </ul>
+        </div>
+        <div class="mdl-navigation__item mdl-navigation__toggle">
+            <a class="mdl-navigation__link " href="#"><span class="x-icon material-icons">widgets</span>Widgets</a>
+            <ul class="mdl-navigation__dropdown">
+                <li class="mdl-navigation__item mdl-navigation__toggle">
+                    <a class="mdl-navigation__link " href="#"><i class="x-icon material-icons">chevron_right</i>Cards</a>
+                    <ul class="mdl-navigation__dropdown ml-4">
+                        <li class="mdl-navigation__item">
+                            <a class="mdl-navigation__link " href="pages/widgets/cards/basic.html"><i
+                                    class="x-icon material-icons">chevron_right</i>Basic</a>
+                        </li>
+                        <li class="mdl-navigation__item">
+                            <a class="mdl-navigation__link " href="pages/widgets/cards/image-cards.html"><i
+                                    class="x-icon material-icons">chevron_right</i>Image Cards</a>
+                        </li>
+                    </ul>
+                </li>
+                <li class="mdl-navigation__item">
+                    <a class="mdl-navigation__link " href="pages/widgets/chat-box.html"><i
+                            class="x-icon material-icons">chevron_right</i>Chat Box</a>
+                </li>
+                <li class="mdl-navigation__item">
+                    <a class="mdl-navigation__link " href="pages/widgets/info-box.html"><i
+                            class="x-icon material-icons">chevron_right</i>Info Box</a>
+                </li>
+                <li class="mdl-navigation__item">
+                    <a class="mdl-navigation__link " href="pages/widgets/timeline.html"><i
+                            class="x-icon material-icons">chevron_right</i>Timeline</a>
+                </li>
+            </ul>
+        </div>
+        <div class="mdl-navigation__item mdl-navigation__toggle">
+            <a class="mdl-navigation__link " href="#"><span class="x-icon material-icons">swap_calls</span>UI
+                Elements</a>
+            <ul class="mdl-navigation__dropdown">
+                <li class="mdl-navigation__item">
+                    <a class="mdl-navigation__link " href="pages/ui-elements/alerts.html"><i
+                            class="x-icon material-icons">chevron_right</i>Alerts</a>
+                </li>
+                <li class="mdl-navigation__item">
+                    <a class="mdl-navigation__link " href="pages/ui-elements/buttons.html"><i
+                            class="x-icon material-icons">chevron_right</i>Buttons</a>
+                </li>
+                <li class="mdl-navigation__item">
+                    <a class="mdl-navigation__link " href="pages/ui-elements/colors.html"><i
+                            class="x-icon material-icons">chevron_right</i>Colors</a>
+                </li>
+                <li class="mdl-navigation__item">
+                    <a class="mdl-navigation__link " href="pages/ui-elements/list-groups.html"><i
+                            class="x-icon material-icons">chevron_right</i>List Groups</a>
+                </li>
+                <li class="mdl-navigation__item">
+                    <a class="mdl-navigation__link " href="pages/ui-elements/media-object.html"><i
+                            class="x-icon material-icons">chevron_right</i>Media Objects</a>
+                </li>
+                <li class="mdl-navigation__item">
+                    <a class="mdl-navigation__link " href="pages/ui-elements/modals.html"><i
+                            class="x-icon material-icons">chevron_right</i>Modals</a>
+                </li>
+                <li class="mdl-navigation__item">
+                    <a class="mdl-navigation__link " href="pages/ui-elements/menus.html"><i
+                            class="x-icon material-icons">chevron_right</i>Menus</a>
+                </li>
+                <li class="mdl-navigation__item">
+                    <a class="mdl-navigation__link " href="pages/ui-elements/snackbar.html"><i
+                            class="x-icon material-icons">chevron_right</i>Snackbar</a>
+                </li>
+                <li class="mdl-navigation__item">
+                    <a class="mdl-navigation__link " href="pages/ui-elements/tabs.html"><i
+                            class="x-icon material-icons">chevron_right</i>Tabs</a>
+                </li>
+            </ul>
+        </div>
+        <div class="mdl-navigation__item mdl-navigation__toggle">
+            <a class="mdl-navigation__link " href="#"><span class="x-icon material-icons">assignment</span>Forms</a>
+            <ul class="mdl-navigation__dropdown">
+                <li class="mdl-navigation__item">
+                    <a class="mdl-navigation__link " href="pages/forms/form-elements.html"><i
+                            class="x-icon material-icons">chevron_right</i>Form Elements</a>
+                </li>
+                <li class="mdl-navigation__item">
+                    <a class="mdl-navigation__link " href="pages/forms/form-stepper.html"><i
+                            class="x-icon material-icons">chevron_right</i>Form Steppers</a>
+                </li>
+            </ul>
+        </div>
+        <div class="mdl-navigation__item mdl-navigation__toggle">
+            <a class="mdl-navigation__link " href="#"><span
+                    class="x-icon material-icons">view_module</span>Tables</a>
+            <ul class="mdl-navigation__dropdown">
+                <li class="mdl-navigation__item">
+                    <a class="mdl-navigation__link " href="pages/tables/basic-tables.html"><i
+                            class="x-icon material-icons">chevron_right</i>Basic Tables</a>
+                </li>
+                <li class="mdl-navigation__item">
+                    <a class="mdl-navigation__link " href="pages/tables/datatables.html"><i
+                            class="x-icon material-icons">chevron_right</i>DataTables</a>
+                </li>
+            </ul>
+        </div>
+        <div class="mdl-navigation__item mdl-navigation__toggle">
+            <a class="mdl-navigation__link " href="#"><span class="x-icon material-icons">bubble_chart</span>Charts</a>
+            <ul class="mdl-navigation__dropdown">
+                <li class="mdl-navigation__item">
+                    <a class="mdl-navigation__link " href="pages/charts/chart-js.html"><i
+                            class="x-icon material-icons">chevron_right</i>Chart Js</a>
+                </li>
+                <li class="mdl-navigation__item">
+                    <a class="mdl-navigation__link " href="pages/charts/morris.html"><i
+                            class="x-icon material-icons">chevron_right</i>Morris</a>
+                </li>
+            </ul>
+        </div>
+        <div class="mdl-navigation__item mdl-navigation__toggle">
+            <a class="mdl-navigation__link" href="#"><span class="x-icon material-icons">pages</span>Example
+                Pages</a>
+            <ul class="mdl-navigation__dropdown">
+                <li class="mdl-navigation__item">
+                    <a class="mdl-navigation__link" href="pages/example-pages/login-1.html"><i
+                            class="x-icon material-icons">chevron_right</i>Login 1</a>
+                </li>
+                <li class="mdl-navigation__item">
+                    <a class="mdl-navigation__link" href="pages/example-pages/login-2.html"><i
+                            class="x-icon material-icons">chevron_right</i>Login 2</a>
+                </li>
+                <li class="mdl-navigation__item">
+                    <a class="mdl-navigation__link" href="pages/example-pages/signup-1.html"><i
+                            class="x-icon material-icons">chevron_right</i>Signup 1</a>
+                </li>
+                <li class="mdl-navigation__item">
+                    <a class="mdl-navigation__link" href="pages/example-pages/signup-2.html"><i
+                            class="x-icon material-icons">chevron_right</i>Signup 2</a>
+                </li>
+            </ul>
+        </div>
+        <div class="mdl-navigation__item mdl-navigation__toggle">
+            <a class="mdl-navigation__link " href="#"><span class="x-icon material-icons">content_copy</span>Blank
+                Pages</a>
+            <ul class="mdl-navigation__dropdown">
+                <li class="mdl-navigation__item">
+                    <a class="mdl-navigation__link " href="pages/blank-pages/basic.html"><i
+                            class="x-icon material-icons">chevron_right</i>Basic</a>
+                </li>
+                <li class="mdl-navigation__item">
+                    <a class="mdl-navigation__link " href="pages/blank-pages/full-dark.html"><i
+                            class="x-icon material-icons">chevron_right</i>Full Dark</a>
+                </li>
+                <li class="mdl-navigation__item">
+                    <a class="mdl-navigation__link " href="pages/blank-pages/horizontal-layout.html"><i
+                            class="x-icon material-icons">chevron_right</i>Horizontal Layout</a>
+                </li>
+        </div>
+        <div class="mdl-navigation__item mdl-navigation__toggle">
+            <a class="mdl-navigation__link" href="#"><span class="x-icon material-icons">format_list_numbered</span>Multilevel</a>
+            <ul class="mdl-navigation__dropdown">
+                <li class="mdl-navigation__item">
+                    <a class="mdl-navigation__link" href="#"><i class="x-icon material-icons">chevron_right</i>Level
+                        1</a>
+                </li>
+                <li class="mdl-navigation__item mdl-navigation__toggle">
+                    <a class="mdl-navigation__link" href="#"><i class="x-icon material-icons">chevron_right</i>Level
+                        2</a>
+                    <ul class="mdl-navigation__dropdown ml-3">
+                        <li class="mdl-navigation__item">
+                            <a class="mdl-navigation__link" href="#"><i
+                                    class="x-icon material-icons">chevron_right</i>Menu Level 2</a>
+                        </li>
+                        <li class="mdl-navigation__item mdl-navigation__toggle">
+                            <a class="mdl-navigation__link" href="#"><i
+                                    class="x-icon material-icons">chevron_right</i>Level 3</a>
+                            <ul class="mdl-navigation__dropdown ml-4">
+                                <li class="mdl-navigation__item">
+                                    <a class="mdl-navigation__link" href="#"><i class="x-icon material-icons">chevron_right</i>Menu
+                                        Level 3</a>
+                                </li>
+                            </ul>
+                        </li>
+                    </ul>
+                </li>
+            </ul>
+        </div>
+    </nav>
+</div> <!-- end mdl-layou__drawer -->
+{% endif %}

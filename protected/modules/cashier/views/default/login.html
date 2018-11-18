@@ -1,0 +1,53 @@
+{% extends "layout.html" %}
+{% block pagetitle %}
+{{ trans.get('mobile', 'Login') }} - {{ App.params.site_name }}
+{% endblock %}
+
+{% block pagesection %}{{ App.params.site_name }}{% endblock %}
+
+{% block header %}{% endblock %}
+
+{% block mainmenu %}{% endblock %}
+
+{% block content %}
+<div class="mdl-layout mdl-js-layout mdl-layout--fixed-drawer mdl-layout--fixed-header mdl-color--grey-200">
+
+    <div class="page-content"><!-- Your content goes here -->
+
+        <div class="mdl-grid x-login-form x-login-form__2">
+
+            <div class="mdl-cell mdl-cell--4-col pr-3">
+                <div class="mdl-card x-login__body mdl-shadow--2dp m-2">
+                    <div class="mdl-card__title pl-0">
+                        <div class="x-login__title">
+                            <span class="x-icon material-icons mdl-shadow--2dp mdl-color--orange-800 ft-white">account_circle</span>
+                            <p class="mdl-color-text--grey-700">Login Page</p>
+                        </div>
+                    </div>
+                    <div class="mdl-card__supporting-text p-4">
+                        <form id="login_form" action="{{ 'cashier/default/login' | link }}" method="post">
+                            <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label w-100">
+                                <input name="LoginForm[username]" class="mdl-textfield__input" type="text" id="txt_username">
+                                <label class="mdl-textfield__label" for="txt_username">Username</label>
+                            </div>
+                            <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label w-100">
+                                <input name="LoginForm[password]" class="mdl-textfield__input" type="password" id="txt_password">
+                                <label class="mdl-textfield__label" for="txt_password">Password</label>
+                            </div>
+                            <input
+                                    type="submit"
+                                    value="{{ trans.get('mobile', 'Login') }}"
+                                    class="mb-3 mdl-button mdl-js-button mdl-js-ripple-effect mdl-button--raised mdl-button--colored float-right">
+                            <a href="javascript:" class="flat">{{ trans.get('mobile', 'Forgot your password?') }}</a>
+                        </form>
+                    </div>
+                </div> <!-- end mdl-card -->
+            </div> <!-- end mdl-cell -->
+
+        </div> <!-- end mdl-grid -->
+    </div> <!-- end page-content -->
+
+</div> <!-- end mdl-layout -->
+{% endblock %}
+{% block endbodyjs %}
+{% endblock %}

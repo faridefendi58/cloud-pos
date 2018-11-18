@@ -1,0 +1,38 @@
+<table class="mdl-data-table mdl-shadow--2dp mt-10">
+    <tbody>
+    {% for ib, cart in items_belanja %}
+    <tr class="cart-item" attr-name="{{ cart.name }}">
+        <td><input class="mdl-textfield__input cart-item-qty" type="text" value="{{ cart.qty }}" onchange="transaction.pushQty('{{ ib }}', this)"></td>
+        <td colspan="2"><b>{{ cart.name }}</b></td>
+    </tr>
+    <tr>
+        <td>@{{ cart.unit_price | number_format(0, ',', '.') }}</td>
+        <td><b>{{ (cart.unit_price * cart.qty) | number_format(0, ',', '.') }}</b></td>
+        <td class="width-30">
+            <a class="cart-item-delete" attr-id="{{ ib }}">
+                <i class="material-icons">
+                    delete_outline
+                </i>
+            </a>
+        </td>
+    </tr>
+    {% else %}
+    <tr>
+        <td colspan="4">{{ trans.get('mobile', 'No item found.') }}</td>
+    </tr>
+    {% endfor %}
+    </tbody>
+</table>
+
+<style>
+    /* modal */
+    .dialog-container,
+    .loading-container {position: absolute;top: 0;right: 0;bottom: 0;left: 0;overflow: scroll;background: rgba(0, 0, 0, 0.4);z-index: 1000;opacity: 0;-webkit-transition: opacity 400ms ease-in;-moz-transition: opacity 400ms ease-in;transition: opacity 400ms ease-in;}
+    .dialog-container > div {position: relative;width: 90%;max-width: 320px;min-height: 25px;margin: 10% auto;z-index: 1000;padding: 6px 16px 0;}
+    .dialog-button-bar {text-align: right;margin-top: 8px;}
+    .loading-container > div {position: relative;width: 50px;height: 50px;margin: 10% auto;z-index: 1000;}
+    .loading-container > div > div {width: 100%;height: 100%;}
+    .dialog-container .mdl-textfield {padding: 0px 0;}
+    .cart-item-qty {text-align: center;border: 1px solid #ebebeb;font-size: 13px;}
+    .width-30{width: 30px;text-align: center;}
+</style>

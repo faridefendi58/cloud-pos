@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="description" content="A front-end template that helps you build fast, modern mobile web apps.">
+    <meta http-equiv='Pragma' content='no-cache'>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0">
+
+    <title>{% block pagetitle %}{% endblock %}</title>
+
+    <link rel="shortcut icon" type="image/x-icon" href="{{ 'img/favicon.ico' | admin_asset_url }}" />
+
+    <link rel="stylesheet" href="{{ 'cashier/assets/css/material.min.css' | module_path }}">
+    <link rel="stylesheet" href="{{ 'cashier/assets/css/material-icons.css' | module_path }}">
+    <!-- Custom styles for this template -->
+    <link rel="stylesheet" href="{{ 'cashier/assets/css/xakti-mdl.css' | module_path }}">
+    <link rel="stylesheet" href="{{ 'cashier/assets/css/demo.css' | module_path }}">
+
+</head>
+<body>
+<div class="mdl-layout mdl-js-layout mdl-layout--fixed-drawer mdl-layout--fixed-header ">
+    {% block header %}
+    <header class="mdl-layout__header mdl-color--grey-100"> <!-- mdl-layout__header -->
+        <div class="mdl-layout__header-row pl-0"> <!-- mdl-layout__header-row -->
+            <div class="mdl-layout-spacer"></div>
+            <ul class="x-nav-menu">
+                <li class="x-nav__item">
+                    <a class="x-nav__link" href="#">
+                        <div class="mdl-textfield mdl-js-textfield mdl-textfield--expandable mdl-textfield--floating-label mdl-textfield--align-right">
+                            <label class="mdl-button mdl-js-button mdl-button--icon" for="fixed-header-drawer-exp">
+                                <i class="material-icons">search</i>
+                            </label>
+                            <div class="mdl-textfield__expandable-holder">
+                                <input class="mdl-textfield__input" type="text" name="sample"
+                                       id="fixed-header-drawer-exp">
+                            </div>
+                        </div>
+                    </a>
+                </li>
+                <li class="x-nav__item mdl-menu--custom" id="layout-header__notification">
+                    <a class="x-nav__link" href="#"><span class="x-icon material-icons">notifications_none</span>
+                        <div class="titik mdl-color--red"></div>
+                    </a>
+                    <ul class="mdl-menu mdl-menu--bottom-right mdl-js-menu" for="layout-header__notification">
+                        <li class="py-2 mdl-menu__item--full-bleed-divider">Notifications</li>
+                        <div class="scroll mdl-menu__body">
+                            <li class="mdl-menu__item justify-content__between align-items__center">
+                                Stephanie commented your post
+                                <span class="x-badge mdl-color--blue-700 ft-white">3</span>
+                            </li>
+                            <li class="mdl-menu__item justify-content__between align-items__center">Settings updated
+                                <span class="x-badge mdl-color--red ft-white">1</span>
+                            </li>
+                            <li class="mdl-menu__item justify-content__between align-items__center">
+                                Solved Transition Issue
+                                <span class="x-badge mdl-color--black ft-white">6</span>
+                            </li>
+                            <li class="mdl-menu__item justify-content__between align-items__center">
+                                Ivan Deleted account
+                                <span class="mdl-color-text--grey ft-12">07:02</span>
+                            </li>
+                            <li class="mdl-menu__item text-wrap">Lorem ipsum dolor sit amet, consectetur adipisicing
+                                elit
+                            </li>
+                            <li class="mdl-menu__item text-wrap justify-content__between align-items__center">
+                                John updated status
+                                <span class="mdl-color-text--grey ft-12">08:17</span>
+                            </li>
+                        </div>
+                    </ul>
+                </li>
+                <li class="x-nav__item mdl-menu--custom" id="layout-header__task">
+                    <a class="x-nav__link" href="#"><span class="x-icon material-icons">flag</span>
+                        <div class="titik mdl-color--red"></div>
+                    </a>
+                    <ul class="mdl-menu mdl-menu--bottom-right mdl-js-menu" for="layout-header__task">
+                        <li class="py-2 mdl-menu__item--full-bleed-divider">Tasks</li>
+                        <div class="scroll mdl-menu__body">
+                            <li class="mdl-menu__item demo-mdl-progress">
+                                <span>Create new dashboard</span>
+                                <small class="float-right">20%</small>
+                                <div id="p0" class="mdl-progress mdl-js-progress"></div>
+                            </li>
+                            <li class="mdl-menu__item demo-mdl-progress">
+                                <span>Answer GitHub questions</span>
+                                <small class="float-right">40%</small>
+                                <div id="p1" class="mdl-progress mdl-js-progress"></div>
+                            </li>
+                            <li class="mdl-menu__item demo-mdl-progress">
+                                <span>Solve transition issues</span>
+                                <small class="float-right">60%</small>
+                                <div id="p2" class="mdl-progress mdl-js-progress"></div>
+                            </li>
+                            <li class="mdl-menu__item demo-mdl-progress">
+                                <span>Answer github question</span>
+                                <small class="float-right">80%</small>
+                                <div id="p3" class="mdl-progress mdl-js-progress"></div>
+                            </li>
+                            <li class="mdl-menu__item demo-mdl-progress">
+                                <span>Create a nice theme</span>
+                                <small class="float-right">95%</small>
+                                <div id="p4" class="mdl-progress mdl-js-progress"></div>
+                            </li>
+                        </div>
+                    </ul>
+                </li>
+                <li class="x-nav__item">
+                    <a class="x-nav__link" href="#" data-toggle=".x-sidebar-right"><span
+                            class="x-icon material-icons rotate-effect">settings</span></a>
+                </li>
+                <li class="x-nav__item mdl-menu--custom" id="layout-header__apps">
+                    <a class="x-nav__link" href="#"><span class="x-icon material-icons">apps</span></a>
+
+                    <ul class="mdl-menu mdl-menu__grid mdl-menu--bottom-right mdl-js-menu" for="layout-header__apps">
+                        <li class="mdl-menu__item">
+                            <span class="x-icon material-icons ft-30">music_video</span>
+                            <div>Music</div>
+                        </li>
+                        <li class="mdl-menu__item">
+                            <span class="x-icon material-icons ft-30">local_movies</span>
+                            <div>Movie</div>
+                        </li>
+                        <li class="mdl-menu__item">
+                            <span class="x-icon material-icons ft-30">image</span>
+                            <div>Picture</div>
+                        </li>
+                        <li class="mdl-menu__item">
+                            <span class="x-icon material-icons ft-30">contact_mail</span>
+                            <div>Contact</div>
+                        </li>
+                        <li class="mdl-menu__item">
+                            <span class="x-icon material-icons ft-30">build</span>
+                            <div>Setting</div>
+                        </li>
+                        <li class="mdl-menu__item">
+                            <span class="x-icon material-icons ft-30">bookmark_border</span>
+                            <div>Bookmark</div>
+                        </li>
+                        <li class="mdl-menu__item">
+                            <span class="x-icon material-icons ft-30">storage</span>
+                            <div>storage</div>
+                        </li>
+                        <li class="mdl-menu__item">
+                            <span class="x-icon material-icons ft-30">code</span>
+                            <div>Code</div>
+                        </li>
+                        <li class="mdl-menu__item">
+                            <span class="x-icon material-icons ft-30">backup</span>
+                            <div>Backup</div>
+                        </li>
+                    </ul>
+                </li>
+                <li class="x-nav__item mdl-menu--custom" id="layout-header__avatar">
+                    <a class="x-nav__link" href="#">
+                        <img src="images/face/male.png" class="x-nav__item-avatar">
+                    </a>
+                    <ul class="mdl-menu mdl-menu--bottom-right mdl-js-menu" for="layout-header__avatar">
+                        <li class="mdl-menu__item mdl-media align-items__center mdl-menu__item--full-bleed-divider">
+                            <div class="mdl-media-middle">
+                                <img src="images/face/male.png" class="x-nav__item-avatar">
+                            </div>
+                            <div class="mdl-media-body">
+                                <div class="mdl-media-title ft-bold">Corey Hunter</div>
+                                <div class="mdl-color-text--grey-600 ft-12">Administrator</div>
+                            </div>
+                        </li>
+                        <li class="mdl-menu__item"><span class="x-icon material-icons">flag</span>Task</li>
+                        <li class="mdl-menu__item"><span class="x-icon material-icons">assignment</span>Events</li>
+                        <li class="mdl-menu__item mdl-menu__item--full-bleed-divider"><span
+                                class="x-icon material-icons">settings</span>Settings
+                        </li>
+                        <li class="mdl-menu__item"><span class="x-icon material-icons">power_settings_new</span>Logout
+                        </li>
+                    </ul>
+                </li>
+            </ul>
+        </div> <!-- end mdl-layout__header-row -->
+
+    </header> <!-- mdl-layout__header -->
+    {% endblock %}
+
+    {% block mainmenu %}
+    {% include 'partial/main_menu.html' %}
+    {% endblock %}
+
+    {% block content %} {% endblock %}
+
+    {% block footer %}{% endblock %}
+</div>
+
+{% block beforemainjs %}{% endblock %}
+
+<script src="{{ 'cashier/assets/lib/chartjs/dist/Chart.min.js' | module_path }}"></script>
+<script type="text/javascript" src="{{ 'cashier/assets/lib/chart/utils.js' | module_path }}"></script>
+
+<script type="text/javascript" src="{{ 'cashier/assets/js/material.min.js' | module_path }}"></script>
+<script type="text/javascript" src="{{ 'cashier/assets/lib/jquery-3.2.1.min.js' | module_path }}"></script>
+<script type="text/javascript" src="{{ 'cashier/assets/js/xakti-mdl.js' | module_path }}"></script>
+<script type="text/javascript" src="{{ 'cashier/assets/js/demo.js' | module_path }}"></script>
+
+{% block endbodyjs %}{% endblock %}
+</body>
+</html>

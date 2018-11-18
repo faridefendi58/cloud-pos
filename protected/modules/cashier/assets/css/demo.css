@@ -1,0 +1,27 @@
+.w-50px{width:50px}
+.w-100px{width:100px}
+.w-200px{width:200px}
+.h-50px{height:50px}
+.h-100px{height:100px}
+.h-150px{height:150px}
+.h-200px{height:200px}
+.h-250px{height:250px}
+.h-300px{height:300px}
+.max-h-300px{max-height:300px}
+.mdl-menu__body{height:200px;max-width:300px}
+.demo-mdl-progress{line-height:inherit}
+.demo-mdl-progress .mdl-progress{height:8px}
+.mdl-layout-title{padding-left:20px!important}
+.demo-logo{height:30px;margin-top:-6px;margin-right:5px;animation:logo_animation 15s linear infinite;-o-animation:logo_animation 15s linear infinite;-moz-animation:logo_animation 15s linear infinite;-webkit-animation:logo_animation 15s linear infinite}
+@-webkit-keyframes logo_animation{from{-webkit-filter:hue-rotate(0)}
+    to{-webkit-filter:hue-rotate(360deg)}
+}
+@keyframes logo_animation{from{-webkit-filter:hue-rotate(0)}
+    to{-webkit-filter:hue-rotate(360deg)}
+}
+.demo-colors{list-style-type:none;padding:0}
+.demo-colors>li:hover{background-color:rgba(0,0,0,.2)!important;transition:.5s}
+.demo-colors>li{padding:3px;text-align:center}
+.btn-choose__skin{cursor:pointer}
+.btn-choose__skin:hover{opacity:.8}
+.mdl-color--grey-100 {background-color: #394953 !important;}

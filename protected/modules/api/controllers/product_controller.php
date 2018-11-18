@@ -55,6 +55,21 @@ class ProductController extends BaseController
             } else {
                 $result['data'] = $items;
             }
+
+            $warehouse_id = 0;
+            if (is_array($params) && isset($params['warehouse_name'])) {
+                $whmodel = \Model\WarehousesModel::model()->findByAttributes(['title' => $params['warehouse_name']]);
+                if ($whmodel instanceof \RedBeanPHP\OODBBean) {
+                    $warehouse_id = $whmodel->id;
+                }
+            }
+
+            if (is_array($params) && isset($params['with_price'])) {
+                $ppmodel = new \Model\ProductPricesModel();
+                foreach ($items as $i => $item) {
+                    $result['price'][] = $ppmodel->getData($item['id']);
+                }
+            }
         } else {
             $result = [
                 'success' => 0,

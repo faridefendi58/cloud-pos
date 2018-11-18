@@ -16,6 +16,7 @@ return [
     'Email' => 'Alamat Email',
     'Phone' => 'Nomor Telepon',
     'Address' => 'Alamat',
-    'Customer' => 'Pelanggan'
+    'Customer' => 'Pelanggan',
+    'Forgot your password?' => 'Lupa password?'
 ];
 ?>

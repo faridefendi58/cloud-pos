@@ -1,0 +1,699 @@
+{% extends "layout.html" %}
+{% block pagetitle %}
+{{ trans.get('mobile', 'Sale Transaction') }} - {{ App.params.site_name }}
+{% endblock %}
+
+{# block header %}
+<header class="demo-header mdl-layout__header mdl-color--grey-100 mdl-color-text--white mdl-layout--fixed-tabs">
+    <div class="mdl-layout__header-row">
+        <span class="mdl-layout-title">
+            {% set warehouses = App.call.model("\\Model\\WarehousesModel", 'getData', {'status':1}) %}
+            {% block pagesection %}
+            <div class="mdl-selectfield mdl-js-selectfield">
+              <select id="warehouse_id" class="mdl-selectfield__select">
+                  {% for w,warehouse in warehouses %}
+                <option value="option1">{{ warehouse.title }}</option>
+                  {% endfor %}
+              </select>
+              <label class="mdl-selectfield__label" for="warehouse_id">Warehouse</label>
+              <span class="mdl-selectfield__error">Select a value</span>
+            </div>
+            {% endblock %}
+        </span>
+        <div class="mdl-layout-spacer"></div>
+        {% if not App.user.isGuest() %}
+        <button id='btn-customer' class="mdl-button mdl-button--icon mdl-js-button mdl-button--raised mdl-js-ripple-effect modal__trigger"
+                data-modal-src="{{ 'mobile/sale/customer' | link }}"
+                data-modal="#modal2"
+                data-modal-target='#ajaxContent'>
+            <i class="material-icons">person_pin</i>
+        </button>
+        {% endif %}
+    </div>
+    <!-- Tab Container with Tab links -->
+    <div class="mdl-layout__tab-bar mdl-js-ripple-effect mdl-color--grey-300">
+        <!-- class is-active to show currently active tab -->
+        <a href="#fixed-tab-1" class="mdl-layout__tab mdl-cell--hide-tablet mdl-cell--hide-desktop">{{ trans.get('mobile', 'Item List') }}</a>
+        <a href="#fixed-tab-2" class="mdl-layout__tab is-active">{{ trans.get('mobile', 'Transaction') }}</a>
+        <a href="#fixed-tab-3" class="mdl-layout__tab">{{ trans.get('mobile', 'Payment') }}</a>
+    </div>
+</header>
+{% endblock #}
+
+{% block header %}
+<header class="mdl-layout__header mdl-color--grey-100 mdl-layout--fixed-tabs"> <!-- mdl-layout__header -->
+    <div class="mdl-layout__header-row pl-0"> <!-- mdl-layout__header-row -->
+        <div class="mdl-layout-spacer"></div>
+        <ul class="x-nav-menu">
+            <li class="x-nav__item">
+                <a class="x-nav__link" href="#">
+                    <div class="mdl-textfield mdl-js-textfield mdl-textfield--expandable mdl-textfield--floating-label mdl-textfield--align-right">
+                        <label class="mdl-button mdl-js-button mdl-button--icon" for="fixed-header-drawer-exp">
+                            <i class="material-icons">search</i>
+                        </label>
+                        <div class="mdl-textfield__expandable-holder">
+                            <input class="mdl-textfield__input" type="text" name="sample"
+                                   id="fixed-header-drawer-exp">
+                        </div>
+                    </div>
+                </a>
+            </li>
+            <li class="x-nav__item mdl-menu--custom" id="layout-header__notification">
+                <a class="x-nav__link" href="#"><span class="x-icon material-icons">notifications_none</span>
+                    <div class="titik mdl-color--red"></div>
+                </a>
+                <ul class="mdl-menu mdl-menu--bottom-right mdl-js-menu" for="layout-header__notification">
+                    <li class="py-2 mdl-menu__item--full-bleed-divider">Notifications</li>
+                    <div class="scroll mdl-menu__body">
+                        <li class="mdl-menu__item justify-content__between align-items__center">
+                            Stephanie commented your post
+                            <span class="x-badge mdl-color--blue-700 ft-white">3</span>
+                        </li>
+                        <li class="mdl-menu__item justify-content__between align-items__center">Settings updated
+                            <span class="x-badge mdl-color--red ft-white">1</span>
+                        </li>
+                        <li class="mdl-menu__item justify-content__between align-items__center">
+                            Solved Transition Issue
+                            <span class="x-badge mdl-color--black ft-white">6</span>
+                        </li>
+                        <li class="mdl-menu__item justify-content__between align-items__center">
+                            Ivan Deleted account
+                            <span class="mdl-color-text--grey ft-12">07:02</span>
+                        </li>
+                        <li class="mdl-menu__item text-wrap">Lorem ipsum dolor sit amet, consectetur adipisicing
+                            elit
+                        </li>
+                        <li class="mdl-menu__item text-wrap justify-content__between align-items__center">
+                            John updated status
+                            <span class="mdl-color-text--grey ft-12">08:17</span>
+                        </li>
+                    </div>
+                </ul>
+            </li>
+            <li class="x-nav__item mdl-menu--custom" id="layout-header__task">
+                <a class="x-nav__link" href="#"><span class="x-icon material-icons">flag</span>
+                    <div class="titik mdl-color--red"></div>
+                </a>
+                <ul class="mdl-menu mdl-menu--bottom-right mdl-js-menu" for="layout-header__task">
+                    <li class="py-2 mdl-menu__item--full-bleed-divider">Tasks</li>
+                    <div class="scroll mdl-menu__body">
+                        <li class="mdl-menu__item demo-mdl-progress">
+                            <span>Create new dashboard</span>
+                            <small class="float-right">20%</small>
+                            <div id="p0" class="mdl-progress mdl-js-progress"></div>
+                        </li>
+                        <li class="mdl-menu__item demo-mdl-progress">
+                            <span>Answer GitHub questions</span>
+                            <small class="float-right">40%</small>
+                            <div id="p1" class="mdl-progress mdl-js-progress"></div>
+                        </li>
+                        <li class="mdl-menu__item demo-mdl-progress">
+                            <span>Solve transition issues</span>
+                            <small class="float-right">60%</small>
+                            <div id="p2" class="mdl-progress mdl-js-progress"></div>
+                        </li>
+                        <li class="mdl-menu__item demo-mdl-progress">
+                            <span>Answer github question</span>
+                            <small class="float-right">80%</small>
+                            <div id="p3" class="mdl-progress mdl-js-progress"></div>
+                        </li>
+                        <li class="mdl-menu__item demo-mdl-progress">
+                            <span>Create a nice theme</span>
+                            <small class="float-right">95%</small>
+                            <div id="p4" class="mdl-progress mdl-js-progress"></div>
+                        </li>
+                    </div>
+                </ul>
+            </li>
+            <li class="x-nav__item">
+                <a class="x-nav__link" href="#" data-toggle=".x-sidebar-right"><span
+                        class="x-icon material-icons rotate-effect">settings</span></a>
+            </li>
+            <li class="x-nav__item mdl-menu--custom" id="layout-header__apps">
+                <a class="x-nav__link" href="#"><span class="x-icon material-icons">apps</span></a>
+
+                <ul class="mdl-menu mdl-menu__grid mdl-menu--bottom-right mdl-js-menu" for="layout-header__apps">
+                    <li class="mdl-menu__item">
+                        <span class="x-icon material-icons ft-30">music_video</span>
+                        <div>Music</div>
+                    </li>
+                    <li class="mdl-menu__item">
+                        <span class="x-icon material-icons ft-30">local_movies</span>
+                        <div>Movie</div>
+                    </li>
+                    <li class="mdl-menu__item">
+                        <span class="x-icon material-icons ft-30">image</span>
+                        <div>Picture</div>
+                    </li>
+                    <li class="mdl-menu__item">
+                        <span class="x-icon material-icons ft-30">contact_mail</span>
+                        <div>Contact</div>
+                    </li>
+                    <li class="mdl-menu__item">
+                        <span class="x-icon material-icons ft-30">build</span>
+                        <div>Setting</div>
+                    </li>
+                    <li class="mdl-menu__item">
+                        <span class="x-icon material-icons ft-30">bookmark_border</span>
+                        <div>Bookmark</div>
+                    </li>
+                    <li class="mdl-menu__item">
+                        <span class="x-icon material-icons ft-30">storage</span>
+                        <div>storage</div>
+                    </li>
+                    <li class="mdl-menu__item">
+                        <span class="x-icon material-icons ft-30">code</span>
+                        <div>Code</div>
+                    </li>
+                    <li class="mdl-menu__item">
+                        <span class="x-icon material-icons ft-30">backup</span>
+                        <div>Backup</div>
+                    </li>
+                </ul>
+            </li>
+            <li class="x-nav__item mdl-menu--custom" id="layout-header__avatar">
+                <a class="x-nav__link" href="#">
+                    <img src="images/face/male.png" class="x-nav__item-avatar">
+                </a>
+                <ul class="mdl-menu mdl-menu--bottom-right mdl-js-menu" for="layout-header__avatar">
+                    <li class="mdl-menu__item mdl-media align-items__center mdl-menu__item--full-bleed-divider">
+                        <div class="mdl-media-middle">
+                            <img src="images/face/male.png" class="x-nav__item-avatar">
+                        </div>
+                        <div class="mdl-media-body">
+                            <div class="mdl-media-title ft-bold">Corey Hunter</div>
+                            <div class="mdl-color-text--grey-600 ft-12">Administrator</div>
+                        </div>
+                    </li>
+                    <li class="mdl-menu__item"><span class="x-icon material-icons">flag</span>Task</li>
+                    <li class="mdl-menu__item"><span class="x-icon material-icons">assignment</span>Events</li>
+                    <li class="mdl-menu__item mdl-menu__item--full-bleed-divider"><span
+                            class="x-icon material-icons">settings</span>Settings
+                    </li>
+                    <li class="mdl-menu__item"><span class="x-icon material-icons">power_settings_new</span>Logout
+                    </li>
+                </ul>
+            </li>
+        </ul>
+    </div> <!-- end mdl-layout__header-row -->
+
+    <!-- Tab Container with Tab links -->
+    <div class="mdl-layout__tab-bar mdl-js-ripple-effect mdl-color--blue-400">
+        <!-- class is-active to show currently active tab -->
+        <a href="#fixed-tab-1" class="mdl-layout__tab mdl-cell--hide-tablet mdl-cell--hide-desktop">{{ trans.get('mobile', 'Item List') }}</a>
+        <a href="#fixed-tab-2" class="mdl-layout__tab is-active">{{ trans.get('mobile', 'Transaction') }}</a>
+        <a href="#fixed-tab-3" class="mdl-layout__tab">{{ trans.get('mobile', 'Payment') }}</a>
+    </div>
+
+</header> <!-- mdl-layout__header -->
+{% endblock %}
+
+{% block content %}
+<!-- Layout Container with Fixed Header and Tabs -->
+    <main class="mdl-layout__content mdl-color--grey-200">
+        <div class="page-content"><!-- Your content goes here -->
+        <!-- Tab 1 -->
+        <section class="mdl-layout__tab-panel mdl-cell--hide-tablet mdl-cell--hide-desktop" id="fixed-tab-1">
+            {% set products = App.call.model("\\Model\\ProductsModel", 'getData', {'status':1}) %}
+            {% include "sale/_product.html" with {'products':products} %}
+        </section>
+
+        <!-- Tab 2 -->
+        <section class="mdl-layout__tab-panel is-active" id="fixed-tab-2">
+            <div class="mdl-grid">
+                <div class="mdl-cell mdl-cell--12-col mdl-cell--4-col-tablet mdl-cell--6-col-desktop" id="cart-items">
+                    {% include "sale/_items.html" with {'items_belanja':items_belanja} %}
+                </div>
+                <div class="mdl-cell mdl-cell--12-col mdl-cell--4-col-tablet mdl-cell--6-col-desktop mdl-cell--hide-phone">
+                    {% include "sale/_product_desktop.html" with {'products':products} %}
+                </div>
+            </div>
+        </section>
+
+        <!-- Tab 3 -->
+        <section class="mdl-layout__tab-panel" id="fixed-tab-3">
+            <div class="page-content">
+                This area for payment
+            </div>
+        </section>
+        </div>
+    </main>
+<div aria-live="assertive" aria-atomic="true" aria-relevant="text" class="mdl-snackbar mdl-js-snackbar">
+    <div class="mdl-snackbar__text"></div>
+    <button type="button" class="mdl-snackbar__action"></button>
+</div>
+{% endblock %}
+
+{% block footer %}
+<div id="ajaxContent" style="display: block;"></div>
+<footer class="mdl-mini-footer mdl-shadow--2dp mdl-color--grey-300">
+    <div class="mdl-mini-footer--left-section">
+        <span id="tot-qty">{{ tot_qty }}</span> items
+    </div>
+    <div class="mdl-mini-footer--right-section">
+        Total : <span id="sub-total" class="text-bold">{{ sub_total | number_format(2, ',', '.') }}</span>
+    </div>
+</footer>
+{% endblock %}
+
+{% block beforemainjs %}
+{% endblock %}
+
+{% block endbodyjs %}
+<script type="text/javascript">
+    transaction = {
+        addToCart: function (item) {
+            var $this = $(this);
+            $.ajax({
+                'beforeSend': function() { Loading.show(); },
+                'complete': function() { Loading.hide(); },
+                'url': "{{ 'pos/transactions/scan' | link }}",
+                'type':'post',
+                'data':{"item":item},
+                'success': function(data){
+                    console.log(data);
+                    if(data.status=='success'){
+                        showToast(data.message);
+                        transaction.refreshChart();
+                        $('span[id="sub-total"]').html(transaction.moneyFormat(data.sub_total));
+                        /*$('#payment-button').css('display','block');
+                        $("input[id='scan']").val("");
+                        $('#list-item').find("input.input-block-level").val("");
+                        $('#list-item').find(".filter-option").html('Pilih Nama Barang');
+                        transaction.paymentRequest();*/
+                    }
+                },
+                complete: function() {
+                    $this.data('requestRunning', false);
+                }
+            });
+            return false;
+        },
+        deleteItem: function (id) {
+            var $this = $(this);
+            $.ajax({
+                'beforeSend': function() { Loading.show(); },
+                'complete': function() { Loading.hide(); },
+                'url': "{{ 'pos/transactions/delete-item' | link }}/"+id,
+                'type':'post',
+                'data':{"id":id},
+                'success': function(data){
+                    console.log(data);
+                    if(data.status=='success'){
+                        showToast(data.message);
+                        transaction.refreshChart();
+                        $('span[id="sub-total"]').html(transaction.moneyFormat(data.sub_total));
+                    }
+                },
+                complete: function() {
+                    $this.data('requestRunning', false);
+                }
+            });
+            return false;
+        },
+        refreshChart: function () {
+            $.ajax({
+                'beforeSend': function() { Loading.show(); },
+                'complete': function() { Loading.hide(); },
+                'url': "{{ 'mobile/sale/cart' | link }}",
+                'type':'get',
+                'success': function(data){
+                    console.log(data);
+                    $('#cart-items').html(data);
+                    initItemAction();
+                    $('span[id="sub-total"]').html(data.sub_total);
+                    var tot_qty = 0;
+                    $('.cart-item-qty').each(function () {
+                        tot_qty += parseInt($(this).val());
+                    });
+                    $('span[id="tot-qty"]').html(tot_qty);
+                },
+            });
+        },
+        moneyFormat: function (num) {
+            return num.toString().replace(/(\d)(?=(\d{3})+(?!\d))/g, "$1.")+',00';
+        },
+        pushQty: function (id,data) {
+            var $this = $(data);
+            var qty = data.value;
+            if(typeof qty == "undefined")
+                var qty = $this.val();
+            $.ajax({
+                'beforeSend': function() { Loading.show(); },
+                'complete': function() { Loading.hide(); },
+                'url' : "{{ 'pos/transactions/update-qty' | link }}",
+                'type' : 'post',
+                'data' : {"id":id, "qty":qty},
+                'success' : function(data){
+                    console.log(data);
+                    if (data.status == 'success'){
+                        transaction.refreshChart();
+                        $('input[id="qty"]').html(data.div);
+                        $('span[id="sub-total"]').html(transaction.moneyFormat(data.subtotal));
+                        /*$('#discount-'+id).find('input').val(data.discount_percentage);
+                        $('#total-item-'+id).html(transaction.moneyFormat(data.total));
+                        $('input[id="PaymentForm_amount_tendered"]').val(transaction.moneyFormat(data.total));*/
+                    } else
+                        $this.val(1);
+                },
+                complete: function() {
+                    $this.data('requestRunning', false);
+                }
+            });
+            return false;
+        },
+        pushDiscount: function (data) {
+            var $this = $(data);
+            var id = $this.attr('rel_id');
+            $.ajax({
+                'beforeSend': function() { Loading.show(); },
+                'complete': function() { Loading.hide(); },
+                'url': "{{ 'pos/transactions/discount' | link }}",
+                'type':'post',
+                'data':{'id':id,'value':$this.val()},
+                'dataType': 'json',
+                'success': function(data){
+                    if (data.status == 'success'){
+                        $('#total-item-'+id).html(data.total);
+                        $("input[id='scan']").focus();
+                        $('input[id="PaymentForm_amount_tendered"]').val(data.total);
+                    }
+                },
+                complete: function() {
+                    $this.data('requestRunning', false);
+                }
+            });
+            return false;
+        },
+        setType: function (data) {
+            var $this = $(data);
+            $.ajax({
+                'beforeSend': function() { Loading.show(); },
+                'complete': function() { Loading.hide(); },
+                'url': "{{ 'pos/transactions/set-type' | link }}",
+                'type':'post',
+                'data':{'type':$this.val()},
+                'dataType': 'json',
+                'success': function(data){
+                    if ( data.status=='success' ){
+                        window.location.reload(true);
+                    }
+                },
+                complete: function() {
+                    $this.data('requestRunning', false);
+                }
+            });
+            return false;
+        },
+        holdTransaction: function () {
+
+        },
+        cancelRequest: function () {
+            if(confirm('Anda yakin ingin membatalkan transaksi ini ?')){
+                var $this = $(this);
+                $.ajax({
+                    'beforeSend': function() { Loading.show(); },
+                    'complete': function() { Loading.hide(); },
+                    'url': "{{ 'pos/transactions/cancel-transaction' | link }}",
+                    'type':'post',
+                    'dataType': 'json',
+                    'success': function(data){
+                        if ( data.status=='success' ){
+                            window.location.reload(true);
+                        }
+                    },
+                    complete: function() {
+                        $this.data('requestRunning', false);
+                    }
+                });
+                return false;
+            }
+        },
+        paymentRequest: function () {
+            var id = "{{ params.id }}";
+            var $this = $(this);
+            $.ajax({
+                'beforeSend': function() { Loading.show(); },
+                'complete': function() { Loading.hide(); },
+                'url': "{{ 'pos/transactions/payment-request' | link }}",
+                'type':'post',
+                'data':{'id':id},
+                'success': function(data){
+                    $('#payment-form').html(data);
+                    $('input[id="PaymentForm_amount_tendered"]').focus();
+                    $('input[id="PaymentForm_amount_tendered"]').trigger('click');
+                    $('#btn-cancel-container').show();
+                },
+                complete: function() {
+                    $this.data('requestRunning', false);
+                }
+            });
+            return false;
+        },
+        changeRequest: function (amount_tendered) {
+            var $this = $(this);
+            $.ajax({
+                'beforeSend': function() { Loading.show(); },
+                'complete': function() { Loading.hide(); },
+                'url': "{{ 'pos/transactions/change-request' | link }}",
+                'type':'post',
+                'data':{"amount_tendered":amount_tendered},
+                'success': function(data){
+                    $('#change').html(data);
+                    $('.submit-payment').removeAttr('disabled');
+                    setTimeout(function () {
+                        $('.submit-payment').focus();
+                    }, 100);
+                },
+                complete: function() {
+                    $this.data('requestRunning', false);
+                }
+            });
+            return false;
+        },
+        pushTax: function (data) {
+            var $this = $(data);
+            $.ajax({
+                'beforeSend': function() { Loading.show(); },
+                'complete': function() { Loading.hide(); },
+                'url': "{{ 'pos/transactions/tax' | link }}",
+                'type':'post',
+                'data':{"taxt":$this.val()},
+                'success': function(data){
+
+                },
+                complete: function() {
+                    $this.data('requestRunning', false);
+                }
+            });
+        },
+        setCustomer: function (data) {
+            var $this = $(data);
+            $.ajax({
+                'beforeSend': function() { Loading.show(); },
+                'complete': function() { Loading.hide(); },
+                'url': "{{ 'pos/transactions/set-customer' | link }}",
+                'type':'post',
+                'data':{"customer_id":$this.val()},
+                'success': function(data){
+
+                },
+                complete: function() {
+                    $this.data('requestRunning', false);
+                }
+            });
+        }
+    }
+
+    function checkSearch(data,action)
+    {
+        if(data.value!==''){
+            addToCart(data.value,action);
+        }
+    }
+
+    function moneyUnformat(money_string) {
+        return money_string
+            .replace(/,/g , "__COMMA__") // Replace `,` by some unique string
+            .replace(/\./g, '')         // Replace `.` by `,`
+            .replace(/__COMMA__/g, '.');
+    }
+
+    function createCustomer()
+    {
+        var $this = $(this);
+        $.ajax({
+            'beforeSend': function() { Loading.show(); },
+            'complete': function() { Loading.hide(); },
+            'url': "{{ 'pos/customers/create' | link }}",
+            'type':'post',
+            //'dataType': 'json',
+            'success': function(data){
+                $('.modal-content .modal-footer').hide();
+                $('.modal-content .modal-title').html("Tambah Pelanggan");
+                $('.modal-content #div-for-items').html(data);
+                $('#launch-modal').trigger('click');
+                $("input[id='Customer_name']").focus();
+            },
+            complete: function() {
+                $this.data('requestRunning', false);
+            }
+        });
+        return false;
+    }
+
+    function pushFindCustomer(nama,url)
+    {
+        var $this = $(this);
+        $.ajax({
+            'beforeSend': function() { Loading.show(); },
+            'complete': function() { Loading.hide(); },
+            'url': url,
+            'type':'post',
+            'data':{'nama':nama},
+            'dataType': 'json',
+            'success': function(data){
+                if(data.status=='success'){
+                    $('#customer-name').html(data.div);
+                    $('#customer-name').css('display','block');
+                    $('#find-customer').css('display','none');
+                    $("input[id=\'scan\']").focus();
+                }
+            },
+            complete: function() {
+                $this.data('requestRunning', false);
+            }
+        });
+        return false;
+    }
+
+    function initItemAction() {
+        $('.cart-item-qty').click(function () {
+            $(this).select();
+        });
+
+        $('.cart-item-delete').click(function () {
+            var id = $(this).attr("attr-id");
+            showDialog({
+                title: '',
+                text: "<p>{{ trans.get('global', 'Are you sure you want to delete this item ?') }}</p>",
+                negative: {
+                    title: "{{ trans.get('global', 'Cancel') }}"
+                },
+                positive: {
+                    title: "{{ trans.get('global', 'Delete') }}"
+                },
+                cancelable: false,
+                call_back: 'deleteItem',
+                item_id: id
+            });
+        });
+    }
+
+    function showDialog(options) {
+        options = $.extend({
+            id: 'orrsDiag',
+            title: null,
+            text: null,
+            negative: false,
+            positive: false,
+            cancelable: true,
+            contentStyle: null,
+            onLoaded: false
+        }, options);
+
+        // remove existing dialogs
+        $('.dialog-container').remove();
+        $(document).unbind("keyup.dialog");
+
+        $('<div id="' + options.id + '" class="dialog-container"><div class="mdl-card mdl-shadow--16dp"></div></div>').appendTo("body");
+        var dialog = $('#orrsDiag');
+        var content = dialog.find('.mdl-card');
+        if (options.contentStyle != null) content.css(options.contentStyle);
+        if (options.title != null) {
+            $('<h5>' + options.title + '</h5>').appendTo(content);
+        }
+        if (options.text != null) {
+            $(options.text).appendTo(content);
+        }
+        if (options.negative || options.positive) {
+            var buttonBar = $('<div class="mdl-card__actions dialog-button-bar"></div>');
+            if (options.negative) {
+                options.negative = $.extend({
+                    id: 'negative',
+                    title: 'Cancel',
+                    onClick: function () {
+                        return false;
+                    }
+                }, options.negative);
+                var negButton = $('<button class="mdl-button mdl-js-button mdl-js-ripple-effect" id="' + options.negative.id + '">' + options.negative.title + '</button>');
+                negButton.click(function (e) {
+                    e.preventDefault();
+                    if (!options.negative.onClick(e))
+                        hideDialog(dialog)
+                });
+                negButton.appendTo(buttonBar);
+            }
+            if (options.positive) {
+                options.positive = $.extend({
+                    id: 'positive',
+                    title: 'OK',
+                    onClick: function () {
+                        if (options.call_back == 'deleteItem') {
+                            transaction.deleteItem(options.item_id);
+                        }
+                        return false;
+                    }
+                }, options.positive);
+                var posButton = $('<button class="mdl-button mdl-button--colored mdl-js-button mdl-js-ripple-effect" id="' + options.positive.id + '">' + options.positive.title + '</button>');
+                posButton.click(function (e) {
+                    e.preventDefault();
+                    if (!options.positive.onClick(e))
+                        hideDialog(dialog)
+                });
+                posButton.appendTo(buttonBar);
+            }
+            buttonBar.appendTo(content);
+        }
+        componentHandler.upgradeDom();
+        if (options.cancelable) {
+            dialog.click(function () {
+                hideDialog(dialog);
+            });
+            $(document).bind("keyup.dialog", function (e) {
+                if (e.which == 27)
+                    hideDialog(dialog);
+            });
+            content.click(function (e) {
+                e.stopPropagation();
+            });
+        }
+        setTimeout(function () {
+            dialog.css({opacity: 1});
+            if (options.onLoaded)
+                options.onLoaded();
+        }, 1);
+    }
+
+    function hideDialog(dialog) {
+        $(document).unbind("keyup.dialog");
+        dialog.css({opacity: 0});
+        setTimeout(function () {
+            dialog.remove();
+        }, 400);
+    }
+
+    $(function () {
+        initItemAction();
+        $('#btn-customer').click(function () {
+            $('.data-table').DataTable( {
+                "ajax": "{{ 'mobile/sale/get-customer' | link }}?limit=2",
+                "pageLength": 2,
+                "info": false,
+            } );
+            $('.dataTables_paginate').parent().parent().remove();
+            $('.dataTables_length').parent().remove();
+        });
+    });
+</script>
+{% endblock %}
