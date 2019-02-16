@@ -55,6 +55,9 @@ $app->group('/api', function () use ($user) {
     $this->group('/inventory', function() use ($user) {
         new Api\Controllers\InventoryController($this, $user);
     });
+    $this->group('/transaction', function() use ($user) {
+        new Api\Controllers\TransactionController($this, $user);
+    });
 });
 
 ?>
