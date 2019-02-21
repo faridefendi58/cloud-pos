@@ -45,21 +45,34 @@ class TransactionController extends BaseController
         if (isset($params['admin_id'])) {
             $model2 = new \Model\InvoicesModel();
             if (isset($params['customer'])) {
-                if (isset($params['customer']['id'])) {
+                if (isset($params['customer']['id']) && !empty(($params['customer']['id']))) {
                     $model2->customer_id = $params['customer']['id'];
                 } else {
-                    if (isset($params['customer']['email'])) {
+                    $cust_id = 0;
+                    if (isset($params['customer']['email']) && ($params['customer']['email'])!="-") {
                         $cmodel = \Model\CustomersModel::model()->findByAttributes(['email' => $params['customer']['email']]);
                         if ($cmodel instanceof \RedBeanPHP\OODBBean) {
                             $model2->customer_id = $cmodel->id;
+                            $cust_id = $cmodel->id;
+                        }
+                    }
+                    if (($cust_id == 0) && isset($params['customer']['phone'])) {
+                        $cmodel = \Model\CustomersModel::model()->findByAttributes(['telephone' => $params['customer']['phone']]);
+                        if ($cmodel instanceof \RedBeanPHP\OODBBean) {
+                            $model2->customer_id = $cmodel->id;
+                            $cust_id = $cmodel->id;
                         }
                     }
                 }
             }
 
             $model2->status = \Model\InvoicesModel::STATUS_PAID;
-            if (isset($params['items_payment']['amount_tendered'])) {
-                $model2->cash = $this->money_unformat($params['items_payment']['amount_tendered']);
+            if (isset($params['payment']) && is_array(($params['payment']))) {
+                foreach ($params['payment'] as $ip => $pymnt) {
+                    if ($pymnt['type'] == 'cash' && !empty($pymnt['amount_tendered'])) {
+                        $model2->cash = $this->money_unformat($pymnt['amount_tendered']);
+                    }
+                }
             }
             if (isset($params['transaction_type'])) {
                 if ($params['transaction_type'] == \Model\InvoicesModel::STATUS_REFUND)
@@ -76,7 +89,7 @@ class TransactionController extends BaseController
             $model2->config = json_encode(
                 [
                     'items_belanja' => $params['items_belanja'],
-                    'items_payment' => $params['items_payment'],
+                    'payment' => $params['payment'],
                     'customer' => $params['customer'],
                     'promocode' => $params['promocode'],
                 ]
