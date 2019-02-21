@@ -116,6 +116,9 @@ class TransactionController extends BaseController
             if (!empty($params['notes'])) {
                 $model2->notes = $params['notes'];
             }
+            if (!empty($params['warehouse_id'])) {
+                $model2->warehouse_id = $params['warehouse_id'];
+            }
             $model2->created_at = date("Y-m-d H:i:s");
             $model2->created_by = (isset($params['admin_id']))? $params['admin_id'] : 1;
 
@@ -150,6 +153,9 @@ class TransactionController extends BaseController
                     $model3->currency_id = $model2->currency_id;
                     $model3->change_value = $model2->change_value;
                     $model3->type = (!empty($params['payment_type']))? $params['payment_type'] : 1;
+                    if (!empty($params['warehouse_id'])) {
+                        $model3->warehouse_id = $params['warehouse_id'];
+                    }
                     $model3->status = 1;
                     $model3->created_at = date("Y-m-d H:i:s");
                     $model3->created_by = (isset($params['admin_id']))? $params['admin_id'] : 1;
