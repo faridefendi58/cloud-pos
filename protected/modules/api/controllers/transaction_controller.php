@@ -45,10 +45,11 @@ class TransactionController extends BaseController
         if (isset($params['admin_id'])) {
             $model2 = new \Model\InvoicesModel();
             if (isset($params['customer'])) {
+                $cust_id = 0;
                 if (isset($params['customer']['id']) && !empty(($params['customer']['id']))) {
                     $model2->customer_id = $params['customer']['id'];
+                    $cust_id = $params['customer']['id'];
                 } else {
-                    $cust_id = 0;
                     if (isset($params['customer']['email']) && ($params['customer']['email'])!="-") {
                         $cmodel = \Model\CustomersModel::model()->findByAttributes(['email' => $params['customer']['email']]);
                         if ($cmodel instanceof \RedBeanPHP\OODBBean) {
@@ -62,6 +63,22 @@ class TransactionController extends BaseController
                             $model2->customer_id = $cmodel->id;
                             $cust_id = $cmodel->id;
                         }
+                    }
+
+                }
+                // if still empty
+                if ($cust_id == 0) {
+                    $cmodel = new \Model\CustomersModel();
+                    $cmodel->name = $params['customer']['name'];
+                    $cmodel->email = (!empty($params['customer']['email']))? $params['customer']['email'] : "-";
+                    $cmodel->telephone = $params['customer']['phone'];
+                    $cmodel->status = \Model\CustomersModel::STATUS_ACTIVE;
+                    $cmodel->created_at = date("Y-m-d H:i:s");
+                    $cmodel->created_by = (isset($params['admin_id']))? $params['admin_id'] : 1;
+                    $csave = \Model\CustomersModel::model()->save(@$cmodel);
+                    if ($csave) {
+                        $model2->customer_id = $cmodel->id;
+                        $cust_id = $cmodel->id;
                     }
                 }
             }
