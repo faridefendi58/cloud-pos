@@ -33,6 +33,7 @@ Transaksi Penjualan - {{ App.params.site_name }}
                                         <th>Jenis Transaksi</th>
                                         <th>Total</th>
                                         <th>Tanggal Transaksi</th>
+                                        <th>Warehouse</th>
                                         <th>&nbsp;</th>
                                     </tr>
                                     </thead>
@@ -41,10 +42,15 @@ Transaksi Penjualan - {{ App.params.site_name }}
                                     {% for i, invoice in invoices %}
                                     <tr>
                                         <td><center>{{ i+1 }}</center></td>
-                                        <td>{{ App.call.model("\\Model\\InvoicesModel", 'getInvoiceFormatedNumber', {'id':invoice.id}) }}</td>
+                                        <td>
+                                            <a href="{{ 'pos/transactions/update' | link }}/{{ invoice.id }}">
+                                                {{ App.call.model("\\Model\\InvoicesModel", 'getInvoiceFormatedNumber', {'id':invoice.id}) }}
+                                            </a>
+                                        </td>
                                         <td>{{ App.call.model("\\Model\\InvoicesModel", 'getStatus', {'status':invoice.status}) }}</td>
                                         <td style="text-align: right;">{{ invoice.total | number_format(0, ",", ".") }}</td>
                                         <td>{{ invoice.created_at }}</td>
+                                        <td>{{ invoice.warehouse_name | default('-') }}</td>
                                         <td>
                                             <a href="{{ 'pos/transactions/update' | link }}/{{ invoice.id }}" title="Ubah Transaksi">
                                                 <i class="fa fa-pencil"></i>

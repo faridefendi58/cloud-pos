@@ -18,6 +18,14 @@
                         {% endfor %}
                     </select>
                 </div>
+                <div class="col-md-8">
+                    {% set warehouses = App.call.model("\\Model\\WarehousesModel", 'getData', {'status':1}) %}
+                    <select class="form-control" onchange="transaction.setWarehouse(this);" name="warehouse_id" id="warehouse-id">
+                        {% for i, warehouse in warehouses %}
+                        <option value="{{ warehouse.id }}" {% if warehouse.id == warehouse_id %}selected="selected"{% endif %}>{{ warehouse.title }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
             </div>
         </div>
         <div class="row">
@@ -345,7 +353,30 @@
 
                 },
             });
-        }
+        },
+        setWarehouse: function (data) {
+            var $this = $(data);
+            $.ajax({
+                'beforeSend': function() { Loading.show(); },
+                'complete': function() { Loading.hide(); },
+                'url': "{{ 'pos/transactions/set-warehouse' | link }}",
+                'type':'post',
+                'data':{'warehouse_id':$this.val()},
+                'dataType': 'json',
+                'success': function(data){
+                    console.log(data);
+                    if ( data.status=='success' ){
+                        window.location.reload(true);
+                    } else {
+                        Loading.hide();
+                    }
+                },
+                complete: function() {
+                    $this.data('requestRunning', false);
+                }
+            });
+            return false;
+        },
     }
     Loading = {
         show: function () {

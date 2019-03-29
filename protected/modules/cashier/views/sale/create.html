@@ -502,7 +502,28 @@
                     $this.data('requestRunning', false);
                 }
             });
-        }
+        },
+        setWarehouse: function (data) {
+            var $this = $(data);
+            $.ajax({
+                'beforeSend': function() { Loading.show(); },
+                'complete': function() { Loading.hide(); },
+                'url': "{{ 'pos/transactions/set-warehouse' | link }}",
+                'type':'post',
+                'data':{'type':$this.val()},
+                'dataType': 'json',
+                'success': function(data){
+                    console.log(data);
+                    if ( data.status=='success' ){
+                        window.location.reload(true);
+                    }
+                },
+                complete: function() {
+                    $this.data('requestRunning', false);
+                }
+            });
+            return false;
+        },
     }
 
     function checkSearch(data,action)

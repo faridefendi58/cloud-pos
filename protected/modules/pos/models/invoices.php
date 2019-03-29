@@ -71,10 +71,12 @@ class InvoicesModel extends \Model\BaseModel
 
     public function getData($data = array())
     {
-        $sql = 'SELECT t.*, SUM(i.price*i.quantity) AS total, c.name AS customer_name, c.email as customer_email 
+        $sql = 'SELECT t.*, SUM(i.price*i.quantity) AS total, c.name AS customer_name, 
+            c.email as customer_email, w.title AS warehouse_name 
             FROM {tablePrefix}ext_invoice t 
             LEFT JOIN {tablePrefix}ext_invoice_item i ON t.id = i.invoice_id 
             LEFT JOIN {tablePrefix}ext_customer c ON c.id = t.customer_id 
+            LEFT JOIN {tablePrefix}ext_warehouse w ON w.id = t.warehouse_id 
             WHERE 1';
 
         $params = [];

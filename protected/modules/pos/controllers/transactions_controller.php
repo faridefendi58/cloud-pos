@@ -29,6 +29,7 @@ class TransactionsController extends BaseController
         $app->map(['POST'], '/change-request', [$this, 'change_request']);
         $app->map(['POST'], '/set-customer', [$this, 'set_customer']);
         $app->map(['POST'], '/set-type', [$this, 'set_type']);
+        $app->map(['POST'], '/set-warehouse', [$this, 'set_warehouse']);
     }
 
     public function accessRules()
@@ -39,7 +40,7 @@ class TransactionsController extends BaseController
                     'view', 'create', 'update', 'delete',
                     'scan', 'delete-item', 'cart', 'update-qty',
                     'payment-request', 'change-request', 'set-customer',
-                    'set-type'
+                    'set-type', 'set-warehouse'
                 ],
                 'users'=> ['@'],
             ],
@@ -104,6 +105,7 @@ class TransactionsController extends BaseController
         $selected_customer = $_SESSION['customer'];
         $customers = \Model\CustomersModel::model()->findAllByAttributes(['status' => \Model\CustomersModel::STATUS_ACTIVE]);
         $transaction_type = $_SESSION['transaction_type'];
+        $warehouse_id = $_SESSION['warehouse_id'];
 
         return $this->_container->module->render(
             $response,
@@ -114,7 +116,8 @@ class TransactionsController extends BaseController
                 'sub_total' => $this->getSubTotal(),
                 'customers' => $customers,
                 'selected_customer' => (!empty($selected_customer))? $selected_customer : false,
-                'transaction_type' => (!empty($transaction_type))? $transaction_type : 1
+                'transaction_type' => (!empty($transaction_type))? $transaction_type : 1,
+                'warehouse_id' => (!empty($warehouse_id))? $warehouse_id : 0
             ]
         );
     }
@@ -423,6 +426,11 @@ class TransactionsController extends BaseController
                 elseif ($_SESSION['transaction_type'] == \Model\InvoicesModel::STATUS_UNPAID)
                     $model2->status = \Model\InvoicesModel::STATUS_UNPAID;
             }
+
+            if (isset($_SESSION['warehouse_id'])) {
+                $model2->warehouse_id = $_SESSION['warehouse_id'];
+            }
+
             $model2->serie = $model2->getInvoiceNumber($model2->status, 'serie');
             $model2->nr = $model2->getInvoiceNumber($model2->status, 'nr');
             if ($model2->status == \Model\InvoicesModel::STATUS_PAID)
@@ -469,6 +477,11 @@ class TransactionsController extends BaseController
                     $model3->currency_id = $model2->currency_id;
                     $model3->change_value = $model2->change_value;
                     $model3->type = $params['PaymentForm']['payment_type'];
+
+                    if (isset($_SESSION['warehouse_id'])) {
+                        $model3->warehouse_id = $_SESSION['warehouse_id'];
+                    }
+
                     $model3->status = 1;
                     $model3->created_at = date("Y-m-d H:i:s");
                     $model3->created_by = $this->_user->id;
@@ -498,19 +511,9 @@ class TransactionsController extends BaseController
                     unset($_SESSION['customer']);
                     unset($_SESSION['promocode']);
                     unset($_SESSION['transaction_type']);
+                    unset($_SESSION['warehouse_id']);
                 }
             }
-            //save to payment
-            /*if ((int)Yii::app()->config->get('use_initial_capital') > 0) {
-                $model5 = new Payment;
-                $model5->invoice_id = $model2->id;
-                $model5->amount_tendered = $this->money_unformat($_POST['PaymentForm']['amount_tendered']);
-                $model5->amount_change = $this->money_unformat($_POST['PaymentForm']['change']);
-                $model5->payment_session_id = PaymentSession::getSession(md5(date("Y-m-d")))->id;
-                $model5->date_entry = date(c);
-                $model5->user_entry = Yii::app()->user->id;
-                $model5->save();
-            }*/
 
             return $response->withJson(
                 [
@@ -608,6 +611,32 @@ class TransactionsController extends BaseController
                 }
                 $_SESSION['items_belanja'] = $items_belanja;
             }
+
+            return $response->withJson(
+                [
+                    'status' => 'success'
+                ], 201);
+        }
+
+        return $response->withJson(
+            [
+                'status' => 'failed'
+            ], 201);
+    }
+
+    public function set_warehouse($request, $response, $args)
+    {
+        $isAllowed = $this->isAllowed($request, $response, $args);
+        if ($isAllowed instanceof \Slim\Http\Response)
+            return $isAllowed;
+
+        if (!$isAllowed) {
+            return $this->notAllowedAction();
+        }
+
+        $params = $request->getParams();
+        if (!empty($params['warehouse_id'])) {
+            $_SESSION['warehouse_id'] = $params['warehouse_id'];
 
             return $response->withJson(
                 [
