@@ -498,7 +498,15 @@ class TransactionsController extends BaseController
             $model2 = new \Model\InvoicesModel();
             if (isset($_SESSION['customer'])) {
                 $customer = $_SESSION['customer'];
-                $model2->customer_id = (!empty($customer)) ? $customer->id : 0;
+                if (!empty($customer)) {
+                    if (is_object($customer)) {
+                        $model2->customer_id = (!empty($customer)) ? $customer->id : 0;
+                    } else {
+                        $model2->customer_id = $customer;
+                    }
+                } else {
+                    $model2->customer_id = 0;
+                }
             }
             $model2->status = \Model\InvoicesModel::STATUS_PAID;
             $model2->cash = $this->money_unformat($params['PaymentForm']['amount_tendered']);
