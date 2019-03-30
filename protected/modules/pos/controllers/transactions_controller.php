@@ -240,10 +240,29 @@ class TransactionsController extends BaseController
     public function scan($request, $response, $args)
     {
         if (isset($_POST['item'])) {
+            $model = \Model\ProductsModel::model()->findByPk($_POST['item']);
+
+            // avoid double execution
+            $current_time = time();
+            if(isset($_SESSION['Scan']) && !empty($_SESSION['Scan'])) {
+                $selisih = $current_time - $_SESSION['Scan'];
+                if ($selisih <= 5) {
+                    return $response->withJson(
+                        [
+                            'status' => 'success',
+                            'message' => ucfirst(strtolower($model->title)).' '. $this->_trans->get('global', 'is sucessfully added.'),
+                            'sub_total' => $this->getSubTotal()
+                        ], 201);
+                } else {
+                    $_SESSION['Scan'] = $current_time;
+                }
+            } else {
+                $_SESSION['Scan'] = $current_time;
+            }
+
             if (!isset($_SESSION['transaction_type']))
                 $_SESSION['transaction_type'] = \Model\InvoicesModel::STATUS_PAID;
 
-            $model = \Model\ProductsModel::model()->findByPk($_POST['item']);
             if (!$model instanceof \RedBeanPHP\OODBBean)
                 $success = false;
             $stmodel = new \Model\ProductStocksModel();
