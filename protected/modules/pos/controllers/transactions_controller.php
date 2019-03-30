@@ -478,6 +478,23 @@ class TransactionsController extends BaseController
 
         $params = $request->getParams();
         if (isset($params['PaymentForm'])) {
+            // avoid double execution
+            $current_time = time();
+            if(isset($_SESSION['PaymentForm']) && !empty($_SESSION['PaymentForm'])) {
+                $selisih = $current_time - $_SESSION['PaymentForm'];
+                if ($selisih <= 10) {
+                    return $response->withJson(
+                        [
+                            'status' => 'success',
+                            'invoice_id' => $_SESSION['latest_invoice_id']
+                        ], 201);
+                } else {
+                    $_SESSION['PaymentForm'] = $current_time;
+                }
+            } else {
+                $_SESSION['PaymentForm'] = $current_time;
+            }
+
             $model2 = new \Model\InvoicesModel();
             if (isset($_SESSION['customer'])) {
                 $customer = $_SESSION['customer'];
@@ -520,6 +537,9 @@ class TransactionsController extends BaseController
             $save = \Model\InvoicesModel::model()->save(@$model2);
             if ($save) {
                 $invoice_id = $model2->id;
+                // save the inv to session
+                $_SESSION['latest_invoice_id'] = $invoice_id;
+
                 $omodel = new \Model\OrdersModel();
                 $group_id = $omodel->getNextGroupId();
                 $items_belanja = $_SESSION['items_belanja'];
