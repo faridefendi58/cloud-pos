@@ -19,6 +19,7 @@ class TransactionsController extends BaseController
         $app->map(['GET'], '/create', [$this, 'create']);
         $app->map(['GET', 'POST'], '/update/[{id}]', [$this, 'update']);
         $app->map(['POST'], '/delete/[{id}]', [$this, 'delete']);
+        $app->map(['GET'], '/detail/[{id}]', [$this, 'detail']);
         $app->map(['POST'], '/scan', [$this, 'scan']);
         $app->map(['POST'], '/delete-item/[{id}]', [$this, 'delete_item']);
         $app->map(['GET'], '/cart', [$this, 'cart']);
@@ -37,7 +38,7 @@ class TransactionsController extends BaseController
         return [
             ['allow',
                 'actions' => [
-                    'view', 'create', 'update', 'delete',
+                    'view', 'create', 'update', 'delete', 'detail',
                     'scan', 'delete-item', 'cart', 'update-qty',
                     'payment-request', 'change-request', 'set-customer',
                     'set-type', 'set-warehouse'
@@ -45,7 +46,7 @@ class TransactionsController extends BaseController
                 'users'=> ['@'],
             ],
             ['allow',
-                'actions' => ['view'],
+                'actions' => ['view', 'detail'],
                 'expression' => $this->hasAccess('pos/transactions/read'),
             ],
             ['allow',
@@ -189,6 +190,51 @@ class TransactionsController extends BaseController
                     'message' => $this->_trans->get('global', 'Your data has been successfully deleted.'),
                 ], 201);
         }
+    }
+
+    public function detail($request, $response, $args)
+    {
+        $isAllowed = $this->isAllowed($request, $response, $args);
+        if ($isAllowed instanceof \Slim\Http\Response)
+            return $isAllowed;
+
+        if(!$isAllowed){
+            return $this->notAllowedAction();
+        }
+
+        $pmodel = new \Model\ProductsModel();
+        $products = $pmodel->getData();
+
+        $imodel = \Model\InvoicesModel::model()->findByPk($args['id']);
+        $configs = json_decode($imodel->config, true);
+
+        $items_belanja = $configs['items_belanja'];
+        if (array_key_exists('customer', $configs)) {
+            $selected_customer = $configs['customer'];
+        } else {
+            $selected_customer = $imodel->customer_id;
+        }
+
+        $customer = \Model\CustomersModel::model()->findByPk($selected_customer);
+        if (array_key_exists('transacation_type', $configs)) {
+            $transaction_type = $configs['transaction_type'];
+        } else {
+            $transaction_type = $imodel->type;
+        }
+
+        return $this->_container->module->render(
+            $response,
+            'transactions/detail.html',
+            [
+                'products' => $products,
+                'items_belanja' => $items_belanja,
+                'sub_total' => $this->getSubTotal($items_belanja),
+                'customer' => $customer,
+                'selected_customer' => (!empty($selected_customer))? $selected_customer : false,
+                'transaction_type' => (!empty($transaction_type))? $transaction_type : 1,
+                'invoice' => $imodel
+            ]
+        );
     }
 
     public function scan($request, $response, $args)

@@ -144,6 +144,31 @@ function addFilter($env, $c)
                 return substr($string, 0, $length) . ' ...';
             }
         }),
+        new \Twig_SimpleFilter('money_format', function ($string) use ($c) {
+            $params = $c->get('settings')['params'];
+            if (!isset($params['currency_symbol'])) {
+                return number_format($string, 0, ',', '.');
+            } else {
+                if (isset($params['currency_decimal_separator']) && isset($params['currency_thousand_separator'])) {
+                    $number = number_format($string, 0, $params['currency_decimal_separator'], $params['currency_thousand_separator']);
+                } else {
+                    $number = number_format($string, 0, ',', '.');
+                }
+
+                $position = 'left';
+                if (isset($params['currency_symbol_position'])) {
+                    $position = $params['currency_symbol_position'];
+                }
+
+                if ($position == 'left') {
+                    $number = $params['currency_symbol'] .' '. $number;
+                } else {
+                    $number = $number .' '. $params['currency_symbol'];
+                }
+
+                return $number;
+            }
+        }),
     ];
 
     $uri_path = $c->get('request')->getUri()->getPath();

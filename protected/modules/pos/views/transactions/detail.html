@@ -1,0 +1,77 @@
+{% extends "layout.html" %}
+{% block pagetitle %}
+Rincian Transaksi Penjualan - {{ App.params.site_name }}
+{% endblock %}
+
+{% block content %}
+<!-- main content -->
+<div id="main_wrapper">
+    <div class="page_bar clearfix">
+        <div class="row">
+            <div class="col-sm-9">
+                <h1 class="page_title">Rincian Transaksi Penjualan</h1>
+                <p class="text-muted">Halaman rincian transaksi penjualan</p>
+            </div>
+            <div class="col-sm-3 text-right">
+                <a class="btn btn-default" href="{{ 'pos/transactions/view' | link }}">Daftar Transaksi Penjualan</a>
+            </div>
+        </div>
+    </div>
+    <div class="page_content">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="panel panel-default">
+                        <div class="panel-heading">
+                            <b>{{ App.call.model("\\Model\\InvoicesModel", 'getInvoiceFormatedNumber', {'id':invoice.id}) }}</b>
+                            <span class="pull-right">Nama Customer : <b>{{ customer.name | title }}</b></span>
+                        </div>
+                        <div class="panel-body">
+                            <div id="dt_basic_wrapper" class="dataTables_wrapper form-inline no-footer table-responsive" role="grid">
+                                <table id="dt_basic" class="table table-striped dataTable">
+                                    <thead>
+                                    <tr>
+                                        <th>No</th>
+                                        <th>Nama Produk</th>
+                                        <th>Quantity</th>
+                                        <th>Unit Price</th>
+                                        <th>Discount</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    {% set tot_discount = 0 %}
+                                    {% for i, item in items_belanja %}
+                                    <tr>
+                                        <td>{{ i+1 }}</td>
+                                        <td>{{ item.name }}</td>
+                                        <td style="text-align: center;">{{ item.qty }}</td>
+                                        <td style="text-align: right;">{{ item.unit_price | money_format }}</td>
+                                        <td style="text-align: right;">{{ item.discount | money_format }}</td>
+                                    </tr>
+                                    {% set tot_discount = tot_discount + item.discount %}
+                                    {% else %}
+                                    <tr class="no-data">
+                                        <td>No data founds</td>
+                                    </tr>
+                                    {% endfor %}
+                                    <tr>
+                                        <td colspan="3" style="text-align: center;font-weight: bold;">SUBTOTAL</td>
+                                        <td style="text-align: right;">{{ sub_total | money_format }}</td>
+                                        <td style="text-align: right;">{{ tot_discount | money_format }}</td>
+                                    </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% include 'partial/right_menu.html' %}
+{% endblock %}
+{% block endbodyjs %}
+<script type="text/javascript">
+</script>
+{% endblock %}

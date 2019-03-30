@@ -29,6 +29,9 @@ Kelola Warehouse - {{ App.params.site_name }}
                                 <li class="active">
                                     <a data-toggle="tab" href="#update">Ubah Data</a>
                                 </li>
+                                <li>
+                                    <a data-toggle="tab" href="#transaction">Transaksi Penjualan</a>
+                                </li>
                             </ul>
                             <div class="tab-content" id="tabs_content_a">
                                 <div id="detail" class="tab-pane fade">
@@ -36,6 +39,9 @@ Kelola Warehouse - {{ App.params.site_name }}
                                 </div>
                                 <div id="update" class="tab-pane fade in active">
                                     {% include 'warehouses/_form.html' with {'model':model, 'groups':groups} %}
+                                </div>
+                                <div id="transaction" class="tab-pane fade">
+                                    {% include 'warehouses/_transaction.html' with {'model':model} %}
                                 </div>
                             </div>
                         </div>
@@ -48,6 +54,8 @@ Kelola Warehouse - {{ App.params.site_name }}
 {% include 'partial/right_menu.html' %}
 {% endblock %}
 {% block endbodyjs %}
+<script src="{{ 'lib/DataTables/media/js/jquery.dataTables.min.js' | admin_asset_url }}"></script>
+<script src="{{ 'lib/DataTables/media/js/dataTables.bootstrap.js' | admin_asset_url }}"></script>
 <script type="text/javascript">
     $(function () {
         if (window.location.hash) {

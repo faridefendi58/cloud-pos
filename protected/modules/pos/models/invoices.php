@@ -85,6 +85,11 @@ class InvoicesModel extends \Model\BaseModel
             $params['status'] = $data['status'];
         }
 
+        if (isset($data['warehouse_id'])) {
+            $sql .= ' AND t.warehouse_id =:warehouse_id';
+            $params['warehouse_id'] = $data['warehouse_id'];
+        }
+
         $sql .= ' GROUP BY t.id';
         $sql .= ' ORDER BY t.created_at DESC';
 

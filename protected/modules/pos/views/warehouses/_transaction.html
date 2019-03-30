@@ -1,0 +1,35 @@
+{% set invoices = App.call.model("\\Model\\InvoicesModel", 'getData', {'warehouse_id':model.id}) %}
+<div id="dt_basic_wrapper" class="dataTables_wrapper form-inline no-footer table-responsive" role="grid">
+    <table id="dt_basic" class="table table-striped dataTable">
+        <thead>
+        <tr>
+            <th>No</th>
+            <th>Nomor Faktur</th>
+            <th>Jenis Transaksi</th>
+            <th>Total</th>
+            <th>Tanggal Transaksi</th>
+            <th>&nbsp;</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for i, invoice in invoices %}
+        <tr>
+            <td>{{ i+1 }}</td>
+            <td>{{ App.call.model("\\Model\\InvoicesModel", 'getInvoiceFormatedNumber', {'id':invoice.id}) }}</td>
+            <td style="text-align: center;">{{ App.call.model("\\Model\\InvoicesModel", 'getStatus', {'status':invoice.status}) }}</td>
+            <td style="text-align: right;">{{ invoice.cash | money_format }}</td>
+            <td>{{ invoice.created_at }}</td>
+            <td>
+                <a href="{{ 'pos/transactions/detail' | link }}/{{ invoice.id }}" title="Rincian Transaksi">
+                    <i class="fa fa-search"></i>
+                </a>
+            </td>
+        </tr>
+        {% else %}
+        <tr class="no-data">
+            <td>No data founds</td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>

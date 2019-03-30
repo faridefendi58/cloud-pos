@@ -43,7 +43,7 @@ Transaksi Penjualan - {{ App.params.site_name }}
                                     <tr>
                                         <td><center>{{ i+1 }}</center></td>
                                         <td>
-                                            <a href="{{ 'pos/transactions/update' | link }}/{{ invoice.id }}">
+                                            <a href="{{ 'pos/transactions/detail' | link }}/{{ invoice.id }}">
                                                 {{ App.call.model("\\Model\\InvoicesModel", 'getInvoiceFormatedNumber', {'id':invoice.id}) }}
                                             </a>
                                         </td>
@@ -52,6 +52,9 @@ Transaksi Penjualan - {{ App.params.site_name }}
                                         <td>{{ invoice.created_at }}</td>
                                         <td>{{ invoice.warehouse_name | default('-') }}</td>
                                         <td>
+                                            <a href="{{ 'pos/transactions/detail' | link }}/{{ invoice.id }}" title="Rincian Transaksi">
+                                                <i class="fa fa-search"></i>
+                                            </a>
                                             <a href="{{ 'pos/transactions/update' | link }}/{{ invoice.id }}" title="Ubah Transaksi">
                                                 <i class="fa fa-pencil"></i>
                                             </a>
