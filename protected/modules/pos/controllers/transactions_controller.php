@@ -475,6 +475,8 @@ class TransactionsController extends BaseController
 
             if (isset($_SESSION['warehouse_id'])) {
                 $model2->warehouse_id = $_SESSION['warehouse_id'];
+            } else {
+                $model2->warehouse_id = 1;
             }
 
             $model2->serie = $model2->getInvoiceNumber($model2->status, 'serie');
