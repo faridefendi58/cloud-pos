@@ -244,8 +244,8 @@ class TransactionsController extends BaseController
 
             // avoid double execution
             $current_time = time();
-            if(isset($_SESSION['Scan']) && !empty($_SESSION['Scan'])) {
-                $selisih = $current_time - $_SESSION['Scan'];
+            if(isset($_SESSION['Scan'][$model->id]) && !empty($_SESSION['Scan'][$model->id])) {
+                $selisih = $current_time - $_SESSION['Scan'][$model->id];
                 if ($selisih <= 5) {
                     return $response->withJson(
                         [
@@ -254,10 +254,10 @@ class TransactionsController extends BaseController
                             'sub_total' => $this->getSubTotal()
                         ], 201);
                 } else {
-                    $_SESSION['Scan'] = $current_time;
+                    $_SESSION['Scan'][$model->id] = $current_time;
                 }
             } else {
-                $_SESSION['Scan'] = $current_time;
+                $_SESSION['Scan'][$model->id] = $current_time;
             }
 
             if (!isset($_SESSION['transaction_type']))
