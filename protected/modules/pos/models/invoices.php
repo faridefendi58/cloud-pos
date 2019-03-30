@@ -43,12 +43,25 @@ class InvoicesModel extends \Model\BaseModel
 
         $pmodel = new \Model\OptionsModel();
         $ext_pos = $pmodel->getOption('ext_pos');
-        if ($status == self::STATUS_PAID)
-            $serie = $ext_pos['paid_invoice_series'];
-        elseif ($status == self::STATUS_UNPAID)
-            $serie = $ext_pos['unpaid_invoice_series'];
-        else
-            $serie = $ext_pos['refund_invoice_series'];
+        if ($status == self::STATUS_PAID) {
+            if (!empty($ext_pos['paid_invoice_series'])) {
+                $serie = $ext_pos['paid_invoice_series'];
+            } else {
+                $serie = 'PAID-'. date("Y").'-';
+            }
+        } elseif ($status == self::STATUS_UNPAID) {
+            if (!empty($ext_pos['unpaid_invoice_series'])) {
+                $serie = $ext_pos['unpaid_invoice_series'];
+            } else {
+                $serie = 'UNPAID-'. date("Y").'-';
+            }
+        } else {
+            if (!empty($ext_pos['refund_invoice_series'])) {
+                $serie = $ext_pos['refund_invoice_series'];
+            } else {
+                $serie = 'REFUND-'. date("Y").'-';
+            }
+        }
 
         $next_nr = $row['max_nr'] +1;
         if($type == 'serie')
