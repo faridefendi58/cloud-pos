@@ -23,12 +23,40 @@ Rincian Transaksi Penjualan - {{ App.params.site_name }}
                 <div class="col-md-12">
                     <div class="panel panel-default">
                         <div class="panel-heading">
-                            <b>{{ App.call.model("\\Model\\InvoicesModel", 'getInvoiceFormatedNumber', {'id':invoice.id}) }}</b>
-                            <span class="pull-right">Nama Customer : <b>{{ customer.name | title }}</b></span>
+                            {% set invoice_number =  App.call.model("\\Model\\InvoicesModel", 'getInvoiceFormatedNumber', {'id':invoice.id}) %}
+                            <b>{{ invoice_number }}</b>
                         </div>
                         <div class="panel-body">
+                            <div class="row">
+                                <div class="col-sm-6">
+                                    <table class="table table-borderless table-condensed table-hover">
+                                        {% set warehouse =  App.call.model("\\Model\\WarehousesModel", 'getItem', {'id':invoice.id}) %}
+                                        <tr>
+                                            <td style="border: none;"><b>Warehouse :</b></td>
+                                            <td style="border: none;">{{ warehouse.title | title | default('-') }}</td>
+                                        </tr>
+                                    </table>
+                                </div>
+                                <div class="col-sm-6">
+                                    <table class="table table-bordered">
+                                        <tr>
+                                            <td><b>Tanggal Transaksi :</b></td>
+                                            <td class="text-right">{{ invoice.created_at }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td><b>Nomor Tagihan :</b></td>
+                                            <td class="text-right">{{ invoice_number | default('-') }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td><b>Nama Pelanggan :</b></td>
+                                            <td class="text-right">{{ customer.name | title | default('-') }}</td>
+                                        </tr>
+                                    </table>
+                                </div>
+                                <div class="clearfix mb30"></div>
+                            </div>
                             <div id="dt_basic_wrapper" class="dataTables_wrapper form-inline no-footer table-responsive" role="grid">
-                                <table id="dt_basic" class="table table-striped dataTable">
+                                <table id="dt_basic" class="table table-striped">
                                     <thead>
                                     <tr>
                                         <th>No</th>

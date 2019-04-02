@@ -75,4 +75,21 @@ class WarehousesModel extends \Model\BaseModel
 
         return $row;
     }
+
+    public function getItem($data = [])
+    {
+        $sql = 'SELECT t.*, a.name AS created_by_name, ab.name AS updated_by_name, 
+            g.title AS group_name, g.pic AS group_pic   
+            FROM {tablePrefix}ext_warehouse t 
+            LEFT JOIN {tablePrefix}ext_warehouse_group g ON g.id = t.group_id 
+            LEFT JOIN {tablePrefix}admin a ON a.id = t.created_by 
+            LEFT JOIN {tablePrefix}admin ab ON ab.id = t.updated_by 
+            WHERE t.id =:id';
+
+        $sql = str_replace(['{tablePrefix}'], [$this->_tbl_prefix], $sql);
+
+        $row = R::getRow( $sql, ['id'=>$data['id']] );
+
+        return $row;
+    }
 }
