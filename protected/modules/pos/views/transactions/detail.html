@@ -82,13 +82,47 @@ Rincian Transaksi Penjualan - {{ App.params.site_name }}
                                         <td>No data founds</td>
                                     </tr>
                                     {% endfor %}
-                                    <tr>
-                                        <td colspan="3" style="text-align: center;font-weight: bold;">SUBTOTAL</td>
-                                        <td style="text-align: right;">{{ sub_total | money_format }}</td>
-                                        <td style="text-align: right;">{{ tot_discount | money_format }}</td>
-                                    </tr>
                                     </tbody>
                                 </table>
+                            </div>
+
+                            <div class="clearfix mb20"></div>
+
+                            <div class="row">
+                                <div class="col-sm-6"></div>
+                                <div class="col-sm-6">
+                                    <table class="table table-bordered">
+                                        <tr>
+                                            <td><b>SubTotal :</b></td>
+                                            <td class="text-right">{{ sub_total | money_format }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td><b>Diskon :</b></td>
+                                            <td class="text-right">{{ tot_discount | money_format }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td><b>Total :</b></td>
+                                            <td class="text-right">{{ (sub_total - tot_discount) | money_format }}</td>
+                                        </tr>
+                                        {% if configs.payment %}
+                                        {% for ip, payment in configs.payment %}
+                                        <tr>
+                                            <td colspan="2"><b>{{ payment.type }} :</b></td>
+                                        </tr>
+                                        {% if payment.amount_tendered %}
+                                        <tr>
+                                            <td><b>Dibayarkan :</b></td>
+                                            <td class="text-right">{{ payment.amount_tendered | money_format }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td><b>Kembali :</b></td>
+                                            <td class="text-right">{{ payment.change_due | money_format }}</td>
+                                        </tr>
+                                        {% endif %}
+                                        {% endfor %}
+                                        {% endif %}
+                                    </table>
+                                </div>
                             </div>
                         </div>
                     </div>

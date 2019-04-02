@@ -253,7 +253,8 @@ class TransactionsController extends BaseController
                 'customer' => $customer,
                 'selected_customer' => (!empty($selected_customer))? $selected_customer : false,
                 'transaction_type' => (!empty($transaction_type))? $transaction_type : 1,
-                'invoice' => $imodel
+                'invoice' => $imodel,
+                'configs' => $configs
             ]
         );
     }
