@@ -106,8 +106,18 @@ Rincian Transaksi Penjualan - {{ App.params.site_name }}
                                         </tr>
                                         {% if configs.payment %}
                                         {% for ip, payment in configs.payment %}
+                                        {% set payment_type_name = payment_type %}
+                                        {% if payment_type == 'cash_receive' %}
+                                            {% set payment_type_name = 'Pembayaran Tunai' %}
+                                        {% elseif payment_type == 'nominal_mandiri' %}
+                                            {% set payment_type_name = 'Transfer Bank Mandiri' %}
+                                        {% elseif payment_type == 'nominal_bca' %}
+                                            {% set payment_type_name = 'Transfer Bank BCA' %}
+                                        {% elseif payment_type == 'nominal_edc' %}
+                                            {% set payment_type_name = 'Kartu Debit EDC' %}
+                                        {% endif %}
                                         <tr>
-                                            <td colspan="2"><b>{{ payment.type }} :</b></td>
+                                            <td colspan="2"><b>{{ payment_type_name }}</b></td>
                                         </tr>
                                         {% if payment.amount_tendered %}
                                         <tr>
