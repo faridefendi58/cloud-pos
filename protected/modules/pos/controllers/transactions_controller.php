@@ -500,6 +500,18 @@ class TransactionsController extends BaseController
 
         $params = $request->getParams();
         if (isset($params['PaymentForm'])) {
+            if (empty($_SESSION['items_payment'])) {
+                $_SESSION['items_payment'] = [];
+                if ($params['PaymentForm']['payment_type'] == 1) {
+                    $pays = [
+                        'type' => 'cash_receive',
+                        'amount_tendered' => $this->money_unformat($params['PaymentForm']['amount_tendered']),
+                        'change_due' => 0
+                        ];
+                    array_push($_SESSION['items_payment'], $pays);
+                }
+            }
+
             // avoid double execution
             $current_time = time();
             if(isset($_SESSION['PaymentForm']) && !empty($_SESSION['PaymentForm'])) {
@@ -552,7 +564,7 @@ class TransactionsController extends BaseController
             $model2->config = json_encode(
                 [
                     'items_belanja' => $_SESSION['items_belanja'],
-                    'items_payment' => $_SESSION['items_payment'],
+                    'payment' => $_SESSION['items_payment'],
                     'customer' => $_SESSION['customer'],
                     'promocode' => $_SESSION['promocode'],
                 ]
@@ -664,8 +676,11 @@ class TransactionsController extends BaseController
         $change = $params['amount_tendered'] - $this->getSubTotal();
 
         $_SESSION['items_payment'] = [
-            'amount_tendered' => $params['amount_tendered'],
-            'change' => $change,
+            [
+                'type' => 'cash_receive',
+                'amount_tendered' => $params['amount_tendered'],
+                'change_due' => $change,
+            ]
         ];
 
         return $this->_container->module->render(
