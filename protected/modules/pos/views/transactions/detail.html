@@ -106,17 +106,17 @@ Rincian Transaksi Penjualan - {{ App.params.site_name }}
                                         </tr>
                                         {% if configs.payment %}
                                         {% for ip, payment in configs.payment %}
-                                        {% set payment_type_name = payment_type %}
-                                        {% if payment_type == 'cash_receive' %}
+                                        {% set payment_type_name = payment.type %}
+                                        {% if payment.type == 'cash_receive' %}
                                             {% set payment_type_name = 'Pembayaran Tunai' %}
-                                        {% elseif payment_type == 'nominal_mandiri' %}
+                                        {% elseif payment.type == 'nominal_mandiri' %}
                                             {% set payment_type_name = 'Transfer Bank Mandiri' %}
-                                        {% elseif payment_type == 'nominal_bca' %}
+                                        {% elseif payment.type == 'nominal_bca' %}
                                             {% set payment_type_name = 'Transfer Bank BCA' %}
-                                        {% elseif payment_type == 'nominal_edc' %}
+                                        {% elseif payment.type == 'nominal_edc' %}
                                             {% set payment_type_name = 'Kartu Debit EDC' %}
                                         {% endif %}
-                                        <tr>
+                                        <tr class="bg-success">
                                             <td colspan="2"><b>{{ payment_type_name }}</b></td>
                                         </tr>
                                         {% if payment.amount_tendered %}
@@ -124,6 +124,8 @@ Rincian Transaksi Penjualan - {{ App.params.site_name }}
                                             <td><b>Dibayarkan :</b></td>
                                             <td class="text-right">{{ payment.amount_tendered | money_format }}</td>
                                         </tr>
+                                        {% endif %}
+                                        {% if payment.change_due %}
                                         <tr>
                                             <td><b>Kembali :</b></td>
                                             <td class="text-right">{{ payment.change_due | money_format }}</td>
