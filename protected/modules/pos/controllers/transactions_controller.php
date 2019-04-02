@@ -209,13 +209,34 @@ class TransactionsController extends BaseController
         $configs = json_decode($imodel->config, true);
 
         $items_belanja = $configs['items_belanja'];
+        $selected_customer = 0; $customer = null;
         if (array_key_exists('customer', $configs)) {
-            $selected_customer = $configs['customer'];
+            if (is_array($configs['customer'])) {
+                if (!empty($configs['customer']['email']) && ($configs['customer']['email'] != '-')) {
+                    $customer = \Model\CustomersModel::model()->findByAttributes(['email' => $configs['customer']['email']]);
+                    if ($customer instanceof \RedBeanPHP\OODBBean) {
+                        $selected_customer = $customer->id;
+                    }
+                } else {
+                    $customer = \Model\CustomersModel::model()->findByAttributes(['telephone' => $configs['customer']['phone']]);
+                    if ($customer instanceof \RedBeanPHP\OODBBean) {
+                        $selected_customer = $customer->id;
+                    }
+                }
+            } else {
+                $selected_customer = $configs['customer'];
+            }
         } else {
             $selected_customer = $imodel->customer_id;
         }
 
-        $customer = \Model\CustomersModel::model()->findByPk($selected_customer);
+        if ($selected_customer > 0) {
+            if (empty($customer))
+                $customer = \Model\CustomersModel::model()->findByPk($selected_customer);
+        } else {
+            $customer = $configs['customer'];
+        }
+
         if (array_key_exists('transacation_type', $configs)) {
             $transaction_type = $configs['transaction_type'];
         } else {
