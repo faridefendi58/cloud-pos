@@ -622,7 +622,7 @@ class TransactionsController extends BaseController
                         $model4->rel_id = $model3->id;
                         $model4->title = $model3->title;
                         $model4->quantity = $model3->quantity;
-                        $model4->price = $model3->quantity * ($model3->price - $model3->discount);
+                        $model4->price = $model3->price;
                         $model4->created_at = date("Y-m-d H:i:s");
                         $model4->created_by = $this->_user->id;
                         $save3 = \Model\InvoiceItemsModel::model()->save(@$model4);
