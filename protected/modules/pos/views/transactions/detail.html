@@ -30,7 +30,7 @@ Rincian Transaksi Penjualan - {{ App.params.site_name }}
                             <div class="row">
                                 <div class="col-sm-6">
                                     <table class="table table-borderless table-condensed table-hover">
-                                        {% set warehouse =  App.call.model("\\Model\\WarehousesModel", 'getItem', {'id':invoice.id}) %}
+                                        {% set warehouse =  App.call.model("\\Model\\WarehousesModel", 'getItem', {'id':invoice.warehouse_id}) %}
                                         <tr>
                                             <td style="border: none;"><b>Warehouse :</b></td>
                                             <td style="border: none;">{{ warehouse.title | title | default('-') }}</td>
