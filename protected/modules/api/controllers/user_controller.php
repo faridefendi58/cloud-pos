@@ -137,7 +137,14 @@ class UserController extends BaseController
                 $admodel->salt = md5(time());
                 $admodel->password = $admodel->hasPassword($_POST['password'], $admodel->salt);
                 $admodel->group_id = 2;
+                if (isset($_POST['group_id'])) {
+                    $admodel->group_id = $_POST['group_id'];
+                }
+
                 $admodel->status = 0;
+                if (isset($_POST['status'])) {
+                    $admodel->status = $_POST['status'];
+                }
                 $admodel->created_at = date("Y-m-d H:i:s");
                 $save = \Model\AdminModel::model()->save(@$admodel);
                 if ($save){
