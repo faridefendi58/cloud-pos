@@ -155,7 +155,13 @@ class UserController extends BaseController
                         'email' => $admodel->email
                     ];
 
-                    $send_mail_confirmation = $this->_send_confirmation_mail($dts);
+                    if (!isset($_POST['status'])) {
+                        try {
+                            $send_mail_confirmation = $this->_send_confirmation_mail($dts);
+                        } catch (\Exception $exception) {
+
+                        }
+                    }
 
                     $result = [
                         'success' => 1,
