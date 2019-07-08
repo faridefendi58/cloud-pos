@@ -29,6 +29,8 @@ class WarehousesController extends BaseController
         $app->map(['POST'], '/role/create', [$this, 'create_role']);
         $app->map(['GET', 'POST'], '/role/update/[{id}]', [$this, 'update_role']);
         $app->map(['POST'], '/role/delete/[{id}]', [$this, 'delete_role']);
+        $app->map(['GET'], '/price-item/[{id}]', [$this, 'price_item']);
+        $app->map(['POST'], '/product-prices/[{id}]', [$this, 'price_prices']);
     }
 
     public function accessRules()
@@ -641,6 +643,91 @@ class WarehousesController extends BaseController
                 [
                     'status' => 'failed',
                     'message' => \Model\WarehouseStaffRolesModel::model()->getErrors(),
+                ], 201);
+        }
+    }
+
+    public function price_item($request, $response, $args)
+    {
+        $isAllowed = $this->isAllowed($request, $response, $args);
+        if ($isAllowed instanceof \Slim\Http\Response)
+            return $isAllowed;
+
+        if (!$isAllowed) {
+            return $this->notAllowedAction();
+        }
+
+        if (!isset($args['id'])) {
+            return false;
+        }
+
+        $product = \Model\ProductsModel::model()->findByPk($args['id']);
+
+        return $this->_container->module->render(
+            $response,
+            'warehouses/_product_price_form.html', ['product' => $product]);
+    }
+
+    public function price_prices($request, $response, $args)
+    {
+        $isAllowed = $this->isAllowed($request, $response, $args);
+        if ($isAllowed instanceof \Slim\Http\Response)
+            return $isAllowed;
+
+        if (!$isAllowed) {
+            return $this->notAllowedAction();
+        }
+
+        $save_counter = 0;
+        if (isset($_POST['WarehouseProducts']) && count($_POST['WarehouseProducts']['product_id'])>0) {
+            foreach ($_POST['WarehouseProducts']['product_id'] as $idx => $product_id) {
+                // build the configs
+                if (is_array($_POST['WarehouseProducts'][$product_id]['quantity'])) {
+                    $items = [];
+                    foreach ($_POST['WarehouseProducts'][$product_id]['quantity'] as $qid => $qval) {
+                        $quantity_max = $_POST['WarehouseProducts'][$product_id]['quantity_max'][$qid];
+                        if ($quantity_max <= 0) {
+                            $quantity_max = $qval;
+                        }
+                        $price = $_POST['WarehouseProducts'][$product_id]['price'][$qid];
+                        $data = ['quantity' => $qval, 'quantity_max' => $quantity_max, 'price' => $price];
+                        $items[$qid] = $data;
+                    }
+                }
+
+                $model = \Model\WarehouseProductsModel::model()->findByAttributes(['product_id' => $product_id, 'warehouse_id' => $_POST['WarehouseProducts']['warehouse_id']]);
+                if ($model instanceof \RedBeanPHP\OODBBean) {
+                    $model->configs = json_encode($items);
+                    $simpan = \Model\WarehouseProductsModel::model()->update(@$model);
+                    if ($simpan) {
+                        $save_counter = $save_counter + 1;
+                    }
+                } else {
+                    $model = new \Model\WarehouseProductsModel();
+                    $model->warehouse_id = $_POST['WarehouseProducts']['warehouse_id'];
+                    $model->product_id = $product_id;
+                    $model->configs = json_encode($items);
+                    $model->created_at = date("Y-m-d H:i:s");
+                    $model->created_by = $this->_user->id;
+                    $simpan = \Model\WarehouseProductsModel::model()->save(@$model);
+                    if ($simpan) {
+                        $save_counter = $save_counter + 1;
+                    }
+                }
+            }
+        }
+
+        if ($save_counter > 0) {
+            return $response->withJson(
+                [
+                    'status' => 'success',
+                    'message' => $save_counter.' data berhasil disimpan.',
+                ], 201);
+        } else {
+            return $response->withJson(
+                [
+                    'status' => 'failed',
+                    'message' => 'Data gagal disimpan',
                 ], 201);
         }
     }

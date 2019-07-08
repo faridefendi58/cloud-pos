@@ -1,0 +1,32 @@
+<div class="row padding10 price-item">
+    <div class="col-md-3">
+        <div class="form-group">
+            <label for="satuan">Jumlah Minimal <span class="required">*</span></label>
+            <input type="text" id="satuan" name="WarehouseProducts[{{ product.id }}][quantity][]"
+                   placeholder="format angka. misal 1." class="form-control" value="">
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="form-group">
+            <label for="nilai">Jumlah Maksimal <span class="required">*</span></label>
+            <input type="text" id="nilai" name="WarehouseProducts[{{ product.id }}][quantity_max][]"
+                   placeholder="format angka. misal 25." class="form-control" value="">
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="form-group">
+            <label for="unit">Harga <span class="required">*</span></label>
+            <input type="text" id="unit" name="WarehouseProducts[{{ product.id }}][price][]"
+                   placeholder="format angka. misal 50000." class="form-control" value="">
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="form-group">
+            <label>&nbsp;</label>
+            <a href="javascript:void(0);" onclick="removePrice(this, true);" attr-id="{{ product.id }}" title="Hapus harga ini">
+                <i class="fa fa-trash-o fa-2x"></i>
+            </a>
+            <a href="javascript:void(0);" onclick="addItem(this, false);" attr-id="{{ product.id }}"><i class="fa fa-plus fa-2x"></i></a>
+        </div>
+    </div>
+</div>

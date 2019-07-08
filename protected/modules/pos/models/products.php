@@ -48,7 +48,7 @@ class ProductsModel extends \Model\BaseModel
             }
         }
 
-        $sql .= ' ORDER BY t.id DESC';
+        $sql .= ' ORDER BY t.ordering ASC';
         
         $sql = str_replace(['{tablePrefix}'], [$this->_tbl_prefix], $sql);
 
