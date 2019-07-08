@@ -2,35 +2,39 @@
 <form method="post" id="product-form" class="mt20" action="{{ 'pos/warehouses/product-prices' | link }}/{{ model.id }}">
     <div class="alert alert-success" style="display: none;"></div>
     {% for i, product in products %}
+    {% set price_data = App.call.model("\\Model\\WarehouseProductsModel", 'getData', {"warehouse_id":model.id, "product_id":product.id}) %}
+    {% set prices = price_data[0].configs | json_decode %}
     <div class="col-md-12">
         <div class="form-group">
             <label class="checkbox-inline">
                 <input type="checkbox" name="WarehouseProducts[product_id][]"
-                       value="{{ product.id }}" onclick="showPriceBox(this);"> <b>{{ product.title | upper }}</b>
+                       value="{{ product.id }}" onclick="showPriceBox(this);" {% if price_data %}checked{% endif %}> <b>{{ product.title | upper }}</b>
             </label>
         </div>
     </div>
-    <div class="col-md-12" id="price-container-{{ product.id }}" style="display: none">
+    <div class="col-md-12" id="price-container-{{ product.id }}" {% if not prices %}style="display: none"{% endif %}>
+        {% set no = 1 %}
+        {% for ip, price in prices %}
         <div class="row padding10 price-item">
             <div class="col-md-3">
                 <div class="form-group">
                     <label for="satuan">Jumlah Minimal <span class="required">*</span></label>
                     <input type="text" id="satuan" name="WarehouseProducts[{{ product.id }}][quantity][]"
-                           placeholder="format angka. misal 1." class="form-control" value="">
+                           placeholder="format angka. misal 1." class="form-control" value="{{ price.quantity }}">
                 </div>
             </div>
             <div class="col-md-3">
                 <div class="form-group">
                     <label for="nilai">Jumlah Maksimal <span class="required">*</span></label>
                     <input type="text" id="nilai" name="WarehouseProducts[{{ product.id }}][quantity_max][]"
-                           placeholder="format angka. misal 25." class="form-control" value="">
+                           placeholder="format angka. misal 25." class="form-control" value="{{ price.quantity_max }}">
                 </div>
             </div>
             <div class="col-md-3">
                 <div class="form-group">
                     <label for="unit">Harga <span class="required">*</span></label>
                     <input type="text" id="unit" name="WarehouseProducts[{{ product.id }}][price][]"
-                           placeholder="format angka. misal 50000." class="form-control" value="">
+                           placeholder="format angka. misal 50000." class="form-control" value="{{ price.price }}">
                 </div>
             </div>
             <div class="col-md-3">
@@ -39,11 +43,18 @@
                     <a href="javascript:void(0);" onclick="removePrice(this, true);" attr-id="{{ product.id }}" title="Hapus harga ini">
                         <i class="fa fa-trash-o fa-2x"></i>
                     </a>
+                    {% if no == prices | length %}
                     <a href="javascript:void(0);" onclick="addItem(this, false);" attr-id="{{ product.id }}"><i class="fa fa-plus fa-2x"></i></a>
+                    {% endif %}
                 </div>
             </div>
         </div>
+        {% set no = no + 1 %}
+        {% else %}
+        {% include 'warehouses/_product_price_form.html' with {'product':product} %}
+        {% endfor %}
     </div>
+    <input type="hidden" name="WarehouseProducts[{{ product.id }}][priority]" value="{{ product.ordering }}">
     {% endfor %}
     <div class="col-md-12">
         <div class="form-group">

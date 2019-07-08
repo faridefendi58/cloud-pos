@@ -697,7 +697,10 @@ class WarehousesController extends BaseController
 
                 $model = \Model\WarehouseProductsModel::model()->findByAttributes(['product_id' => $product_id, 'warehouse_id' => $_POST['WarehouseProducts']['warehouse_id']]);
                 if ($model instanceof \RedBeanPHP\OODBBean) {
+                    $model->priority = $_POST['WarehouseProducts'][$product_id]['priority'];
                     $model->configs = json_encode($items);
+                    $model->updated_at = date("Y-m-d H:i:s");
+                    $model->updated_by = $this->_user->id;
                     $simpan = \Model\WarehouseProductsModel::model()->update(@$model);
                     if ($simpan) {
                         $save_counter = $save_counter + 1;
@@ -706,6 +709,7 @@ class WarehousesController extends BaseController
                     $model = new \Model\WarehouseProductsModel();
                     $model->warehouse_id = $_POST['WarehouseProducts']['warehouse_id'];
                     $model->product_id = $product_id;
+                    $model->priority = $_POST['WarehouseProducts'][$product_id]['priority'];
                     $model->configs = json_encode($items);
                     $model->created_at = date("Y-m-d H:i:s");
                     $model->created_by = $this->_user->id;
