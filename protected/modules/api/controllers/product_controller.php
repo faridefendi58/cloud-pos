@@ -44,6 +44,52 @@ class ProductController extends BaseController
         $result = [];
         $params = $request->getParams();
         $pmodel = new \Model\ProductsModel();
+
+        $warehouse_id = 0;
+        if (is_array($params) && isset($params['warehouse_name'])) {
+            $whmodel = \Model\WarehousesModel::model()->findByAttributes(['title' => $params['warehouse_name']]);
+            if ($whmodel instanceof \RedBeanPHP\OODBBean) {
+                $warehouse_id = $whmodel->id;
+            }
+        }
+        if ($warehouse_id > 0) {
+            $wpmodel = new \Model\WarehouseProductsModel();
+            $items = $wpmodel->getData(['warehouse_id' => $warehouse_id]);
+            if (is_array($items) && count($items) > 0) {
+                $result['success'] = 1;
+                $result['data'] = [];
+                $result['discount'] = [];
+                foreach ($items as $i => $item) {
+                    // geting the prices
+                    $prices = json_decode($item['configs'], true);
+                    $base_price = $prices[0]['price'];
+                    foreach ($prices as $i => $price) {
+                        if ($price['quantity'] == 1) {
+                            $base_price = $price['price'];
+                        }
+                        $prices[$i]['product_id'] = $item['product_id'];
+                        $prices[$i]['unit'] = $item['product_unit'];
+                    }
+
+                    $result['data'][$item['priority']] = [
+                            'id' => $item['product_id'],
+                            'title' => $item['product_name'],
+                            'unit' => $item['product_unit'],
+                            'price' => $base_price,
+                            'priority' => $item['priority']
+                        ];
+
+                    if (isset($params['with_discount']) && $params['with_discount'] > 0) {
+                        array_push(
+                            $result['discount'], $prices
+                        );
+                    }
+                }
+            }
+
+            return $response->withJson($result, 201);
+        }
+
         $items = $pmodel->getData(['status' => \Model\ProductsModel::STATUS_ENABLED]);
         if (is_array($items)){
             $result['success'] = 1;
@@ -62,14 +108,6 @@ class ProductController extends BaseController
                 }
             } else {
                 $result['data'] = $items;
-            }
-
-            $warehouse_id = 0;
-            if (is_array($params) && isset($params['warehouse_name'])) {
-                $whmodel = \Model\WarehousesModel::model()->findByAttributes(['title' => $params['warehouse_name']]);
-                if ($whmodel instanceof \RedBeanPHP\OODBBean) {
-                    $warehouse_id = $whmodel->id;
-                }
             }
 
             if (is_array($params) && isset($params['with_discount'])) {

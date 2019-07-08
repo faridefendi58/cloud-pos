@@ -33,7 +33,7 @@ class WarehouseProductsModel extends \Model\BaseModel
     public function getData($data = array())
     {
         $sql = 'SELECT t.*, a.name AS admin_name, w.title AS warehouse_name, 
-            p.title AS product_name      
+            p.title AS product_name, p.unit AS product_unit       
             FROM {tablePrefix}ext_warehouse_product t 
             LEFT JOIN {tablePrefix}ext_warehouse w ON w.id = t.warehouse_id 
             LEFT JOIN {tablePrefix}ext_product p ON p.id = t.product_id 
@@ -51,7 +51,11 @@ class WarehouseProductsModel extends \Model\BaseModel
             $params['product_id'] = $data['product_id'];
         }
 
-        $sql .= ' ORDER BY t.id DESC';
+        if (isset($data['warehouse_id'])) {
+            $sql .= ' ORDER BY t.priority ASC';
+        } else {
+            $sql .= ' ORDER BY t.id ASC';
+        }
 
         $sql = str_replace(['{tablePrefix}'], [$this->_tbl_prefix], $sql);
 
