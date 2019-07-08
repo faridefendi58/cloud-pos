@@ -75,7 +75,8 @@ class UserController extends BaseController
                                 'roles' => $roles,
                                 'coverage' => $pics,
                                 'email' => $model->email,
-                                'phone' => $model->phone
+                                'phone' => (!empty($model->phone))? $model->phone : '-',
+								'group_id' => $model->group_id
                             ];
                         }
                     } else {
