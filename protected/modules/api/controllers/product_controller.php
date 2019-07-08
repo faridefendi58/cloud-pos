@@ -71,13 +71,13 @@ class ProductController extends BaseController
                         $prices[$i]['unit'] = $item['product_unit'];
                     }
 
-                    $result['data'][$item['priority']] = [
+                    array_push($result['data'], [
                             'id' => $item['product_id'],
                             'title' => $item['product_name'],
                             'unit' => $item['product_unit'],
                             'price' => $base_price,
                             'priority' => $item['priority']
-                        ];
+                        ]);
 
                     if (isset($params['with_discount']) && $params['with_discount'] > 0) {
                         array_push(
