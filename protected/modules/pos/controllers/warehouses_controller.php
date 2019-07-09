@@ -754,26 +754,17 @@ class WarehousesController extends BaseController
         $save_counter = 0;
         if (isset($_POST['ProductStocks'])) {
             foreach ($_POST['ProductStocks'] as $product_id => $tot_stock) {
-                $model = \Model\ProductStocksModel::model()->findByAttributes(['warehouse_id' => $args['id'], 'product_id' => $product_id]);
-                if ($model instanceof \RedBeanPHP\OODBBean) {
-                    $model->quantity = $tot_stock;
-                    $model->updated_at = date("Y-m-d H:i:s");
-                    $model->updated_by = $this->_user->id;
-                    $simpan = \Model\ProductStocksModel::model()->update(@$model);
-                    if ($simpan) {
-                        $save_counter = $save_counter + 1;
-                    }
-                } else {
-                    $model = new \Model\ProductStocksModel();
-                    $model->warehouse_id = $args['id'];
-                    $model->product_id = $product_id;
-                    $model->quantity = $tot_stock;
-                    $model->created_at = date("Y-m-d H:i:s");
-                    $model->created_by = $this->_user->id;
-                    $simpan = \Model\ProductStocksModel::model()->save(@$model);
-                    if ($simpan) {
-                        $save_counter = $save_counter + 1;
-                    }
+                $model = new \Model\ProductStocksModel();
+                $current_stock = $model->getStock(['warehouse_id' => $args['id'], 'product_id' => $product_id]);
+                $new_stock = $tot_stock - $current_stock;
+                $model->warehouse_id = $args['id'];
+                $model->product_id = $product_id;
+                $model->quantity = $new_stock;
+                $model->created_at = date("Y-m-d H:i:s");
+                $model->created_by = $this->_user->id;
+                $simpan = \Model\ProductStocksModel::model()->save(@$model);
+                if ($simpan) {
+                    $save_counter = $save_counter + 1;
                 }
             }
         }

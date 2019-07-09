@@ -10,7 +10,7 @@
                     <label>{{ price_data.product_name }}</label>
                     <div class="input-group">
                         <input type="text" name="ProductStocks[{{ price_data.product_id }}]"
-                               placeholder="Masukkan jumlah stok dalam format angka. misal 25." class="form-control" value="">
+                               placeholder="Masukkan jumlah stok dalam format angka. misal 25." class="form-control" required>
                         <span class="input-group-addon">{{ price_data.product_unit }}</span>
                     </div>
                 </div>
