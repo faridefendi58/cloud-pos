@@ -54,6 +54,7 @@ class ProductController extends BaseController
         }
         if ($warehouse_id > 0) {
             $wpmodel = new \Model\WarehouseProductsModel();
+            $psmodel = new \Model\ProductStocksModel();
             $items = $wpmodel->getData(['warehouse_id' => $warehouse_id]);
             if (is_array($items) && count($items) > 0) {
                 $result['success'] = 1;
@@ -71,12 +72,21 @@ class ProductController extends BaseController
                         $prices[$i]['unit'] = $item['product_unit'];
                     }
 
+                    $the_stock = 0;
+                    if (isset($params['with_stock']) && $params['with_stock'] > 0) {
+                        $stock = $psmodel->getStock(['warehouse_id' => $warehouse_id, 'product_id' => $item['product_id']]);
+                        if ($stock > 0) {
+                            $the_stock = $stock;
+                        }
+                    }
+
                     array_push($result['data'], [
                             'id' => $item['product_id'],
                             'title' => $item['product_name'],
                             'unit' => $item['product_unit'],
                             'price' => $base_price,
-                            'priority' => $item['priority']
+                            'priority' => $item['priority'],
+                            'stock' => $the_stock
                         ]);
 
                     if (isset($params['with_discount']) && $params['with_discount'] > 0) {
@@ -84,6 +94,17 @@ class ProductController extends BaseController
                             $result['discount'], $prices
                         );
                     }
+
+                    /*if (isset($params['with_stock']) && $params['with_stock'] > 0) {
+                        $stock = \Model\ProductStocksModel::model()->findByAttributes(['warehouse_id' => $warehouse_id, 'product_id' => $item['product_id']]);
+                        $the_stock = [$item['product_id'] => 0];
+                        if ($stock instanceof \RedBeanPHP\OODBBean) {
+                            $the_stock[$item['product_id']] = $stock->quantity;
+                        }
+                        array_push(
+                            $result['stock'], $the_stock
+                        );
+                    }*/
                 }
             }
 

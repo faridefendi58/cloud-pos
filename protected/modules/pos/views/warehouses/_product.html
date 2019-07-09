@@ -106,6 +106,8 @@
         $('#product-form').submit(function () {
             var url = $(this).attr('action');
             $.ajax({
+                'beforeSend': function() { $('.loader').show(); },
+                'complete': function() { $('.loader').hide(); },
                 'url': url,
                 'type':'post',
                 'data': $('#product-form').serialize(),

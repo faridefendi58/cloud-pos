@@ -31,6 +31,7 @@ class WarehousesController extends BaseController
         $app->map(['POST'], '/role/delete/[{id}]', [$this, 'delete_role']);
         $app->map(['GET'], '/price-item/[{id}]', [$this, 'price_item']);
         $app->map(['POST'], '/product-prices/[{id}]', [$this, 'price_prices']);
+        $app->map(['POST'], '/product-stock/[{id}]', [$this, 'product_stock']);
     }
 
     public function accessRules()
@@ -714,6 +715,62 @@ class WarehousesController extends BaseController
                     $model->created_at = date("Y-m-d H:i:s");
                     $model->created_by = $this->_user->id;
                     $simpan = \Model\WarehouseProductsModel::model()->save(@$model);
+                    if ($simpan) {
+                        $save_counter = $save_counter + 1;
+                    }
+                }
+            }
+        }
+
+        if ($save_counter > 0) {
+            return $response->withJson(
+                [
+                    'status' => 'success',
+                    'message' => $save_counter.' data berhasil disimpan.',
+                ], 201);
+        } else {
+            return $response->withJson(
+                [
+                    'status' => 'failed',
+                    'message' => 'Data gagal disimpan',
+                ], 201);
+        }
+    }
+
+    public function product_stock($request, $response, $args)
+    {
+        $isAllowed = $this->isAllowed($request, $response, $args);
+        if ($isAllowed instanceof \Slim\Http\Response)
+            return $isAllowed;
+
+        if (!$isAllowed) {
+            return $this->notAllowedAction();
+        }
+
+        if (!isset($args['id'])) {
+            return false;
+        }
+
+        $save_counter = 0;
+        if (isset($_POST['ProductStocks'])) {
+            foreach ($_POST['ProductStocks'] as $product_id => $tot_stock) {
+                $model = \Model\ProductStocksModel::model()->findByAttributes(['warehouse_id' => $args['id'], 'product_id' => $product_id]);
+                if ($model instanceof \RedBeanPHP\OODBBean) {
+                    $model->quantity = $tot_stock;
+                    $model->updated_at = date("Y-m-d H:i:s");
+                    $model->updated_by = $this->_user->id;
+                    $simpan = \Model\ProductStocksModel::model()->update(@$model);
+                    if ($simpan) {
+                        $save_counter = $save_counter + 1;
+                    }
+                } else {
+                    $model = new \Model\ProductStocksModel();
+                    $model->warehouse_id = $args['id'];
+                    $model->product_id = $product_id;
+                    $model->quantity = $tot_stock;
+                    $model->created_at = date("Y-m-d H:i:s");
+                    $model->created_by = $this->_user->id;
+                    $simpan = \Model\ProductStocksModel::model()->save(@$model);
                     if ($simpan) {
                         $save_counter = $save_counter + 1;
                     }

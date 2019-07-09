@@ -102,4 +102,19 @@ class ProductStocksModel extends \Model\BaseModel
 
         return $rows;
     }
+
+    public function getStock($data)
+    {
+        $sql = 'SELECT SUM(t.quantity) AS total     
+            FROM {tablePrefix}ext_product_stock t 
+            WHERE t.product_id =:product_id AND t.warehouse_id =:warehouse_id';
+
+        $params = ['product_id' => $data['product_id'], 'warehouse_id' => $data['warehouse_id']];
+
+        $sql = str_replace(['{tablePrefix}'], [$this->_tbl_prefix], $sql);
+
+        $row = R::getRow( $sql, $params );
+
+        return $row['total'];
+    }
 }

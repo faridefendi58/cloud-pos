@@ -30,7 +30,10 @@ Kelola Warehouse - {{ App.params.site_name }}
                                     <a data-toggle="tab" href="#update">Ubah Data</a>
                                 </li>
                                 <li>
-                                    <a data-toggle="tab" href="#product">Produk</a>
+                                    <a data-toggle="tab" href="#product">Harga Produk</a>
+                                </li>
+                                <li>
+                                    <a data-toggle="tab" href="#adjustment">Stock Adjustment</a>
                                 </li>
                                 <li>
                                     <a data-toggle="tab" href="#transaction">Transaksi Penjualan</a>
@@ -45,6 +48,9 @@ Kelola Warehouse - {{ App.params.site_name }}
                                 </div>
                                 <div id="product" class="tab-pane fade">
                                     {% include 'warehouses/_product.html' with {'model':model} %}
+                                </div>
+                                <div id="adjustment" class="tab-pane fade">
+                                    {% include 'warehouses/_stock_adjustment.html' with {'model':model} %}
                                 </div>
                                 <div id="transaction" class="tab-pane fade">
                                     {% include 'warehouses/_transaction.html' with {'model':model} %}

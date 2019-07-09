@@ -1,0 +1,84 @@
+{% set price_datas = App.call.model("\\Model\\WarehouseProductsModel", 'getData', {"warehouse_id":model.id}) %}
+<div class="row">
+    <div class="col-md-6">
+        <form method="post" id="adjustment-form" class="mt20" action="{{ 'pos/warehouses/product-stock' | link }}/{{ model.id }}">
+            <div class="alert alert-success" style="display: none;"></div>
+            {% for i, price_data in price_datas %}
+            {% set configs = price_data.configs | json_decode %}
+            <div class="col-md-12">
+                <div class="form-group">
+                    <label>{{ price_data.product_name }}</label>
+                    <div class="input-group">
+                        <input type="text" name="ProductStocks[{{ price_data.product_id }}]"
+                               placeholder="Masukkan jumlah stok dalam format angka. misal 25." class="form-control" value="">
+                        <span class="input-group-addon">{{ price_data.product_unit }}</span>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+            <div class="col-md-12">
+                <div class="form-group">
+                    <input type="hidden" name="ProductStocks[warehouse_id]" value="{{ model.id }}">
+                    <input type="submit" value="Simpan" class="btn btn-info">
+                </div>
+            </div>
+        </form>
+    </div>
+    <div class="col-md-6">
+        <h4 class="mb20"><b>Stok Terkini di {{ model.title }}</b></h4>
+        <table class="table table-bordered">
+            <thead>
+            <tr>
+                <th class="text-center">No</th>
+                <th class="text-center">Nama Produk</th>
+                <th class="text-center">Jumlah Stok</th>
+            </tr>
+            </thead>
+            {% for i, price_data in price_datas %}
+            {% set stock = App.call.model("\\Model\\ProductStocksModel", 'getStock', {"product_id":price_data.product_id, "warehouse_id":model.id}) %}
+            <tr>
+                <td class="text-center">{{ i+1 }}</td>
+                <td>{{ price_data.product_name }}</td>
+                <td class="text-center">{{ stock | default(0) }}  {{ price_data.product_unit }}</td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+        <tbody>
+    </div>
+</div>
+
+
+<style>
+    .row + .row {margin-top: 0px;}
+</style>
+<script type="text/javascript">
+    $(function () {
+        $('#adjustment-form').submit(function () {
+            var url = $(this).attr('action');
+            $.ajax({
+                'beforeSend': function() { $('.loader').show(); },
+                'complete': function() { $('.loader').hide(); },
+                'url': url,
+                'type':'post',
+                'data': $('#adjustment-form').serialize(),
+                'success': function(data) {
+                    console.log(data);
+                    if (data.status == 'success') {
+                        var alert_success = $('#adjustment-form').find('.alert-success');
+                        alert_success.html(data.message);
+                        alert_success.show();
+                        setTimeout(function () {
+                            window.location.reload(true);
+                        }, 5000);
+                    }
+                },
+                error: function(XMLHttpRequest, textStatus, errorThrown) {
+                    console.log("Status: " + textStatus + " Message: "+errorThrown);
+                }
+            });
+
+            return false;
+        });
+    });
+</script>
