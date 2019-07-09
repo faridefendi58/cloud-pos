@@ -7,10 +7,14 @@
             {% set configs = price_data.configs | json_decode %}
             <div class="col-md-12">
                 <div class="form-group">
-                    <label>{{ price_data.product_name }}</label>
-                    <div class="input-group">
+                    <label class="checkbox-inline">
+                        <input type="checkbox" name="ProductStocks[product_id][]"
+                               value="{{ price_data.product_id }}" onclick="showPriceBox(this);" checked> <b>{{ price_data.product_name | upper }}</b>
+                    </label>
+                    <div class="input-group mt20">
                         <input type="text" name="ProductStocks[{{ price_data.product_id }}]"
-                               placeholder="Masukkan jumlah stok dalam format angka. misal 25." class="form-control" required>
+                               placeholder="Masukkan jumlah stok dalam format angka. misal 25."
+                               class="form-control" id="product-stock-{{ price_data.product_id }}" required>
                         <span class="input-group-addon">{{ price_data.product_unit }}</span>
                     </div>
                 </div>
@@ -53,6 +57,17 @@
     .row + .row {margin-top: 0px;}
 </style>
 <script type="text/javascript">
+    function showPriceBox(dt) {
+        var ps = $("#product-stock-"+ $(dt).val());
+        if ($(dt).is(':checked')) {
+            ps.attr("required", "required");
+            ps.removeAttr("disabled");
+        } else {
+            ps.removeAttr("required");
+            ps.attr("disabled", "disabled");
+        }
+    }
+
     $(function () {
         $('#adjustment-form').submit(function () {
             var url = $(this).attr('action');

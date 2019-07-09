@@ -753,7 +753,8 @@ class WarehousesController extends BaseController
 
         $save_counter = 0;
         if (isset($_POST['ProductStocks'])) {
-            foreach ($_POST['ProductStocks'] as $product_id => $tot_stock) {
+            foreach ($_POST['ProductStocks']['product_id'] as $j => $product_id) {
+                $tot_stock = $_POST['ProductStocks'][$product_id];
                 $model = new \Model\ProductStocksModel();
                 $current_stock = $model->getStock(['warehouse_id' => $args['id'], 'product_id' => $product_id]);
                 $new_stock = $tot_stock - $current_stock;
