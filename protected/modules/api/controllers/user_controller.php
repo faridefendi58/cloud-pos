@@ -169,7 +169,8 @@ class UserController extends BaseController
                         'message' => 'Data berhasi disimpan.',
                         'id' => $admodel->id,
                         'username' => $admodel->username,
-                        'name' => $admodel->name
+                        'name' => $admodel->name,
+						'group_id' => $admodel->group_id
                     ];
                 } else {
                     $result = [
