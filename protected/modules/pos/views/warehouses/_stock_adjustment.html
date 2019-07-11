@@ -3,18 +3,21 @@
     <div class="col-md-6">
         <form method="post" id="adjustment-form" class="mt20" action="{{ 'pos/warehouses/product-stock' | link }}/{{ model.id }}">
             <div class="alert alert-success" style="display: none;"></div>
+
+            <div class="alert alert-warning">Pilih produk untuk melakukan adjustment atau penyesuaian stok.</div>
+
             {% for i, price_data in price_datas %}
             {% set configs = price_data.configs | json_decode %}
             <div class="col-md-12">
                 <div class="form-group">
                     <label class="checkbox-inline">
-                        <input type="checkbox" name="ProductStocks[product_id][]"
-                               value="{{ price_data.product_id }}" onclick="showPriceBox(this);" checked> <b>{{ price_data.product_name | upper }}</b>
+                        <input type="checkbox" name="ProductStocks[product_id][]" class="product-id"
+                               value="{{ price_data.product_id }}" onclick="showPriceBox(this);"> <b> {{ price_data.product_name | upper }}</b>
                     </label>
-                    <div class="input-group mt20">
+                    <div class="input-group mt20" style="display: none;">
                         <input type="text" name="ProductStocks[{{ price_data.product_id }}]"
                                placeholder="Masukkan jumlah stok dalam format angka. misal 25."
-                               class="form-control" id="product-stock-{{ price_data.product_id }}" required>
+                               class="form-control" id="product-stock-{{ price_data.product_id }}" disabled="disabled">
                         <span class="input-group-addon">{{ price_data.product_unit }}</span>
                     </div>
                 </div>
@@ -23,7 +26,7 @@
             <div class="col-md-12">
                 <div class="form-group">
                     <input type="hidden" name="ProductStocks[warehouse_id]" value="{{ model.id }}">
-                    <input type="submit" value="Simpan" class="btn btn-info">
+                    <input type="submit" value="Simpan" class="btn btn-info btn-submit" style="display: none;">
                 </div>
             </div>
         </form>
@@ -59,12 +62,19 @@
 <script type="text/javascript">
     function showPriceBox(dt) {
         var ps = $("#product-stock-"+ $(dt).val());
+        var choosen = $('input.product-id:checked').length;
         if ($(dt).is(':checked')) {
             ps.attr("required", "required");
             ps.removeAttr("disabled");
+            $("#product-stock-"+ $(dt).val()).parent().show();
+            $('.btn-submit').show();
         } else {
             ps.removeAttr("required");
             ps.attr("disabled", "disabled");
+            $("#product-stock-"+ $(dt).val()).parent().hide();
+            if (choosen <= 0) {
+                $('.btn-submit').hide();
+            }
         }
     }
 
