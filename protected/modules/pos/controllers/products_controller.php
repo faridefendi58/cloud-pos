@@ -106,11 +106,14 @@ class ProductsController extends BaseController
         $model = new \Model\ProductsModel();
         if (isset($_POST['Products'])) {
             $model->title = $_POST['Products']['title'];
+            $model->code = $_POST['Products']['code'];
             $model->product_category_id = $_POST['Products']['product_category_id'];
             if (!empty($_POST['Products']['unit']))
                 $model->unit = $_POST['Products']['unit'];
             $model->description = $_POST['Products']['description'];
             $model->active = $_POST['Products']['active'];
+            $latest_ordering = $model->getLatestOrder();
+            $model->ordering = $latest_ordering + 1;
             $model->created_at = date("Y-m-d H:i:s");
             $model->created_by = $this->_user->id;
             try {
@@ -151,7 +154,27 @@ class ProductsController extends BaseController
         $stocks = $stmodel->getData($model->id);
 
         if (isset($_POST['Products'])){
+            $config = [];
+            if (!empty($model->config)) {
+                $config = json_decode($model->config, true);
+            }
+
+            $uploadfile = null;
+            if (isset($_FILES['Products']['name']['image'])) {
+                $path_info = pathinfo($_FILES['Products']['name']['image']);
+                if (!in_array($path_info['extension'], ['jpg','JPG','jpeg','JPEG','png','PNG'])) {
+                    echo json_encode(['status'=>'failed','message'=>'Allowed file type are jpg, png']); exit;
+                    exit;
+                }
+                $upload_folder = 'uploads/images/products';
+                $file_name = time().'.'.$path_info['extension'];
+                $uploadfile = $upload_folder . '/' . $file_name;
+                $config['image'] = $uploadfile;
+                $model->config = json_encode($config);
+            }
+
             $model->title = $_POST['Products']['title'];
+            $model->code = $_POST['Products']['code'];
             $model->product_category_id = $_POST['Products']['product_category_id'];
             if (!empty($_POST['Products']['unit']))
                 $model->unit = $_POST['Products']['unit'];
@@ -161,6 +184,10 @@ class ProductsController extends BaseController
             $model->updated_by = $this->_user->id;
             $update = \Model\ProductsModel::model()->update($model);
             if ($update) {
+                if (!empty($uploadfile)) {
+                    move_uploaded_file($_FILES['Products']['tmp_name']['image'], $uploadfile);
+                }
+
                 return $response->withJson(
                     [
                         'status' => 'success',

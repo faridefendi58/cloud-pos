@@ -1,15 +1,21 @@
-<form method="post" id="product-form" class="mt20" action="{% if model.id %}{{ 'pos/products/update' | link }}/{{ model.id }}{% else %}{{ 'pos/products/create' | link }}{% endif %}">
+<link rel="stylesheet" href="{{ 'css/bootstrap-fileupload.min.css' | admin_asset_url }}" />
+
+<form method="post" id="product-form" class="mt20"
+      action="{% if model.id %}{{ 'pos/products/update' | link }}/{{ model.id }}{% else %}{{ 'pos/products/create' | link }}{% endif %}"
+      enctype="multipart/form-data">
     <div class="alert alert-success" style="display: none;"></div>
     <div class="col-md-12 mb10">
         <p>Kolom bertanda <span class="red">*</span> tidak boleh dikosongi</p>
     </div>
-    <div class="col-md-4">
+    <div class="col-md-6">
         <div class="form-group">
             <label for="name">Nama Produk <span class="text-danger">*</span></label>
             <input type="text" id="name" name="Products[title]" class="form-control" {% if model.title %}value="{{ model.title }}"{% endif %} required>
         </div>
-    </div>
-    <div class="col-md-4">
+        <div class="form-group">
+            <label for="kode">Kode Produk <span class="text-danger">*</span></label>
+            <input type="text" id="kode" name="Products[code]" class="form-control" {% if model.code %}value="{{ model.code }}"{% endif %} required>
+        </div>
         <div class="form-group">
             <label for="reg_select">Kategori <span class="text-danger">*</span></label>
             <select id="reg_select" name="Products[product_category_id]" class="form-control">
@@ -18,12 +24,13 @@
                 {% endfor %}
             </select>
         </div>
+        <div class="form-group">
+            <label>Unit <span class="text-danger">*</span></label>
+            <input type="text" id="unit" name="Products[unit]" class="form-control" {% if model.unit %}value="{{ model.unit }}"{% endif %} required>
+            <span class="help-block">Contoh: box, pcs, gram, kilogram, dll.</span>
+        </div>
     </div>
-    <div class="col-md-4">
-        <label>Unit <span class="text-danger">*</span></label>
-        <input type="text" id="unit" name="Products[unit]" class="form-control" {% if model.unit %}value="{{ model.unit }}"{% endif %} required>
-        <span class="help-block">Contoh: box, pcs, gram, kilogram, dll.</span>
-    </div>
+
     <div class="col-md-4 hide">
         <label>Status <span class="text-danger">*</span></label>
         <div class="form-group">
@@ -37,26 +44,63 @@
             </label>
         </div>
     </div>
-    <div class="col-md-12">
+
+    <div class="col-md-6">
+        {% if model.id %}
+        <div class="form-group">
+            <label for="ordering">Urutan</label>
+            <input type="text" id="ordering" name="Products[ordering]" class="form-control" {% if model.ordering %}value="{{ model.ordering }}"{% endif %}>
+        </div>
+
+        <div class="form-group">
+            {% set config = model.config | json_decode %}
+            {% if config.image %}
+            <img src="{{ config.image | link }}" width="100px"/>
+            {% endif %}
+            <label class="control-label">Images</label>
+            <div class="fileupload fileupload-new" data-provides="fileupload">
+                <div class="input-append">
+                    <div class="uneditable-input">
+                        <i class="glyphicon glyphicon-file fileupload-exists"></i>
+                        <span class="fileupload-preview"></span>
+                    </div>
+                    <span class="btn btn-default btn-file">
+                                                  <span class="fileupload-new">Select file</span>
+                                                  <span class="fileupload-exists">Change</span>
+                                                  <input type="file" name="Products[image]"/>
+                                                </span>
+                    <a href="#" class="btn btn-default fileupload-exists" data-dismiss="fileupload">Remove</a>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
         <div class="form-group">
             <label for="desc">Deskripsi</label>
             <textarea name="Products[description]" id="desc" cols="10" rows="3" class="form-control">{% if model and model.description %}{{ model.description }}{% endif %}</textarea>
         </div>
         <div class="form-group">
-            <input type="submit" value="Simpan" class="btn btn-info">
+            <input type="submit" value="Simpan" class="btn btn-info" id="submit-button">
         </div>
     </div>
 </form>
 
+<script src="{{ 'js/bootstrap-fileupload.min.js' | admin_asset_url }}"></script>
 <script type="text/javascript">
     $(function () {
         $('#product-form').submit(function () {
             var url = $(this).attr('action');
+            var formData = new FormData($('form[id="product-form"]')[0]);
             $.ajax({
+                'beforeSend': function() { $('.loader').show(); },
+                'complete': function() { $('.loader').hide(); },
                 'url': url,
                 'type':'post',
-                'data': $('#product-form').serialize(),
+                'data': formData,
+                'dataType': 'json',
+                'async': false,
                 'success': function(data) {
+                    console.log(data);
                     if (data.status == 'success') {
                         var alert_success = $('#product-form').find('.alert-success');
                         alert_success.html(data.message);
@@ -71,7 +115,10 @@
                             }
                         }, 5000);
                     }
-                }
+                },
+                'cache': false,
+                'contentType': false,
+                'processData': false
             });
 
             return false;

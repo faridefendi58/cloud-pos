@@ -112,4 +112,18 @@ class ProductsModel extends \Model\BaseModel
 
         return round($result, 2);
     }
+
+    public function getLatestOrder() {
+        $sql = 'SELECT MAX(t.ordering) AS max  
+            FROM {tablePrefix}ext_product t 
+            WHERE 1';
+
+        $params = [];
+
+        $sql = str_replace(['{tablePrefix}'], [$this->_tbl_prefix], $sql);
+
+        $row = R::getRow( $sql, $params );
+
+        return $row['max'];
+    }
 }
