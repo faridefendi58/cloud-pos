@@ -46,12 +46,17 @@ class ProductController extends BaseController
         $pmodel = new \Model\ProductsModel();
 
         $warehouse_id = 0;
-        if (is_array($params) && isset($params['warehouse_name'])) {
+        if (is_array($params) && isset($params['warehouse_id'])) {
+            $warehouse_id = $params['warehouse_id'];
+        }
+
+        if (is_array($params) && isset($params['warehouse_name']) && ($warehouse_id == 0)) {
             $whmodel = \Model\WarehousesModel::model()->findByAttributes(['title' => $params['warehouse_name']]);
             if ($whmodel instanceof \RedBeanPHP\OODBBean) {
                 $warehouse_id = $whmodel->id;
             }
         }
+
         if ($warehouse_id > 0) {
             $wpmodel = new \Model\WarehouseProductsModel();
             $psmodel = new \Model\ProductStocksModel();
@@ -80,13 +85,18 @@ class ProductController extends BaseController
                         }
                     }
 
+                    $config = [];
+                    if (!empty($item['product_config'])) {
+                        $config = json_decode($item['product_config'], true);
+                    }
                     array_push($result['data'], [
                             'id' => $item['product_id'],
                             'title' => $item['product_name'],
                             'unit' => $item['product_unit'],
                             'price' => $base_price,
                             'priority' => $item['priority'],
-                            'stock' => $the_stock
+                            'stock' => $the_stock,
+                            'config' => $config
                         ]);
 
                     if (isset($params['with_discount']) && $params['with_discount'] > 0) {
