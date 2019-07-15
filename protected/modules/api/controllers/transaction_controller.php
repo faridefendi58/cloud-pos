@@ -183,6 +183,7 @@ class TransactionController extends BaseController
                     $result = [
                         "success" => 1,
                         "id" => $model2->id,
+						"invoice_number" => $model2->getInvoiceFormatedNumber(['id' => $model2->id]),
                         'message' => 'Data berhasil disimpan.'
                     ];
                 } else {
