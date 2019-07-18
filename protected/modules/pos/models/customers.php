@@ -50,7 +50,11 @@ class CustomersModel extends \Model\BaseModel
             $sql .= ' AND LOWER(t.name) LIKE "%'. strtolower($data['name']) .'%"';
         }
 
-        $sql .= ' ORDER BY t.created_at DESC';
+		if (isset($data['telephone'])) {
+            $sql .= ' AND t.telephone LIKE "%'. $data['telephone'] .'%"';
+        }
+
+        $sql .= ' ORDER BY t.name ASC';
 
         if (isset($data['limit'])) {
             $sql .= ' LIMIT '. $data['limit'];
