@@ -109,6 +109,8 @@ class TransactionController extends BaseController
                     'payment' => $params['payment'],
                     'customer' => $params['customer'],
                     'promocode' => $params['promocode'],
+					'discount' => $params['discount'],
+					'shipping' => $params['shipping']
                 ]
             );
             $model2->currency_id = 1;
