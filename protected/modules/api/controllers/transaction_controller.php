@@ -109,7 +109,7 @@ class TransactionController extends BaseController
                     'items_belanja' => $params['items_belanja'],
                     'payment' => $params['payment'],
                     'customer' => $params['customer'],
-                    'promocode' => $params['promocode'],
+                    //'promocode' => $params['promocode'],
 					'discount' => $params['discount'],
 					'shipping' => $params['shipping']
                 ]
@@ -214,11 +214,12 @@ class TransactionController extends BaseController
 
         $result = ['success' => 0];
         $params = $request->getParams();
+        $config = [];
 
         if (isset($params['admin_id'])) {
             $inv_model = new \Model\InvoicesModel();
 
-            $inv_data = null;
+            $inv_data = [];
             if (isset($params['invoice_number'])) {
                 $series = $inv_model->getSeries();
                 $serie = null;
@@ -237,7 +238,7 @@ class TransactionController extends BaseController
                 if ($nr > 0) {
                     $inv_data = $inv_model->getItem(['serie' => $serie, 'nr' => $nr]);
                     if (in_array("config", array_keys($inv_data))) {
-                        $inv_data['config'] = json_decode($inv_data['config'], true);
+                        $config = json_decode($inv_data['config'], true);
                     }
                 }
             }
@@ -245,7 +246,24 @@ class TransactionController extends BaseController
             if (isset($params['invoice_id'])) {
                 $inv_data = $inv_model->getItem(['id' => $params['invoice_id']]);
                 if (in_array("config", array_keys($inv_data))) {
-                    $inv_data['config'] = json_decode($inv_data['config'], true);
+                    $config = json_decode($inv_data['config'], true);
+                }
+            }
+
+            if (array_key_exists("serie", $inv_data) && array_key_exists("nr", $inv_data)) {
+                $zero = str_repeat('0',4-strlen($inv_data['nr']));
+                $inv_data['invoice_number'] = $inv_data['serie'].$zero.$nr;
+                unset($inv_data['serie']);
+                unset($inv_data['nr']);
+            }
+
+            if (is_array($config)) {
+                unset($inv_data['config']);
+                $inv_data = $inv_data + $config;
+                if (array_key_exists("customer", $inv_data)) {
+                    $inv_data['customer']['id'] = $inv_data['customer_id'];
+                    unset($inv_data['customer_id']);
+                    unset($inv_data['customer_name']);
                 }
             }
 
