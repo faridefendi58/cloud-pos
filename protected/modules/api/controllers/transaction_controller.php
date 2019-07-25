@@ -102,8 +102,16 @@ class TransactionController extends BaseController
             }
             $model2->serie = $model2->getInvoiceNumber($model2->status, 'serie');
             $model2->nr = $model2->getInvoiceNumber($model2->status, 'nr');
-            if ($model2->status == \Model\InvoicesModel::STATUS_PAID)
+            if ($model2->status == \Model\InvoicesModel::STATUS_PAID) {
                 $model2->paid_at = date(c);
+                $model2->paid_by = (isset($params['admin_id']))? $params['admin_id'] : 1;
+            }
+
+            if ($model2->status == \Model\InvoicesModel::STATUS_REFUND) {
+                $model2->refunded_at = date(c);
+                $model2->refunded_by = (isset($params['admin_id']))? $params['admin_id'] : 1;
+            }
+
             $model2->config = json_encode(
                 [
                     'items_belanja' => $params['items_belanja'],
@@ -264,6 +272,10 @@ class TransactionController extends BaseController
                     $inv_data['customer']['id'] = $inv_data['customer_id'];
                     unset($inv_data['customer_id']);
                     unset($inv_data['customer_name']);
+                }
+
+                if (array_key_exists("promocode", $inv_data)) {
+                    unset($inv_data['promocode']);
                 }
             }
 
