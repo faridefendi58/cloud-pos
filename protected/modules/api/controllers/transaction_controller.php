@@ -14,13 +14,14 @@ class TransactionController extends BaseController
     public function register($app)
     {
         $app->map(['POST'], '/create', [$this, 'create']);
+        $app->map(['GET'], '/detail', [$this, 'get_detail']);
     }
 
     public function accessRules()
     {
         return [
             ['allow',
-                'actions' => ['create'],
+                'actions' => ['create', 'detail'],
                 'users'=> ['@'],
             ]
         ];
@@ -194,6 +195,62 @@ class TransactionController extends BaseController
             } else {
                 $result['message'] = 'Data gagal disimpan';
             }
+        }
+
+        return $response->withJson($result, 201);
+    }
+
+    public function get_detail($request, $response, $args)
+    {
+        $isAllowed = $this->isAllowed($request, $response);
+
+        if (!$isAllowed['allow']) {
+            $result = [
+                'success' => 0,
+                'message' => $isAllowed['message'],
+            ];
+            return $response->withJson($result, 201);
+        }
+
+        $result = ['success' => 0];
+        $params = $request->getParams();
+
+        if (isset($params['admin_id'])) {
+            $inv_model = new \Model\InvoicesModel();
+
+            $inv_data = null;
+            if (isset($params['invoice_number'])) {
+                $series = $inv_model->getSeries();
+                $serie = null;
+                foreach ($series as $i => $s_row) {
+                    if (strpos($params['invoice_number'], $s_row['serie'])!== false) {
+                        $serie = $s_row['serie'];
+                    }
+                }
+
+                $nr = 0;
+                if (!empty($serie)) {
+                    $exps = explode($serie, $params['invoice_number']);
+                    $nr = (int)$exps[1];
+                }
+
+                if ($nr > 0) {
+                    $inv_data = $inv_model->getItem(['serie' => $serie, 'nr' => $nr]);
+                    if (in_array("config", array_keys($inv_data))) {
+                        $inv_data['config'] = json_decode($inv_data['config'], true);
+                    }
+                }
+            }
+
+            if (isset($params['invoice_id'])) {
+                $inv_data = $inv_model->getItem(['id' => $params['invoice_id']]);
+                if (in_array("config", array_keys($inv_data))) {
+                    $inv_data['config'] = json_decode($inv_data['config'], true);
+                }
+            }
+
+            $result['success'] = 1;
+            $result['data'] = $inv_data;
         }
 
         return $response->withJson($result, 201);

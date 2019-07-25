@@ -128,4 +128,66 @@ class InvoicesModel extends \Model\BaseModel
 
         return $statuses[$data['status']];
     }
+
+    public function getSeries()
+    {
+        $sql = 'SELECT t.serie 
+            FROM {tablePrefix}ext_invoice t  
+            WHERE 1';
+
+        $params = [];
+
+        $sql .= ' GROUP BY t.serie';
+
+        $sql = str_replace(['{tablePrefix}'], [$this->_tbl_prefix], $sql);
+
+        $rows = R::getAll( $sql, $params );
+
+        return $rows;
+    }
+
+    public function getItem($data = array())
+    {
+        $sql = 'SELECT t.id, t.serie, t.nr, t.notes, t.status, t.created_at, t.paid_at, 
+            SUM(ii.price*ii.quantity) AS total, t.discount,
+            t.customer_id, c.name AS customer_name, c.email as customer_email, c.telephone AS customer_phone, c.address AS customer_address, 
+            t.warehouse_id, w.title AS warehouse_name, t.config 
+            FROM {tablePrefix}ext_invoice t 
+            JOIN {tablePrefix}ext_invoice_item ii ON t.id = ii.invoice_id 
+            LEFT JOIN {tablePrefix}ext_customer c ON c.id = t.customer_id 
+            LEFT JOIN {tablePrefix}ext_warehouse w ON w.id = t.warehouse_id 
+            WHERE 1';
+
+        $params = [];
+        if (isset($data['status'])) {
+            $sql .= ' AND t.status =:status';
+            $params['status'] = $data['status'];
+        }
+
+        if (isset($data['warehouse_id'])) {
+            $sql .= ' AND t.warehouse_id =:warehouse_id';
+            $params['warehouse_id'] = $data['warehouse_id'];
+        }
+
+        if (isset($data['id'])) {
+            $sql .= ' AND t.id =:id';
+            $params['id'] = $data['id'];
+        }
+
+        if (isset($data['serie'])) {
+            $sql .= ' AND t.serie =:serie';
+            $params['serie'] = $data['serie'];
+        }
+
+        if (isset($data['nr'])) {
+            $sql .= ' AND t.nr =:nr';
+            $params['nr'] = $data['nr'];
+        }
+
+        $sql = str_replace(['{tablePrefix}'], [$this->_tbl_prefix], $sql);
+
+        $row = R::getRow( $sql, $params );
+
+        return $row;
+    }
 }
