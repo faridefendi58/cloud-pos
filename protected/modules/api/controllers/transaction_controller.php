@@ -260,7 +260,7 @@ class TransactionController extends BaseController
 
             if (array_key_exists("serie", $inv_data) && array_key_exists("nr", $inv_data)) {
                 $zero = str_repeat('0',4-strlen($inv_data['nr']));
-                $inv_data['invoice_number'] = $inv_data['serie'].$zero.$nr;
+                $inv_data['invoice_number'] = $inv_data['serie'].$zero.$inv_data['nr'];
                 unset($inv_data['serie']);
                 unset($inv_data['nr']);
             }
