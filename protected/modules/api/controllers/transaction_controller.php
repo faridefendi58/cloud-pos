@@ -73,6 +73,7 @@ class TransactionController extends BaseController
                     $cmodel->name = $params['customer']['name'];
                     $cmodel->email = (!empty($params['customer']['email']))? $params['customer']['email'] : "-";
                     $cmodel->telephone = $params['customer']['phone'];
+                    $cmodel->address = $params['customer']['address'];
                     $cmodel->status = \Model\CustomersModel::STATUS_ACTIVE;
                     $cmodel->created_at = date("Y-m-d H:i:s");
                     $cmodel->created_by = (isset($params['admin_id']))? $params['admin_id'] : 1;
