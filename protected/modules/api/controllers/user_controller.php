@@ -292,8 +292,8 @@ class UserController extends BaseController
         $whs_model = new \Model\WarehouseStaffsModel();
         $items = $whs_model->getData(['admin_id' => $admin_id]);
 
+		$roles = [];
         if (count($items) > 0) {
-            $roles = [];
             foreach ($items as $i => $item) {
                 $roles[$item['warehouse_id']] = [
                     'warehouse_name' => $item['warehouse_name'],
@@ -307,7 +307,7 @@ class UserController extends BaseController
             return $roles;
         }
 
-        return false;
+        return $roles;
     }
 
     private function _get_coverage_wh($admin_id, $admin_name = null)
