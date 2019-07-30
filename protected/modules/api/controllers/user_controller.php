@@ -305,7 +305,12 @@ class UserController extends BaseController
             }
 
             return $roles;
-        }
+        } else {
+			$roles[8] = [
+                    'warehouse_name' => 'Jogja Jl. Kabupaten',
+                    'warehouse_group_name' => 'Jogja'
+                ];
+		}
 
         return $roles;
     }
