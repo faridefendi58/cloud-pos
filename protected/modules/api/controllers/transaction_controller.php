@@ -317,6 +317,7 @@ class TransactionController extends BaseController
             if (!empty($model->config)) {
                 $configs = json_decode($model->config, true);
             }
+
             $has_new_config = false;
             if (isset($params['payment'])) {
                 if (in_array('payment', array_keys($configs))) {
@@ -334,12 +335,14 @@ class TransactionController extends BaseController
                 }
             }
 
-            $model->status = \Model\InvoicesModel::STATUS_PAID;
             $i_model = new \Model\InvoicesModel();
-            $model->serie = $i_model->getInvoiceNumber($model->status, 'serie');
-            $model->nr = $i_model->getInvoiceNumber($model->status, 'nr');
-            $model->paid_at = date("Y-m-d H:i:s");
-            $model->paid_by = (isset($params['admin_id']))? $params['admin_id'] : 1;
+            if ($model->status != \Model\InvoicesModel::STATUS_PAID) {
+                $model->status = \Model\InvoicesModel::STATUS_PAID;
+                $model->serie = $i_model->getInvoiceNumber($model->status, 'serie');
+                $model->nr = $i_model->getInvoiceNumber($model->status, 'nr');
+                $model->paid_at = date("Y-m-d H:i:s");
+                $model->paid_by = (isset($params['admin_id'])) ? $params['admin_id'] : 1;
+            }
             $model->delivered = 1;
             $model->delivered_at = date("Y-m-d H:i:s");
             $model->delivered_by = (isset($params['admin_id']))? $params['admin_id'] : 1;
@@ -350,6 +353,25 @@ class TransactionController extends BaseController
             $model->updated_by = (isset($params['admin_id']))? $params['admin_id'] : 1;
             $update = \Model\InvoicesModel::model()->update($model);
             if ($update) {
+                // real update the stock
+                if (array_key_exists("items_belanja", $configs)) {
+                    $smodel = new \Model\ProductStocksModel();
+                    foreach ($configs['items_belanja'] as $i => $item_belanja) {
+                        $stock = $smodel->getStockByQuantity([
+                            'product_id' => $item_belanja['barcode'],
+                            'warehouse_id' => $model->warehouse_id,
+                            'quantity' => $item_belanja['qty']
+                        ]);
+
+                        if ($stock instanceof \RedBeanPHP\OODBBean) {
+                            $stock->quantity = $stock->quantity - $item_belanja['qty'];
+                            $stock->updated_at = date("Y-m-d H:i:s");
+                            $stock->updated_by = (isset($params['admin_id']))? $params['admin_id'] : 1;
+                            $update_stock = \Model\ProductStocksModel::model()->update($stock);
+                        }
+                    }
+                }
+
                 $result['success'] = 1;
                 $result['message'] = 'Data berhasil disimpan.';
                 $result['invoice_number'] = $i_model->getInvoiceFormatedNumber(['id' => $model->id]);

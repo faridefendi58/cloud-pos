@@ -117,4 +117,24 @@ class ProductStocksModel extends \Model\BaseModel
 
         return $row['total'];
     }
+
+    public function getStockByQuantity($data)
+    {
+        $sql = 'SELECT t.id     
+            FROM {tablePrefix}ext_product_stock t 
+            WHERE t.product_id =:product_id AND t.warehouse_id =:warehouse_id AND t.quantity >=:quantity 
+            ORDER BY t.quantity ASC';
+
+        $params = ['product_id' => $data['product_id'], 'warehouse_id' => $data['warehouse_id'], 'quantity' => $data['quantity']];
+
+        $sql = str_replace(['{tablePrefix}'], [$this->_tbl_prefix], $sql);
+
+        $row = R::getRow( $sql, $params );
+
+        if ($row['id'] > 0) {
+            return self::model()->findByPk($row['id']);
+        }
+
+        return null;
+    }
 }
