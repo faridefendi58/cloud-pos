@@ -349,6 +349,8 @@ class TransactionController extends BaseController
             if ($update) {
                 $result['success'] = 1;
                 $result['message'] = 'Data berhasil disimpan.';
+                $i_model = new \Model\InvoicesModel();
+                $result['invoice_number'] = $i_model->getInvoiceFormatedNumber(['id' => $model->id]);
             }
         }
 
