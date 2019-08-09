@@ -154,7 +154,8 @@ class InvoicesModel extends \Model\BaseModel
             t.warehouse_id, w.title AS warehouse_name, t.config, 
             t.created_by, a.name AS created_by_name, 
             t.paid_by, ab.name AS paid_by_name, 
-            t.refunded_by, ac.name AS refunded_by_name 
+            t.refunded_by, ac.name AS refunded_by_name,
+            t.delivered, t.delivered_at, ad.name AS delivered_by_name 
             FROM {tablePrefix}ext_invoice t 
             JOIN {tablePrefix}ext_invoice_item ii ON t.id = ii.invoice_id 
             LEFT JOIN {tablePrefix}ext_customer c ON c.id = t.customer_id 
@@ -162,6 +163,7 @@ class InvoicesModel extends \Model\BaseModel
             LEFT JOIN {tablePrefix}admin a ON a.id = t.created_by 
             LEFT JOIN {tablePrefix}admin ab ON ab.id = t.paid_by 
             LEFT JOIN {tablePrefix}admin ac ON ac.id = t.refunded_by 
+            LEFT JOIN {tablePrefix}admin ad ON ad.id = t.delivered_by 
             WHERE 1';
 
         $params = [];

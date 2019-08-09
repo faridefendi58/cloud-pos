@@ -15,13 +15,14 @@ class TransactionController extends BaseController
     {
         $app->map(['POST'], '/create', [$this, 'create']);
         $app->map(['GET'], '/detail', [$this, 'get_detail']);
+        $app->map(['POST'], '/complete', [$this, 'complete']);
     }
 
     public function accessRules()
     {
         return [
             ['allow',
-                'actions' => ['create', 'detail'],
+                'actions' => ['create', 'detail', 'complete'],
                 'users'=> ['@'],
             ]
         ];
@@ -282,6 +283,73 @@ class TransactionController extends BaseController
 
             $result['success'] = 1;
             $result['data'] = $inv_data;
+        }
+
+        return $response->withJson($result, 201);
+    }
+
+    /**
+     * Completing the invoice mean mark as paid and mark as delivered
+     * usage curl -d "admin_id=1&invoice_id=13&payment%5B0%5D%5Btype%5D=cash_receive&pay%5D%5Btype%5D=transfer_bri&payment%5B1%5D%5Bamount_tendered%5D=5000" -X POST http://hostname/api/transaction/complete?api-key=[the_api_key]
+     * @param $request
+     * @param $response
+     * @param $args
+     * @return mixed
+     */
+    public function complete($request, $response, $args)
+    {
+        $isAllowed = $this->isAllowed($request, $response);
+
+        if (!$isAllowed['allow']) {
+            $result = [
+                'success' => 0,
+                'message' => $isAllowed['message'],
+            ];
+            return $response->withJson($result, 201);
+        }
+
+        $result = ['success' => 0];
+        $params = $request->getParams();
+
+        if (!empty($params['invoice_id'])) {
+            $model = \Model\InvoicesModel::model()->findByPk($params['invoice_id']);
+            $configs = [];
+            if (!empty($model->config)) {
+                $configs = json_decode($model->config, true);
+            }
+            $has_new_config = false;
+            if (isset($params['payment'])) {
+                if (in_array('payment', array_keys($configs))) {
+                    if (is_array($configs['payment'])) {
+                        $configs['payment'] = array_merge($configs['payment'], $params['payment']);
+                        $has_new_config = true;
+                    } else {
+                        // if current payment null or false
+                        $configs['payment'] = $params['payment'];
+                        $has_new_config = true;
+                    }
+                } else {
+                    $configs['payment'] = $params['payment'];
+                    $has_new_config = true;
+                }
+            }
+
+            $model->status = \Model\InvoicesModel::STATUS_PAID;
+            $model->paid_at = date("Y-m-d H:i:s");
+            $model->paid_by = (isset($params['admin_id']))? $params['admin_id'] : 1;
+            $model->delivered = 1;
+            $model->delivered_at = date("Y-m-d H:i:s");
+            $model->delivered_by = (isset($params['admin_id']))? $params['admin_id'] : 1;
+            if ($has_new_config) {
+                $model->config = json_encode($configs);
+            }
+            $model->updated_at = date("Y-m-d H:i:s");
+            $model->updated_by = (isset($params['admin_id']))? $params['admin_id'] : 1;
+            $update = \Model\InvoicesModel::model()->update($model);
+            if ($update) {
+                $result['success'] = 1;
+                $result['message'] = 'Data berhasil disimpan.';
+            }
         }
 
         return $response->withJson($result, 201);
