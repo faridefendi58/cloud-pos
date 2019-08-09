@@ -335,6 +335,9 @@ class TransactionController extends BaseController
             }
 
             $model->status = \Model\InvoicesModel::STATUS_PAID;
+            $i_model = new \Model\InvoicesModel();
+            $model->serie = $i_model->getInvoiceNumber($model->status, 'serie');
+            $model->nr = $i_model->getInvoiceNumber($model->status, 'nr');
             $model->paid_at = date("Y-m-d H:i:s");
             $model->paid_by = (isset($params['admin_id']))? $params['admin_id'] : 1;
             $model->delivered = 1;
@@ -349,7 +352,6 @@ class TransactionController extends BaseController
             if ($update) {
                 $result['success'] = 1;
                 $result['message'] = 'Data berhasil disimpan.';
-                $i_model = new \Model\InvoicesModel();
                 $result['invoice_number'] = $i_model->getInvoiceFormatedNumber(['id' => $model->id]);
             }
         }
