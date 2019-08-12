@@ -3,6 +3,7 @@
 namespace Api\Controllers;
 
 use Components\ApiBaseController as BaseController;
+use Model\InvoicesModel;
 
 class TransactionController extends BaseController
 {
@@ -16,13 +17,14 @@ class TransactionController extends BaseController
         $app->map(['POST'], '/create', [$this, 'create']);
         $app->map(['GET'], '/detail', [$this, 'get_detail']);
         $app->map(['POST'], '/complete', [$this, 'complete']);
+        $app->map(['GET'], '/list', [$this, 'get_list']);
     }
 
     public function accessRules()
     {
         return [
             ['allow',
-                'actions' => ['create', 'detail', 'complete'],
+                'actions' => ['create', 'detail', 'complete', 'list'],
                 'users'=> ['@'],
             ]
         ];
@@ -131,6 +133,9 @@ class TransactionController extends BaseController
             }
             if (!empty($params['warehouse_id'])) {
                 $model2->warehouse_id = $params['warehouse_id'];
+            }
+            if (array_key_exists("pickup_date", $params['shipping']) && !empty($params['shipping']['pickup_date'])) {
+                $model2->delivered_plan_at = date("Y-m-d H:i:s", strtotime($params['shipping']['pickup_date']));
             }
             $model2->created_at = date("Y-m-d H:i:s");
             $model2->created_by = (isset($params['admin_id']))? $params['admin_id'] : 1;
@@ -376,6 +381,54 @@ class TransactionController extends BaseController
                 $result['message'] = 'Data berhasil disimpan.';
                 $result['invoice_number'] = $i_model->getInvoiceFormatedNumber(['id' => $model->id]);
             }
+        }
+
+        return $response->withJson($result, 201);
+    }
+
+    public function get_list($request, $response, $args)
+    {
+        $isAllowed = $this->isAllowed($request, $response);
+
+        if (!$isAllowed['allow']) {
+            $result = [
+                'success' => 0,
+                'message' => $isAllowed['message'],
+            ];
+            return $response->withJson($result, 201);
+        }
+
+        $result = ['success' => 0];
+        $params = $request->getParams();
+        $i_model = new \Model\InvoicesModel();
+        $items = $i_model->getData($params);
+        if (is_array($items)){
+            $result['success'] = 1;
+            foreach ($items as $i => $item) {
+                $items[$i]['invoice_number'] = $i_model->getInvoiceFormatedNumber2($item['serie'], $item['nr']);
+                $items[$i]['config'] = json_decode($item['config'], true);
+                $status_order = 'Lunas';
+                if ($item['status'] == 0) {
+                    if ($item['delivered'] == 0) {
+                        $status_order = 'Belum Lunas';
+                    } elseif ($item['delivered'] == 1) {
+                        $status_order = 'Hutang Tempo';
+                    }
+                } else {
+                    if ($item['delivered'] == 0) {
+                        $status_order = 'Lunas';
+                    } elseif ($item['delivered'] == 1) {
+                        $status_order = 'Selesai';
+                    }
+                }
+                $items[$i]['status_order'] = $status_order;
+            }
+            $result['data'] = $items;
+        } else {
+            $result = [
+                'success' => 0,
+                'message' => "Data transaksi tidak ditemukan.",
+            ];
         }
 
         return $response->withJson($result, 201);

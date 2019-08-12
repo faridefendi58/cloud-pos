@@ -82,6 +82,14 @@ class InvoicesModel extends \Model\BaseModel
         return $model->serie.$nr.$model->nr;
     }
 
+    public function getInvoiceFormatedNumber2($serie, $nr)
+    {
+        $zero = str_repeat('0',4-strlen($nr));
+
+        return $serie.$zero.$nr;
+    }
+
+
     public function getData($data = array())
     {
         $sql = 'SELECT t.*, SUM(i.price*i.quantity) AS total, c.name AS customer_name, 
@@ -98,13 +106,63 @@ class InvoicesModel extends \Model\BaseModel
             $params['status'] = $data['status'];
         }
 
+        if (isset($data['status_order'])) {
+            if (strtolower($data['status_order']) == 'selesai') {
+                $sql .= ' AND t.status = 1 AND t.delivered = 1';
+            } elseif (strtolower($data['status_order']) == 'lunas') {
+                $sql .= ' AND t.status = 1 AND t.delivered = 0';
+            } elseif (strtolower($data['status_order']) == 'utang_tempo') {
+                $sql .= ' AND t.status = 0 AND t.delivered = 1';
+            } elseif (strtolower($data['status_order']) == 'belum_lunas') {
+                $sql .= ' AND t.status = 0 AND t.delivered = 0';
+            }
+        }
+
         if (isset($data['warehouse_id'])) {
             $sql .= ' AND t.warehouse_id =:warehouse_id';
             $params['warehouse_id'] = $data['warehouse_id'];
         }
 
+        if (isset($data['created_at_from']) && isset($data['created_at_to'])) {
+            $sql .= ' AND t.created_at BETWEEN :created_at_from AND :created_at_to';
+            $params['created_at_from'] = date("Y-m-d H:i:s", strtotime($data['created_at_from']));
+            $params['created_at_to'] = date("Y-m-d H:i:s", strtotime($data['created_at_to']));
+        }
+
+        if (isset($data['paid_at_from']) && isset($data['paid_at_to'])) {
+            $sql .= ' AND t.paid_at BETWEEN :paid_at_from AND :paid_at_to';
+            $params['paid_at_from'] = date("Y-m-d H:i:s", strtotime($data['paid_at_from']));
+            $params['paid_at_to'] = date("Y-m-d H:i:s", strtotime($data['paid_at_to']));
+        }
+
+        if (isset($data['delivered_at_from']) && isset($data['delivered_at_to'])) {
+            $sql .= ' AND t.delivered_at BETWEEN :delivered_at_from AND :delivered_at_to';
+            $params['delivered_at_from'] = date("Y-m-d H:i:s", strtotime($data['delivered_at_from']));
+            $params['delivered_at_to'] = date("Y-m-d H:i:s", strtotime($data['delivered_at_to']));
+        }
+
+        if (isset($data['delivered_plan_at_from']) && isset($data['delivered_plan_at_to'])) {
+            $sql .= ' AND t.delivered_plan_at BETWEEN :delivered_plan_at_from AND :delivered_plan_at_to';
+            $params['delivered_plan_at_from'] = date("Y-m-d H:i:s", strtotime($data['delivered_plan_at_from']));
+            $params['delivered_plan_at_to'] = date("Y-m-d H:i:s", strtotime($data['delivered_plan_at_to']));
+        }
+
         $sql .= ' GROUP BY t.id';
-        $sql .= ' ORDER BY t.created_at DESC';
+        if (!isset($data['order_by'])) {
+            $sql .= ' ORDER BY t.created_at DESC';
+        } else {
+            $order_type = 'DESC';
+            if (isset($data['order_type'])) {
+                $order_type = $data['order_type'];
+            }
+            $sql .= ' ORDER BY t.'. $data['order_by'] .' '.$order_type;
+        }
+
+        if (!isset($data['limit'])) {
+            $sql .= ' LIMIT 20';
+        } else {
+            $sql .= ' LIMIT '.$data['limit'];
+        }
 
         $sql = str_replace(['{tablePrefix}'], [$this->_tbl_prefix], $sql);
 
