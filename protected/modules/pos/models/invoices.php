@@ -89,7 +89,6 @@ class InvoicesModel extends \Model\BaseModel
         return $serie.$zero.$nr;
     }
 
-
     public function getData($data = array())
     {
         $sql = 'SELECT t.*, SUM(i.price*i.quantity) AS total, c.name AS customer_name, 
@@ -146,6 +145,26 @@ class InvoicesModel extends \Model\BaseModel
             $sql .= ' AND t.delivered_plan_at BETWEEN :delivered_plan_at_from AND :delivered_plan_at_to';
             $params['delivered_plan_at_from'] = date("Y-m-d H:i:s", strtotime($data['delivered_plan_at_from']));
             $params['delivered_plan_at_to'] = date("Y-m-d H:i:s", strtotime($data['delivered_plan_at_to']));
+        }
+
+		if (isset($data['customer_name'])) {
+            $sql .= ' AND LOWER(c.name) LIKE "%'. strtolower($data['customer_name']) .'%"';
+        }
+
+		if (isset($data['customer_phone'])) {
+            $sql .= ' AND c.telephone =:phone ';
+			$params['phone'] = $data['customer_phone'];
+        }
+
+		if (isset($data['invoice_number'])) {
+            $sql .= ' AND t.nr =:invoice_number ';
+			if (($pos = strpos($data['invoice_number'], "-")) !== FALSE) {
+				$exp = explode("-", $data['invoice_number']);
+				$nr = @end($exp);
+				$params['invoice_number'] = (int)$nr;
+			} else {
+				$params['invoice_number'] = (int)$data['invoice_number'];
+			}
         }
 
         $sql .= ' GROUP BY t.id';
