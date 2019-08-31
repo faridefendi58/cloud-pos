@@ -126,25 +126,25 @@ class InvoicesModel extends \Model\BaseModel
         if (isset($data['created_at_from']) && isset($data['created_at_to'])) {
             $sql .= ' AND t.created_at BETWEEN :created_at_from AND :created_at_to';
             $params['created_at_from'] = date("Y-m-d H:i:s", strtotime($data['created_at_from']));
-            $params['created_at_to'] = date("Y-m-d H:i:s", strtotime($data['created_at_to']));
+            $params['created_at_to'] = date("Y-m-d H:i:s", strtotime($data['created_at_to'])+86400);
         }
 
         if (isset($data['paid_at_from']) && isset($data['paid_at_to'])) {
             $sql .= ' AND t.paid_at BETWEEN :paid_at_from AND :paid_at_to';
             $params['paid_at_from'] = date("Y-m-d H:i:s", strtotime($data['paid_at_from']));
-            $params['paid_at_to'] = date("Y-m-d H:i:s", strtotime($data['paid_at_to']));
+            $params['paid_at_to'] = date("Y-m-d H:i:s", strtotime($data['paid_at_to'])+86400);
         }
 
         if (isset($data['delivered_at_from']) && isset($data['delivered_at_to'])) {
             $sql .= ' AND t.delivered_at BETWEEN :delivered_at_from AND :delivered_at_to';
             $params['delivered_at_from'] = date("Y-m-d H:i:s", strtotime($data['delivered_at_from']));
-            $params['delivered_at_to'] = date("Y-m-d H:i:s", strtotime($data['delivered_at_to']));
+            $params['delivered_at_to'] = date("Y-m-d H:i:s", strtotime($data['delivered_at_to'])+86400);
         }
 
         if (isset($data['delivered_plan_at_from']) && isset($data['delivered_plan_at_to'])) {
             $sql .= ' AND t.delivered_plan_at BETWEEN :delivered_plan_at_from AND :delivered_plan_at_to';
             $params['delivered_plan_at_from'] = date("Y-m-d H:i:s", strtotime($data['delivered_plan_at_from']));
-            $params['delivered_plan_at_to'] = date("Y-m-d H:i:s", strtotime($data['delivered_plan_at_to']));
+            $params['delivered_plan_at_to'] = date("Y-m-d H:i:s", strtotime($data['delivered_plan_at_to'])+86400);
         }
 
 		if (isset($data['customer_name'])) {

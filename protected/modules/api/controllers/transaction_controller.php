@@ -136,7 +136,9 @@ class TransactionController extends BaseController
             }
             if (array_key_exists("pickup_date", $params['shipping']) && !empty($params['shipping']['pickup_date'])) {
                 $model2->delivered_plan_at = date("Y-m-d H:i:s", strtotime($params['shipping']['pickup_date']));
-            }
+            } else {
+				$model2->delivered_plan_at = date("Y-m-d H:i:s");
+			}
             $model2->created_at = date("Y-m-d H:i:s");
             $model2->created_by = (isset($params['admin_id']))? $params['admin_id'] : 1;
 
@@ -348,6 +350,10 @@ class TransactionController extends BaseController
                 $model->paid_at = date("Y-m-d H:i:s");
                 $model->paid_by = (isset($params['admin_id'])) ? $params['admin_id'] : 1;
             }
+
+			if (empty($model->delivered_plan_at)) {
+				$model->delivered_plan_at = $model->paid_at;
+			}
             $model->delivered = 1;
             $model->delivered_at = date("Y-m-d H:i:s");
             $model->delivered_by = (isset($params['admin_id']))? $params['admin_id'] : 1;
