@@ -153,6 +153,7 @@ class InvoicesModel extends \Model\BaseModel
             $params['delivered_plan_at_to'] = date("Y-m-d H:i:s", strtotime($data['delivered_plan_at_to'])+86400);
         }
 
+
 		if (isset($data['customer_name'])) {
             $sql .= ' AND LOWER(c.name) LIKE "%'. strtolower($data['customer_name']) .'%"';
         }
@@ -171,6 +172,11 @@ class InvoicesModel extends \Model\BaseModel
 			} else {
 				$params['invoice_number'] = (int)$data['invoice_number'];
 			}
+        }
+
+		if (isset($data['delivered'])) {
+            $sql .= ' AND t.delivered =:delivered AND DATE_FORMAT(t.delivered_plan_at, "%Y-%m-%d") <= CURDATE()';
+			$params['delivered'] = $data['delivered'];
         }
 
 		if (isset($data['shipping_method']) && $data['shipping_method']>0) {
