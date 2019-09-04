@@ -93,7 +93,13 @@ class InvoicesModel extends \Model\BaseModel
     {
         $sql = 'SELECT t.*, SUM(i.price*i.quantity) AS total, c.name AS customer_name, 
             c.email as customer_email, c.telephone AS customer_phone, c.address AS customer_address, c.status AS customer_status, 
-            w.title AS warehouse_name 
+            w.title AS warehouse_name, 
+            (CASE
+                WHEN t.status = 1 AND t.delivered = 1 THEN "4-Selesai"
+                WHEN t.status = 1 AND t.delivered = 0 THEN "1-Lunas"
+                WHEN t.status = 0 AND t.delivered = 1 THEN "3-Utang Tempo"
+                WHEN t.status = 0 AND t.delivered = 0 THEN "2-Belum Lunas"
+            END) AS status_order_code 
             FROM {tablePrefix}ext_invoice t 
             LEFT JOIN {tablePrefix}ext_invoice_item i ON t.id = i.invoice_id 
             LEFT JOIN {tablePrefix}ext_customer c ON c.id = t.customer_id 
@@ -169,7 +175,15 @@ class InvoicesModel extends \Model\BaseModel
 
         $sql .= ' GROUP BY t.id';
         if (!isset($data['order_by'])) {
-            $sql .= ' ORDER BY t.created_at DESC';
+            if (isset($data['custom_order_by'])) {
+                $order_type = 'DESC';
+                if (isset($data['order_type'])) {
+                    $order_type = $data['order_type'];
+                }
+                $sql .= ' ORDER BY '. $data['custom_order_by'] .' '.$order_type;
+            } else {
+                $sql .= ' ORDER BY t.created_at DESC';
+            }
         } else {
             $order_type = 'DESC';
             if (isset($data['order_type'])) {
