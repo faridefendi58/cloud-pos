@@ -173,6 +173,12 @@ class InvoicesModel extends \Model\BaseModel
 			}
         }
 
+		if (isset($data['shipping_method']) && $data['shipping_method']>0) {
+			$ship_method = $data['shipping_method'] - 1;
+			$like = '"method":"'. $ship_method .'"';
+			$sql .= " AND t.config LIKE '%". $like ."%'";
+		}
+
         $sql .= ' GROUP BY t.id';
         if (!isset($data['order_by'])) {
             if (isset($data['custom_order_by'])) {
