@@ -135,7 +135,11 @@ class TransactionController extends BaseController
                 $model2->warehouse_id = $params['warehouse_id'];
             }
             if (!empty($params['shipping']) && array_key_exists("pickup_date", $params['shipping'][0]) && !empty($params['shipping'][0]['pickup_date'])) {
-                $model2->delivered_plan_at = date("Y-m-d H:i:s", strtotime($params['shipping'][0]['pickup_date']));
+				if (strtotime($params['shipping'][0]['pickup_date']) > 0) {
+                	$model2->delivered_plan_at = date("Y-m-d H:i:s", strtotime($params['shipping'][0]['pickup_date']));
+				} else {
+					$model2->delivered_plan_at = date("Y-m-d H:i:s", strtotime($params['shipping'][0]['date_added']));
+				}
             } else {
 				$model2->delivered_plan_at = date("Y-m-d H:i:s");
 			}
