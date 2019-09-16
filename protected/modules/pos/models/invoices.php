@@ -115,10 +115,16 @@ class InvoicesModel extends \Model\BaseModel
         if (isset($data['status_order'])) {
             if (strtolower($data['status_order']) == 'selesai') {
                 $sql .= ' AND t.status = 1 AND t.delivered = 1';
+				$data['delivered'] = 1;
+				$data['delivered_at_from'] = $data['delivered_plan_at_from'];
+				$data['delivered_at_to'] = $data['delivered_at_to'];
             } elseif (strtolower($data['status_order']) == 'lunas') {
                 $sql .= ' AND t.status = 1 AND t.delivered = 0';
             } elseif (strtolower($data['status_order']) == 'utang_tempo') {
                 $sql .= ' AND t.status = 0 AND t.delivered = 1';
+				$data['delivered'] = 1;
+				$data['delivered_at_from'] = $data['delivered_plan_at_from'];
+				$data['delivered_at_to'] = $data['delivered_at_to'];
             } elseif (strtolower($data['status_order']) == 'belum_lunas') {
                 $sql .= ' AND t.status = 0 AND t.delivered = 0';
             }
