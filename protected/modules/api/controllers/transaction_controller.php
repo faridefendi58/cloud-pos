@@ -18,13 +18,14 @@ class TransactionController extends BaseController
         $app->map(['GET'], '/detail', [$this, 'get_detail']);
         $app->map(['POST'], '/complete', [$this, 'complete']);
         $app->map(['GET'], '/list', [$this, 'get_list']);
+        $app->map(['POST'], '/complete-payment', [$this, 'complete_payment']);
     }
 
     public function accessRules()
     {
         return [
             ['allow',
-                'actions' => ['create', 'detail', 'complete', 'list'],
+                'actions' => ['create', 'detail', 'complete', 'list', 'complete-payment'],
                 'users'=> ['@'],
             ]
         ];
@@ -358,6 +359,7 @@ class TransactionController extends BaseController
 			if (empty($model->delivered_plan_at)) {
 				$model->delivered_plan_at = $model->paid_at;
 			}
+
             $model->delivered = 1;
             $model->delivered_at = date("Y-m-d H:i:s");
             $model->delivered_by = (isset($params['admin_id']))? $params['admin_id'] : 1;
@@ -411,9 +413,17 @@ class TransactionController extends BaseController
         $result = ['success' => 0];
         $params = $request->getParams();
         $i_model = new \Model\InvoicesModel();
+		$limit = 20;
+		if (isset($params['limit'])) {
+			$limit = $params['limit'];
+			$params['limit'] = $params['limit'] + 1;
+		} else {
+			$params['limit'] = 21;
+		}
         $items = $i_model->getData($params);
         if (is_array($items)){
             $result['success'] = 1;
+			$ids = [];
             foreach ($items as $i => $item) {
                 $items[$i]['invoice_number'] = $i_model->getInvoiceFormatedNumber2($item['serie'], $item['nr']);
                 $items[$i]['config'] = json_decode($item['config'], true);
@@ -431,14 +441,88 @@ class TransactionController extends BaseController
                         $status_order = 'Selesai';
                     }
                 }
-                $items[$i]['status_order'] = $status_order;
+				$items[$i]['status_order'] = $status_order;
+				array_push($ids, $item['id']);
             }
             $result['data'] = $items;
+			$result['next_id'] = 0;
+			if (count($items) > $limit) {
+				$result['next_id'] = max($ids);
+				unset($items[$limit]);
+			}
         } else {
             $result = [
                 'success' => 0,
                 'message' => "Data transaksi tidak ditemukan.",
             ];
+        }
+
+        return $response->withJson($result, 201);
+    }
+
+	public function complete_payment($request, $response, $args)
+    {
+        $isAllowed = $this->isAllowed($request, $response);
+
+        if (!$isAllowed['allow']) {
+            $result = [
+                'success' => 0,
+                'message' => $isAllowed['message'],
+            ];
+            return $response->withJson($result, 201);
+        }
+
+        $result = ['success' => 0];
+        $params = $request->getParams();
+
+        if (!empty($params['invoice_id'])) {
+            $model = \Model\InvoicesModel::model()->findByPk($params['invoice_id']);
+            $configs = [];
+            if (!empty($model->config)) {
+                $configs = json_decode($model->config, true);
+            }
+
+            $has_new_config = false;
+            if (isset($params['payment'])) {
+                if (in_array('payment', array_keys($configs))) {
+                    if (is_array($configs['payment'])) {
+                        $configs['payment'] = array_merge($configs['payment'], $params['payment']);
+                        $has_new_config = true;
+                    } else {
+                        // if current payment null or false
+                        $configs['payment'] = $params['payment'];
+                        $has_new_config = true;
+                    }
+                } else {
+                    $configs['payment'] = $params['payment'];
+                    $has_new_config = true;
+                }
+            }
+
+            $i_model = new \Model\InvoicesModel();
+            if ($model->status != \Model\InvoicesModel::STATUS_PAID) {
+                $model->status = \Model\InvoicesModel::STATUS_PAID;
+                $model->serie = $i_model->getInvoiceNumber($model->status, 'serie');
+                $model->nr = $i_model->getInvoiceNumber($model->status, 'nr');
+                $model->paid_at = date("Y-m-d H:i:s");
+                $model->paid_by = (isset($params['admin_id'])) ? $params['admin_id'] : 1;
+            }
+
+			if (empty($model->delivered_plan_at)) {
+				$model->delivered_plan_at = $model->paid_at;
+			}
+
+            if ($has_new_config) {
+                $model->config = json_encode($configs);
+            }
+            $model->updated_at = date("Y-m-d H:i:s");
+            $model->updated_by = (isset($params['admin_id']))? $params['admin_id'] : 1;
+            $update = \Model\InvoicesModel::model()->update($model);
+            if ($update) {
+                $result['success'] = 1;
+                $result['message'] = 'Data berhasil disimpan.';
+                $result['invoice_number'] = $i_model->getInvoiceFormatedNumber(['id' => $model->id]);
+            }
         }
 
         return $response->withJson($result, 201);
