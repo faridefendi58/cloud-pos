@@ -163,6 +163,10 @@ class InvoicesModel extends \Model\BaseModel
             $params['delivered_plan_at_to'] = date("Y-m-d H:i:s", strtotime($data['delivered_plan_at_to'])+86400);
         }
 
+		if (isset($data['delivered_plan_max_today'])) {
+            $sql .= ' AND DATE_FORMAT(t.delivered_plan_at, "%Y-%m-%d") <= CURDATE()';
+        }
+
 
 		if (isset($data['customer_name'])) {
             $sql .= ' AND LOWER(c.name) LIKE "%'. strtolower($data['customer_name']) .'%"';
