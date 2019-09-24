@@ -122,7 +122,7 @@ class InvoicesModel extends \Model\BaseModel
 				unset($data['delivered_at_to']);
             } elseif (strtolower($data['status_order']) == 'lunas') {
                 $sql .= ' AND t.status = 1 AND t.delivered = 0';
-            } elseif (strtolower($data['status_order']) == 'utang_tempo') {
+            } elseif (strtolower($data['status_order']) == 'hutang_tempo') {
                 $sql .= ' AND t.status = 0 AND t.delivered = 1';
 				$data['delivered'] = 1;
 				$data['delivered_at_from'] = $data['delivered_plan_at_from'];
