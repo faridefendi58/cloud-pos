@@ -164,7 +164,7 @@ class InvoicesModel extends \Model\BaseModel
         }
 
 		if (isset($data['delivered_plan_max_today'])) {
-            $sql .= ' AND DATE_FORMAT(t.delivered_plan_at, "%Y-%m-%d") <= CURDATE()';
+            $sql .= ' AND DATE_FORMAT(t.delivered_plan_at, "%Y-%m-%d") < CURDATE()';
         }
 
 
