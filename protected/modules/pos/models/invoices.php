@@ -158,9 +158,9 @@ class InvoicesModel extends \Model\BaseModel
         }
 
         if (isset($data['delivered_plan_at_from']) && isset($data['delivered_plan_at_to'])) {
-            $sql .= ' AND t.delivered_plan_at BETWEEN :delivered_plan_at_from AND :delivered_plan_at_to';
-            $params['delivered_plan_at_from'] = date("Y-m-d H:i:s", strtotime($data['delivered_plan_at_from']));
-            $params['delivered_plan_at_to'] = date("Y-m-d H:i:s", strtotime($data['delivered_plan_at_to'])+86400);
+            $sql .= ' AND DATE_FORMAT(t.delivered_plan_at, "%Y-%m-%d") BETWEEN :delivered_plan_at_from AND :delivered_plan_at_to';
+            $params['delivered_plan_at_from'] = date("Y-m-d", strtotime($data['delivered_plan_at_from']));
+            $params['delivered_plan_at_to'] = date("Y-m-d", strtotime($data['delivered_plan_at_to'])+86400);
         }
 
 		if (isset($data['delivered_plan_max_today'])) {
@@ -188,7 +188,7 @@ class InvoicesModel extends \Model\BaseModel
 			}
         }
 
-		if (isset($data['delivered'])) {
+		if (isset($data['delivered']) && $data['delivered']>0) {
             $sql .= ' AND t.delivered =:delivered AND DATE_FORMAT(t.delivered_plan_at, "%Y-%m-%d") <= CURDATE()';
 			$params['delivered'] = $data['delivered'];
         }
