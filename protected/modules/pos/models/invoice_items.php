@@ -6,6 +6,7 @@ require_once __DIR__ . '/../../../models/base.php';
 class InvoiceItemsModel extends \Model\BaseModel
 {
     const TYPE_ORDER = 'order';
+    const TYPE_REFUND = 'refund';
 
     public static function model($className = __CLASS__)
     {

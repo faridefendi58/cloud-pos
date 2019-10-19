@@ -19,13 +19,14 @@ class TransactionController extends BaseController
         $app->map(['POST'], '/complete', [$this, 'complete']);
         $app->map(['GET'], '/list', [$this, 'get_list']);
         $app->map(['POST'], '/complete-payment', [$this, 'complete_payment']);
+        $app->map(['POST'], '/refund', [$this, 'refund']);
     }
 
     public function accessRules()
     {
         return [
             ['allow',
-                'actions' => ['create', 'detail', 'complete', 'list', 'complete-payment'],
+                'actions' => ['create', 'detail', 'complete', 'list', 'complete-payment', 'refund'],
                 'users'=> ['@'],
             ]
         ];
@@ -522,6 +523,101 @@ class TransactionController extends BaseController
                 $result['success'] = 1;
                 $result['message'] = 'Data berhasil disimpan.';
                 $result['invoice_number'] = $i_model->getInvoiceFormatedNumber(['id' => $model->id]);
+            }
+        }
+
+        return $response->withJson($result, 201);
+    }
+
+    public function refund($request, $response, $args)
+    {
+        $isAllowed = $this->isAllowed($request, $response);
+
+        if (!$isAllowed['allow']) {
+            $result = [
+                'success' => 0,
+                'message' => $isAllowed['message'],
+            ];
+            return $response->withJson($result, 201);
+        }
+
+        $result = ['success' => 0];
+        $params = $request->getParams();
+        // just ex
+        /*$json = '{"items":[{"id":"12","name":"Daging Durian","total_qty":"2","returned_qty":"1","refunded_qty":"1","price":"90000"}],"payments":{"type":"cash","amount":"90000"},"admin_id":"1","invoice_id":"10"}';
+        $qry = json_decode($json, true);
+        $http_qry = http_build_query($qry);*/
+
+        if (isset($params['admin_id']) && isset($params['invoice_id'])) {
+            $model = \Model\InvoicesModel::model()->findByPk($params['invoice_id']);
+
+            $model2 = new \Model\InvoicesModel();
+            $model2->customer_id = $model->customer_id;
+            $model2->status = \Model\InvoicesModel::STATUS_REFUND;
+            if (isset($params['payments']) && is_array(($params['payments']))) {
+                foreach ($params['payments'] as $ip => $pymnt) {
+                    if ($pymnt['type'] == 'cash' && !empty($pymnt['amount'])) {
+                        $model2->cash = $this->money_unformat($pymnt['amount']);
+                    }
+                }
+            }
+            $model2->serie = $model2->getInvoiceNumber($model2->status, 'serie');
+            $model2->nr = $model2->getInvoiceNumber($model2->status, 'nr');
+            if ($model2->status == \Model\InvoicesModel::STATUS_REFUND) {
+                $model2->refunded_at = date(c);
+                $model2->refunded_by = (isset($params['admin_id']))? $params['admin_id'] : 1;
+            }
+
+            $model2->config = json_encode(
+                [
+                    'items' => $params['items'],
+                    'payments' => $params['payments'],
+                ]
+            );
+
+            $model2->currency_id = 1;
+            $model2->change_value = 1;
+            if (!empty($params['notes'])) {
+                $model2->notes = $params['notes'];
+            }
+
+            $model2->warehouse_id = $model->warehouse_id;
+            $model2->created_at = date("Y-m-d H:i:s");
+            $model2->created_by = (isset($params['admin_id']))? $params['admin_id'] : 1;
+
+            $save = \Model\InvoicesModel::model()->save(@$model2);
+            if ($save) {
+                $items = $params['items'];
+                $success = true;
+                foreach ($items as $index => $data) {
+                    $model3 = new \Model\InvoiceItemsModel();
+                    $model3->invoice_id = $model2->id;
+                    $model3->type = \Model\InvoiceItemsModel::TYPE_REFUND;
+                    // find the order
+                    $o_model = \Model\OrdersModel::model()->findByAttributes(['invoice_id' => $model->id, 'product_id' => $data['id']]);
+                    $model3->rel_id = $o_model->id;
+                    $model3->title = $data['name'];
+                    $model3->quantity = $data['refunded_qty'];
+                    $model3->price = $data['price'];
+                    $model3->created_at = date("Y-m-d H:i:s");
+                    $model3->created_by = (isset($params['admin_id']))? $params['admin_id'] : 1;
+                    $save2 = \Model\InvoiceItemsModel::model()->save(@$model3);
+                    if (!$save2) {
+                        $success &= false;
+                    }
+                }
+                if ($success) {
+                    $result = [
+                        "success" => 1,
+                        "id" => $model2->id,
+                        "invoice_number" => $model2->getInvoiceFormatedNumber(['id' => $model2->id]),
+                        'message' => 'Data berhasil disimpan.'
+                    ];
+                } else {
+                    $result['message'] = 'Data gagal disimpan';
+                }
+            } else {
+                $result['message'] = 'Data gagal disimpan';
             }
         }
 
