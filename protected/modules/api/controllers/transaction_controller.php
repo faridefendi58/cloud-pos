@@ -595,7 +595,14 @@ class TransactionController extends BaseController
                     $model3->type = \Model\InvoiceItemsModel::TYPE_REFUND;
                     // find the order
                     $o_model = \Model\OrdersModel::model()->findByAttributes(['invoice_id' => $model->id, 'product_id' => $data['id']]);
-                    $model3->rel_id = $o_model->id;
+					if ($o_model instanceof \RedBeanPHP\OODBBean) {
+                    	$model3->rel_id = $o_model->id;
+					} else {
+						$ii_model = \Model\InvoiceItemsModel::model()->findByAttributes(['invoice_id' => $model->id, 'title' => $data['name']]);
+						if ($ii_model instanceof \RedBeanPHP\OODBBean) {
+		                	$model3->rel_id = $ii_model->rel_id;
+						}
+					}
                     $model3->title = $data['name'];
                     $model3->quantity = $data['refunded_qty'];
                     $model3->price = $data['price'];
