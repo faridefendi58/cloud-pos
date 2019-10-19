@@ -156,7 +156,7 @@ class TransactionController extends BaseController
                 $success = true;
                 foreach ($items_belanja as $index => $data) {
                     $model3 = new \Model\OrdersModel();
-                    $model3->product_id = $data['id'];
+                    $model3->product_id = $data['barcode'];
                     if (!empty($model2->customer_id)) {
                         $model3->customer_id = $model2->customer_id;
                     }
