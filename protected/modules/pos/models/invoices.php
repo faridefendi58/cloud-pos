@@ -316,4 +316,61 @@ class InvoicesModel extends \Model\BaseModel
 
         return $row;
     }
+
+    public function getRefundData($data = array()) {
+        $sql = 'SELECT t.id, t.serie, t.nr, t.notes, t.status, t.created_at, t.refunded_at, 
+            SUM(ii.price*ii.quantity) AS total, t.discount,
+            t.customer_id, c.name AS customer_name, 
+            t.warehouse_id, w.title AS warehouse_name, t.config, 
+            t.created_by, a.name AS created_by_name, 
+            t.refunded_by, ac.name AS refunded_by_name
+            FROM {tablePrefix}ext_invoice t 
+            JOIN {tablePrefix}ext_invoice_item ii ON t.id = ii.invoice_id 
+            LEFT JOIN {tablePrefix}ext_customer c ON c.id = t.customer_id 
+            LEFT JOIN {tablePrefix}ext_warehouse w ON w.id = t.warehouse_id 
+            LEFT JOIN {tablePrefix}admin a ON a.id = t.created_by 
+            LEFT JOIN {tablePrefix}admin ac ON ac.id = t.refunded_by 
+            WHERE 1';
+
+        $params = [];
+        if (isset($data['id'])) {
+            $sql .= ' AND t.id =:id';
+            $params['id'] = $data['id'];
+        }
+
+        if (isset($data['serie'])) {
+            $sql .= ' AND t.serie =:serie';
+            $params['serie'] = $data['serie'];
+        }
+
+        if (isset($data['nr'])) {
+            $sql .= ' AND t.nr =:nr';
+            $params['nr'] = $data['nr'];
+        }
+
+        if (isset($data['refunded_invoice_id'])) {
+            $sql .= ' AND t.refunded_invoice_id =:refunded_invoice_id';
+            $params['refunded_invoice_id'] = $data['refunded_invoice_id'];
+        }
+
+        $sql = str_replace(['{tablePrefix}'], [$this->_tbl_prefix], $sql);
+
+        $row = R::getRow( $sql, $params );
+
+        return $row;
+    }
+
+    public function has_refund($invoice_id = 0) {
+        $sql = 'SELECT t.id, t.refunded_invoice_id
+            FROM {tablePrefix}ext_invoice t 
+            WHERE t.refunded_invoice_id =:refunded_invoice_id';
+
+        $params = ['refunded_invoice_id' => $invoice_id];
+
+        $sql = str_replace(['{tablePrefix}'], [$this->_tbl_prefix], $sql);
+
+        $row = R::getRow( $sql, $params );
+
+        return $row['id'];
+    }
 }

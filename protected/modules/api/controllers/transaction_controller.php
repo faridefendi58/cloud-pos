@@ -294,6 +294,28 @@ class TransactionController extends BaseController
                 }
             }
 
+            // check has refund data
+            $inv_data['refund'] = [];
+            $refund_inv_id = $inv_model->has_refund($inv_data['id']);
+            if (!empty($refund_inv_id)) {
+                $refund_data = $inv_model->getRefundData(['id' => $refund_inv_id]);
+                if (in_array("config", array_keys($refund_data))) {
+                    $r_config = json_decode($refund_data['config'], true);
+                    if (is_array($r_config)) {
+                        unset($refund_data['config']);
+                        $refund_data = $refund_data + $r_config;
+                    }
+                }
+
+                if (array_key_exists("serie", $refund_data) && array_key_exists("nr", $refund_data)) {
+                    $zero = str_repeat('0',4-strlen($refund_data['nr']));
+                    $refund_data['invoice_number'] = $refund_data['serie'].$zero.$refund_data['nr'];
+                    unset($refund_data['serie']);
+                    unset($refund_data['nr']);
+                }
+                $inv_data['refund'] = $refund_data;
+            }
+
             $result['success'] = 1;
             $result['data'] = $inv_data;
         }
@@ -544,7 +566,7 @@ class TransactionController extends BaseController
         $result = ['success' => 0];
         $params = $request->getParams();
         // just ex
-        /*$json = '{"items":[{"id":"12","name":"Daging Durian","total_qty":"2","returned_qty":"1","refunded_qty":"1","price":"90000"}],"payments":{"type":"cash","amount":"90000"},"admin_id":"1","invoice_id":"10"}';
+        /*$json = '{"items":[{"id":"12","name":"Daging Durian","total_qty":"2","returned_qty":"1","refunded_qty":"1","price":"90000"}],"payments":[{"type":"cash","amount":"90000"}],"admin_id":"1","invoice_id":"10"}';
         $qry = json_decode($json, true);
         $http_qry = http_build_query($qry);*/
 
@@ -566,6 +588,7 @@ class TransactionController extends BaseController
             if ($model2->status == \Model\InvoicesModel::STATUS_REFUND) {
                 $model2->refunded_at = date(c);
                 $model2->refunded_by = (isset($params['admin_id']))? $params['admin_id'] : 1;
+                $model2->refunded_invoice_id = $model->id;
             }
 
             $model2->config = json_encode(
