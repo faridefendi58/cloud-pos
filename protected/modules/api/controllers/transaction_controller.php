@@ -590,6 +590,15 @@ class TransactionController extends BaseController
                 $model2->refunded_by = (isset($params['admin_id']))? $params['admin_id'] : 1;
                 $model2->refunded_invoice_id = $model->id;
             }
+	
+			foreach ($params['items'] as $index => $data) {
+				if (!array_key_exists('id', $data)) {
+					$pmodel = \Model\ProductsModel::model()->findByAttributes(['title' => $data['name']]);
+					if ($pmodel instanceof \RedBeanPHP\OODBBean) {	                   
+						$params['items'][$index]['id'] = $pmodel->id;
+					}
+				}
+			}
 
             $model2->config = json_encode(
                 [
