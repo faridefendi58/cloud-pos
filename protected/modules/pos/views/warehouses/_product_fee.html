@@ -12,7 +12,7 @@
             </label>
         </div>
     </div>
-    <div class="col-md-12" id="price-container-{{ product.id }}" {% if not prices %}style="display: none"{% endif %}>
+    <div class="col-md-12" id="product-fees-price_container-{{ product.id }}" {% if not prices %}style="display: none"{% endif %}>
         {% set no = 1 %}
         {% for ip, price in prices %}
         <div class="row padding10 price-item">
@@ -98,7 +98,7 @@
             'url': '{{ "pos/warehouses/price-item" | link }}/'+id,
             'type':'get',
             'success': function(data) {
-                $('#price-container-'+id).append(data);
+                $('#product-fees-price_container-'+id).append(data);
                 $(dt).hide();
                 if (hide) {
                     $(dt).parent().find('.fa-trash-o').parent().show();
@@ -111,9 +111,9 @@
     }
     function showPriceBox(dt) {
         if ($(dt).is(':checked')) {
-            $("#price-container-"+ $(dt).val()).show();
+            $("#product-fees-price_container-"+ $(dt).val()).show();
         } else {
-            $("#price-container-"+ $(dt).val()).hide();
+            $("#product-fees-price_container-"+ $(dt).val()).hide();
         }
     }
     $(function () {
