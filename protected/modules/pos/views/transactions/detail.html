@@ -55,6 +55,7 @@ Rincian Transaksi Penjualan - {{ App.params.site_name }}
                                 </div>
                                 <div class="clearfix mb30"></div>
                             </div>
+                            {% if invoice.status < 2 %}
                             <div id="dt_basic_wrapper" class="dataTables_wrapper form-inline no-footer table-responsive" role="grid">
                                 <table id="dt_basic" class="table table-striped">
                                     <thead>
@@ -136,6 +137,46 @@ Rincian Transaksi Penjualan - {{ App.params.site_name }}
                                     </table>
                                 </div>
                             </div>
+                            {% else %}
+                            <div class="dataTables_wrapper form-inline no-footer table-responsive" role="grid">
+                                <table class="table table-striped">
+                                    <thead>
+                                    <tr>
+                                        <th>No</th>
+                                        <th>Nama Produk</th>
+                                        <th>Jml Dikembalikan</th>
+                                        <th>Jml Direfund</th>
+                                        <th>Subtotal</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    {% set returned_qty = 0 %} {% set grand_total = 0 %}
+                                    {% for i, item in configs.items %}
+                                    <tr>
+                                        <td>{{ i+1 }}</td>
+                                        <td>{{ item.name }}</td>
+                                        <td style="text-align: center;">{{ item.returned_qty }}</td>
+                                        <td style="text-align: center;">{{ item.refunded_qty }} x {{ item.price | money_format }}</td>
+                                        {% set returned_qty = returned_qty + item.returned_qty %}
+                                        {% set sub_total = item.price * item.refunded_qty %}
+                                        {% set grand_total = grand_total + sub_total %}
+                                        <td style="text-align: right;">{{ sub_total | money_format }}</td>
+                                    </tr>
+                                    {% else %}
+                                    <tr class="no-data">
+                                        <td>No data founds</td>
+                                    </tr>
+                                    {% endfor %}
+                                    <tr>
+                                        <td colspan="2"><b>TOTAL</b></td>
+                                        <td style="text-align: center;">{{ returned_qty }}</td>
+                                        <td style="text-align: center;">&nbsp;</td>
+                                        <td style="text-align: right;">{{ grand_total | money_format }}</td>
+                                    </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            {% endif %}
                         </div>
                     </div>
                 </div>

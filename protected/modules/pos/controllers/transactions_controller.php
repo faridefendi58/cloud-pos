@@ -208,6 +208,15 @@ class TransactionsController extends BaseController
         $imodel = \Model\InvoicesModel::model()->findByPk($args['id']);
         $configs = json_decode($imodel->config, true);
 
+        if (array_key_exists('items', $configs)) {
+            $configs['items_belanja'] = $configs['items'];
+            $ri_model = \Model\InvoicesModel::model()->findByPk($imodel->refunded_invoice_id);
+            if ($ri_model instanceof \RedBeanPHP\OODBBean) {
+                $ri_configs = json_decode($ri_model->config, true);
+                $configs['customer'] = $ri_configs['customer'];
+            }
+        }
+
         $items_belanja = $configs['items_belanja'];
         $selected_customer = 0; $customer = null;
         if (array_key_exists('customer', $configs)) {
