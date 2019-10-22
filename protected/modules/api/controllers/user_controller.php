@@ -164,6 +164,16 @@ class UserController extends BaseController
                         }
                     }
 
+					if (isset($_POST['warehouse_id'])) {
+						$whs_model = new \Model\WarehouseStaffsModel();
+						$whs_model->warehouse_id = $_POST['warehouse_id'];
+						$whs_model->role_id = $admodel->group_id;
+						$whs_model->admin_id = $admodel->id;
+						$whs_model->created_at = date("Y-m-d H:i:s");
+						$whs_model->created_by = $admodel->id;
+						$save2 = \Model\WarehouseStaffsModel::model()->save(@$whs_model);
+					}
+
                     $result = [
                         'success' => 1,
                         'message' => 'Data berhasi disimpan.',
