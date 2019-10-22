@@ -1,8 +1,8 @@
 {% set products = App.call.model("\\Model\\ProductsModel", 'getData', {"active":1}) %}
-<form method="post" id="product-form" class="mt20" action="{{ 'pos/warehouses/product-prices' | link }}/{{ model.id }}">
+<form method="post" id="product-fees-form" class="mt20" action="{{ 'pos/warehouses/product-fees' | link }}/{{ model.id }}">
     <div class="alert alert-success" style="display: none;"></div>
     {% for i, product in products %}
-    {% set price_data = App.call.model("\\Model\\WarehouseProductsModel", 'getData', {"warehouse_id":model.id, "product_id":product.id}) %}
+    {% set price_data = App.call.model("\\Model\\WarehouseProductFeesModel", 'getData', {"warehouse_id":model.id, "product_id":product.id}) %}
     {% set prices = price_data[0].configs | json_decode %}
     <div class="col-md-12">
         <div class="form-group">
@@ -117,18 +117,18 @@
         }
     }
     $(function () {
-        $('#product-form').submit(function () {
+        $('#product-fees-form').submit(function () {
             var url = $(this).attr('action');
             $.ajax({
                 'beforeSend': function() { $('.loader').show(); },
                 'complete': function() { $('.loader').hide(); },
                 'url': url,
                 'type':'post',
-                'data': $('#product-form').serialize(),
+                'data': $('#product-fees-form').serialize(),
                 'success': function(data) {
                     console.log(data);
                     if (data.status == 'success') {
-                        var alert_success = $('#product-form').find('.alert-success');
+                        var alert_success = $('#product-fees-form').find('.alert-success');
                         alert_success.html(data.message);
                         alert_success.show();
                         setTimeout(function () {

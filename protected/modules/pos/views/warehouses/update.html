@@ -33,6 +33,9 @@ Kelola Warehouse - {{ App.params.site_name }}
                                     <a data-toggle="tab" href="#product">Harga Produk</a>
                                 </li>
                                 <li>
+                                    <a data-toggle="tab" href="#fee">Fee Produk</a>
+                                </li>
+                                <li>
                                     <a data-toggle="tab" href="#adjustment">Stock Adjustment</a>
                                 </li>
                                 <li>
@@ -48,6 +51,9 @@ Kelola Warehouse - {{ App.params.site_name }}
                                 </div>
                                 <div id="product" class="tab-pane fade">
                                     {% include 'warehouses/_product.html' with {'model':model} %}
+                                </div>
+                                <div id="fee" class="tab-pane fade">
+                                    {% include 'warehouses/_product_fee.html' with {'model':model} %}
                                 </div>
                                 <div id="adjustment" class="tab-pane fade">
                                     {% include 'warehouses/_stock_adjustment.html' with {'model':model} %}

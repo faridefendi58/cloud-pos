@@ -32,6 +32,7 @@ class WarehousesController extends BaseController
         $app->map(['GET'], '/price-item/[{id}]', [$this, 'price_item']);
         $app->map(['POST'], '/product-prices/[{id}]', [$this, 'price_prices']);
         $app->map(['POST'], '/product-stock/[{id}]', [$this, 'product_stock']);
+        $app->map(['POST'], '/product-fees/[{id}]', [$this, 'price_fees']);
     }
 
     public function accessRules()
@@ -682,6 +683,44 @@ class WarehousesController extends BaseController
         $save_counter = 0;
         if (isset($_POST['WarehouseProducts']) && count($_POST['WarehouseProducts']['product_id'])>0) {
             foreach ($_POST['WarehouseProducts']['product_id'] as $idx => $product_id) {
+                if (is_array($_POST['WarehouseProducts'][$product_id]['_qty'])) {
+                    foreach ($_POST['WarehouseProducts'][$product_id]['_qty'] as $_qid => $_qval) {
+                        $_qty = (int)$_POST['WarehouseProducts'][$product_id]['_qty'][$_qid];
+                        $delimeter = $_POST['WarehouseProducts'][$product_id]['delimeter'][$_qid];
+                        if ($delimeter == 'less_than') {
+                            if ($_qid == 0) {
+                                $_POST['WarehouseProducts'][$product_id]['quantity'][$_qid] = 1;
+                            } else {
+                                // check the prev data
+                                $_POST['WarehouseProducts'][$product_id]['quantity'][$_qid] = $_POST['WarehouseProducts'][$product_id]['quantity_max'][$_qid-1] + 1;
+                            }
+                            $_POST['WarehouseProducts'][$product_id]['quantity_max'][$_qid] = $_qty;
+                        } elseif ($delimeter == 'more_than') {
+                            // has next data
+                            if (array_key_exists($_qid+1, $_POST['WarehouseProducts'][$product_id]['_qty'])) {
+                                $_POST['WarehouseProducts'][$product_id]['quantity_max'][$_qid] = (int)$_POST['WarehouseProducts'][$product_id]['_qty'][$_qid+1];
+                            } else {
+                                $_POST['WarehouseProducts'][$product_id]['quantity_max'][$_qid] = 1000;
+                            }
+                            $_POST['WarehouseProducts'][$product_id]['quantity'][$_qid] = $_qty + 1;
+                        } elseif ($delimeter == 'less_than_equal') {
+                            if ($_qid == 0) {
+                                $_POST['WarehouseProducts'][$product_id]['quantity'][$_qid] = 1;
+                            } else {
+                                $_POST['WarehouseProducts'][$product_id]['quantity'][$_qid] = $_POST['WarehouseProducts'][$product_id]['quantity_max'][$_qid-1] + 1;
+                            }
+                            $_POST['WarehouseProducts'][$product_id]['quantity_max'][$_qid] = $_qty + 1;
+                        } else { //should be more than equal
+                            // has next data
+                            if (array_key_exists($_qid+1, $_POST['WarehouseProducts'][$product_id]['_qty'])) {
+                                $_POST['WarehouseProducts'][$product_id]['quantity_max'][$_qid] = (int)$_POST['WarehouseProducts'][$product_id]['_qty'][$_qid+1];
+                            } else {
+                                $_POST['WarehouseProducts'][$product_id]['quantity_max'][$_qid] = 1000;
+                            }
+                            $_POST['WarehouseProducts'][$product_id]['quantity'][$_qid] = (int)$_qty;
+                        }
+                    }
+                }
                 // build the configs
                 if (is_array($_POST['WarehouseProducts'][$product_id]['quantity'])) {
                     $items = [];
@@ -691,7 +730,9 @@ class WarehousesController extends BaseController
                             $quantity_max = $qval;
                         }
                         $price = $_POST['WarehouseProducts'][$product_id]['price'][$qid];
-                        $data = ['quantity' => $qval, 'quantity_max' => $quantity_max, 'price' => $price];
+                        $delimeter = $_POST['WarehouseProducts'][$product_id]['delimeter'][$qid];
+                        $_qty = $_POST['WarehouseProducts'][$product_id]['_qty'][$qid];
+                        $data = ['quantity' => $qval, 'quantity_max' => $quantity_max, 'price' => $price, 'delimeter' => $delimeter, '_qty' => $_qty];
                         $items[$qid] = $data;
                     }
                 }
@@ -766,6 +807,114 @@ class WarehousesController extends BaseController
                 $simpan = \Model\ProductStocksModel::model()->save(@$model);
                 if ($simpan) {
                     $save_counter = $save_counter + 1;
+                }
+            }
+        }
+
+        if ($save_counter > 0) {
+            return $response->withJson(
+                [
+                    'status' => 'success',
+                    'message' => $save_counter.' data berhasil disimpan.',
+                ], 201);
+        } else {
+            return $response->withJson(
+                [
+                    'status' => 'failed',
+                    'message' => 'Data gagal disimpan',
+                ], 201);
+        }
+    }
+
+    public function price_fees($request, $response, $args)
+    {
+        $isAllowed = $this->isAllowed($request, $response, $args);
+        if ($isAllowed instanceof \Slim\Http\Response)
+            return $isAllowed;
+
+        if (!$isAllowed) {
+            return $this->notAllowedAction();
+        }
+
+        $save_counter = 0;
+        if (isset($_POST['WarehouseProducts']) && count($_POST['WarehouseProducts']['product_id'])>0) {
+            foreach ($_POST['WarehouseProducts']['product_id'] as $idx => $product_id) {
+                if (is_array($_POST['WarehouseProducts'][$product_id]['_qty'])) {
+                    foreach ($_POST['WarehouseProducts'][$product_id]['_qty'] as $_qid => $_qval) {
+                        $_qty = (int)$_POST['WarehouseProducts'][$product_id]['_qty'][$_qid];
+                        $delimeter = $_POST['WarehouseProducts'][$product_id]['delimeter'][$_qid];
+                        if ($delimeter == 'less_than') {
+                            if ($_qid == 0) {
+                                $_POST['WarehouseProducts'][$product_id]['quantity'][$_qid] = 1;
+                            } else {
+                                // check the prev data
+                                $_POST['WarehouseProducts'][$product_id]['quantity'][$_qid] = $_POST['WarehouseProducts'][$product_id]['quantity_max'][$_qid-1] + 1;
+                            }
+                            $_POST['WarehouseProducts'][$product_id]['quantity_max'][$_qid] = $_qty;
+                        } elseif ($delimeter == 'more_than') {
+                            // has next data
+                            if (array_key_exists($_qid+1, $_POST['WarehouseProducts'][$product_id]['_qty'])) {
+                                $_POST['WarehouseProducts'][$product_id]['quantity_max'][$_qid] = (int)$_POST['WarehouseProducts'][$product_id]['_qty'][$_qid+1];
+                            } else {
+                                $_POST['WarehouseProducts'][$product_id]['quantity_max'][$_qid] = 1000;
+                            }
+                            $_POST['WarehouseProducts'][$product_id]['quantity'][$_qid] = $_qty + 1;
+                        } elseif ($delimeter == 'less_than_equal') {
+                            if ($_qid == 0) {
+                                $_POST['WarehouseProducts'][$product_id]['quantity'][$_qid] = 1;
+                            } else {
+                                $_POST['WarehouseProducts'][$product_id]['quantity'][$_qid] = $_POST['WarehouseProducts'][$product_id]['quantity_max'][$_qid-1] + 1;
+                            }
+                            $_POST['WarehouseProducts'][$product_id]['quantity_max'][$_qid] = $_qty + 1;
+                        } else { //should be more than equal
+                            // has next data
+                            if (array_key_exists($_qid+1, $_POST['WarehouseProducts'][$product_id]['_qty'])) {
+                                $_POST['WarehouseProducts'][$product_id]['quantity_max'][$_qid] = (int)$_POST['WarehouseProducts'][$product_id]['_qty'][$_qid+1];
+                            } else {
+                                $_POST['WarehouseProducts'][$product_id]['quantity_max'][$_qid] = 1000;
+                            }
+                            $_POST['WarehouseProducts'][$product_id]['quantity'][$_qid] = (int)$_qty;
+                        }
+                    }
+                }
+                // build the configs
+                if (is_array($_POST['WarehouseProducts'][$product_id]['quantity'])) {
+                    $items = [];
+                    foreach ($_POST['WarehouseProducts'][$product_id]['quantity'] as $qid => $qval) {
+                        $quantity_max = $_POST['WarehouseProducts'][$product_id]['quantity_max'][$qid];
+                        if ($quantity_max <= 0) {
+                            $quantity_max = $qval;
+                        }
+                        $price = $_POST['WarehouseProducts'][$product_id]['price'][$qid];
+                        $delimeter = $_POST['WarehouseProducts'][$product_id]['delimeter'][$qid];
+                        $_qty = $_POST['WarehouseProducts'][$product_id]['_qty'][$qid];
+                        $data = ['quantity' => $qval, 'quantity_max' => $quantity_max, 'price' => $price, 'delimeter' => $delimeter, '_qty' => $_qty];
+                        $items[$qid] = $data;
+                    }
+                }
+
+                $model = \Model\WarehouseProductFeesModel::model()->findByAttributes(['product_id' => $product_id, 'warehouse_id' => $_POST['WarehouseProducts']['warehouse_id']]);
+                if ($model instanceof \RedBeanPHP\OODBBean) {
+                    $model->priority = $_POST['WarehouseProducts'][$product_id]['priority'];
+                    $model->configs = json_encode($items);
+                    $model->updated_at = date("Y-m-d H:i:s");
+                    $model->updated_by = $this->_user->id;
+                    $simpan = \Model\WarehouseProductFeesModel::model()->update(@$model);
+                    if ($simpan) {
+                        $save_counter = $save_counter + 1;
+                    }
+                } else {
+                    $model = new \Model\WarehouseProductFeesModel();
+                    $model->warehouse_id = $_POST['WarehouseProducts']['warehouse_id'];
+                    $model->product_id = $product_id;
+                    $model->priority = $_POST['WarehouseProducts'][$product_id]['priority'];
+                    $model->configs = json_encode($items);
+                    $model->created_at = date("Y-m-d H:i:s");
+                    $model->created_by = $this->_user->id;
+                    $simpan = \Model\WarehouseProductFeesModel::model()->save(@$model);
+                    if ($simpan) {
+                        $save_counter = $save_counter + 1;
+                    }
                 }
             }
         }
