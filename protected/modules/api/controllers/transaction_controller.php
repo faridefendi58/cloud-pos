@@ -689,7 +689,7 @@ class TransactionController extends BaseController
                     $fee_items[$item['barcode']] = $item;
                 }
 
-                $wh_pics = \Model\WarehouseStaffsModel::model()->findAllByAttributes(['warehouse_id' => $inv_data['warehouse_id'], 'role_id' => 2]);
+                $wh_pics = \Model\WarehouseStaffsModel::model()->findAllByAttributes(['warehouse_id' => $inv_data['warehouse_id'], 'role_id' => 4]); //4 is pic
                 if (is_array($wh_pics)) {
                     foreach ($wh_pics as $j => $pic) {
                         if ($pic instanceof \RedBeanPHP\OODBBean) {
