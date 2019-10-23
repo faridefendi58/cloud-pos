@@ -391,7 +391,7 @@ class TransactionController extends BaseController
             }
             $model->updated_at = date("Y-m-d H:i:s");
             $model->updated_by = (isset($params['admin_id']))? $params['admin_id'] : 1;
-            $update = \Model\InvoicesModel::model()->update($model);
+            $update = \Model\InvoicesModel::model()->update(@$model);
             if ($update) {
                 // real update the stock
                 if (array_key_exists("items_belanja", $configs)) {
@@ -411,6 +411,10 @@ class TransactionController extends BaseController
                         }
                     }
                 }
+                //store the manager fee
+                try {
+                    $this->onAfterInvoiceCompleted($model->id);
+                } catch (\Exception $e){}
 
                 $result['success'] = 1;
                 $result['message'] = 'Data berhasil disimpan.';
@@ -661,5 +665,47 @@ class TransactionController extends BaseController
         }
 
         return $response->withJson($result, 201);
+    }
+
+    /**
+     * @param $id
+     * store pic fees
+     */
+    private function onAfterInvoiceCompleted($id) {
+        $inv_model = new \Model\InvoicesModel();
+        $inv_data = $inv_model->getItem(['id' => $id]);
+        if (is_array($inv_data) && array_key_exists('status', $inv_data) && $inv_data['status'] == \Model\InvoicesModel::STATUS_PAID) {
+            $wh_fee_model = new \Model\WarehouseProductFeesModel();
+
+            $configs = json_decode($inv_data['config'], true);
+            $fee_items = [];
+            if (is_array($configs) && array_key_exists('items_belanja', $configs)) {
+                $tot_fee = 0;
+                foreach ($configs['items_belanja'] as $i => $item) {
+                    $item['id'] = $item['barcode'];
+                    $fee = $wh_fee_model->getFee(['warehouse_id' => $inv_data['warehouse_id'], 'product_id' => $item['barcode'], 'quantity' => $item['qty']]);
+                    $item['fee'] = $fee;
+                    $tot_fee = $tot_fee + $fee;
+                    $fee_items[$item['barcode']] = $item;
+                }
+
+                $wh_pics = \Model\WarehouseStaffsModel::model()->findAllByAttributes(['warehouse_id' => $inv_data['warehouse_id'], 'role_id' => 2]);
+                if (is_array($wh_pics)) {
+                    foreach ($wh_pics as $j => $pic) {
+                        if ($pic instanceof \RedBeanPHP\OODBBean) {
+                            $model = new \Model\InvoiceFeesModel();
+                            $model->invoice_id = $inv_data['id'];
+                            $model->warehouse_id = $inv_data['warehouse_id'];
+                            $model->admin_id = $pic->admin_id;
+                            $model->fee = $tot_fee;
+                            $model->configs = json_encode($fee_items);
+                            $model->status = 1;
+                            $model->created_at = date("Y-m-d H:i:s");
+                            $save = \Model\InvoiceFeesModel::model()->save($model);
+                        }
+                    }
+                }
+            }
+        }
     }
 }

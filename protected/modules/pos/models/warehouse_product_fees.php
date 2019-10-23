@@ -64,7 +64,7 @@ class WarehouseProductFeesModel extends \Model\BaseModel
         return $rows;
     }
 
-    public function getPricesByWH($data) {
+    public function getFeesByWH($data) {
         $datas = self::getData($data);
         $items = [];
         if (is_array($datas)) {
@@ -75,5 +75,37 @@ class WarehouseProductFeesModel extends \Model\BaseModel
         }
 
         return $items;
+    }
+
+    /**
+     * @param $data: warehouse_id, product_id, quantity
+     * @return mixed
+     */
+    public function getFee($data)
+    {
+        $sql = 'SELECT t.configs    
+            FROM {tablePrefix}ext_warehouse_product_fee t 
+            LEFT JOIN {tablePrefix}ext_product p ON p.id = t.product_id 
+            WHERE t.warehouse_id =:warehouse_id AND t.product_id =:product_id';
+
+        $params = [ 'warehouse_id' => $data['warehouse_id'], 'product_id' => $data['product_id'] ];
+
+        $sql = str_replace(['{tablePrefix}'], [$this->_tbl_prefix], $sql);
+
+        $row = R::getRow( $sql, $params );
+
+        $fee = 0;
+        if (!empty($row['configs'])){
+            $configs = json_decode($row['configs'], true);
+            if (is_array($configs)) {
+                foreach ($configs as $i => $config) {
+                    if ($data['quantity'] >= $config['quantity'] && $data['quantity'] <= $config['quantity_max']) {
+                        $fee = $data['quantity'] * $config['price'];
+                    }
+                }
+            }
+        }
+
+        return $fee;
     }
 }
