@@ -99,7 +99,8 @@ class WarehouseProductFeesModel extends \Model\BaseModel
             $configs = json_decode($row['configs'], true);
             if (is_array($configs)) {
                 foreach ($configs as $i => $config) {
-                    if ($data['quantity'] >= $config['quantity'] && $data['quantity'] <= $config['quantity_max']) {
+                    // use the total quantity instead of each qty due to harga komulatif
+                    if ($data['total_quantity'] >= $config['quantity'] && $data['total_quantity'] <= $config['quantity_max']) {
                         $fee = $data['quantity'] * $config['price'];
                     }
                 }

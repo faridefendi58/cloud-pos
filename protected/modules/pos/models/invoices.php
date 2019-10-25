@@ -273,7 +273,8 @@ class InvoicesModel extends \Model\BaseModel
             t.created_by, a.name AS created_by_name, 
             t.paid_by, ab.name AS paid_by_name, 
             t.refunded_by, ac.name AS refunded_by_name,
-            t.delivered, t.delivered_at, ad.name AS delivered_by_name 
+            t.delivered, t.delivered_at, ad.name AS delivered_by_name,
+            SUM(ii.quantity) AS total_quantity 
             FROM {tablePrefix}ext_invoice t 
             JOIN {tablePrefix}ext_invoice_item ii ON t.id = ii.invoice_id 
             LEFT JOIN {tablePrefix}ext_customer c ON c.id = t.customer_id 

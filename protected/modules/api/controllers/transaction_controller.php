@@ -683,7 +683,7 @@ class TransactionController extends BaseController
                 $tot_fee = 0;
                 foreach ($configs['items_belanja'] as $i => $item) {
                     $item['id'] = $item['barcode'];
-                    $fee = $wh_fee_model->getFee(['warehouse_id' => $inv_data['warehouse_id'], 'product_id' => $item['barcode'], 'quantity' => $item['qty']]);
+                    $fee = $wh_fee_model->getFee(['warehouse_id' => $inv_data['warehouse_id'], 'product_id' => $item['barcode'], 'quantity' => $item['qty'], 'total_quantity' => $inv_data['total_quantity']]);
                     $item['fee'] = $fee;
                     $tot_fee = $tot_fee + $fee;
                     $fee_items[$item['barcode']] = $item;
