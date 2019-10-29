@@ -604,12 +604,28 @@ class TransactionController extends BaseController
 				}
 			}
 
-            $model2->config = json_encode(
-                [
-                    'items' => $params['items'],
-                    'payments' => $params['payments'],
-                ]
-            );
+			if (array_key_exists('items_change', $params)) {
+				if (!array_key_exists('id', $data)) {
+					$pmodel = \Model\ProductsModel::model()->findByAttributes(['title' => $data['name']]);
+					if ($pmodel instanceof \RedBeanPHP\OODBBean) {	                   
+						$params['items_change'][$index]['id'] = $pmodel->id;
+					}
+				}
+				$model2->config = json_encode(
+				        [
+				            'items' => $params['items'],
+				            'payments' => $params['payments'],
+							'items_change' => $params['items_change']
+				        ]
+				    );
+			} else {
+				$model2->config = json_encode(
+				        [
+				            'items' => $params['items'],
+				            'payments' => $params['payments'],
+				        ]
+				    );
+			}
 
             $model2->currency_id = 1;
             $model2->change_value = 1;
