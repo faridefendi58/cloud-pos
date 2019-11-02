@@ -20,13 +20,14 @@ class TransactionController extends BaseController
         $app->map(['GET'], '/list', [$this, 'get_list']);
         $app->map(['POST'], '/complete-payment', [$this, 'complete_payment']);
         $app->map(['POST'], '/refund', [$this, 'refund']);
+        $app->map(['GET'], '/list-fee', [$this, 'get_list_fee']);
     }
 
     public function accessRules()
     {
         return [
             ['allow',
-                'actions' => ['create', 'detail', 'complete', 'list', 'complete-payment', 'refund'],
+                'actions' => ['create', 'detail', 'complete', 'list', 'complete-payment', 'refund', 'list-fee'],
                 'users'=> ['@'],
             ]
         ];
@@ -723,5 +724,54 @@ class TransactionController extends BaseController
                 }
             }
         }
+    }
+
+    public function get_list_fee($request, $response, $args)
+    {
+        $isAllowed = $this->isAllowed($request, $response);
+
+        if (!$isAllowed['allow']) {
+            $result = [
+                'success' => 0,
+                'message' => $isAllowed['message'],
+            ];
+            return $response->withJson($result, 201);
+        }
+
+        $result = ['success' => 0];
+        $params = $request->getParams();
+        $model = new \Model\InvoiceFeesModel();
+        $items = $model->getData($params);
+        if (is_array($items) && count($items) > 0) {
+            $result['success'] = 1;
+            $i_model = new \Model\InvoicesModel();
+            $total_revenue = 0;
+            foreach ($items as $i => $item) {
+                $items[$i]['invoice_number'] = $i_model->getInvoiceFormatedNumber2($item['invoice_serie'], $item['invoice_nr']);
+                $items[$i]['configs'] = json_decode($item['configs'], true);
+                $items[$i]['invoice_configs'] = json_decode($item['invoice_configs'], true);
+                $status_order = 'Lunas';
+                if ($item['invoice_status'] == 0) {
+                    if ($item['delivered'] == 0) {
+                        $status_order = 'Belum Lunas';
+                    } elseif ($item['delivered'] == 1) {
+                        $status_order = 'Hutang Tempo';
+                    }
+                } else {
+                    if ($item['delivered'] == 0) {
+                        $status_order = 'Lunas';
+                    } elseif ($item['delivered'] == 1) {
+                        $status_order = 'Selesai';
+                    }
+                }
+                $items[$i]['status_order'] = $status_order;
+                unset($items[$i]['invoice_serie']);
+                unset($items[$i]['invoice_nr']);
+                $total_revenue = $total_revenue + $item['total_revenue'];
+            }
+            $result['data'] = ['summary' =>['total_revenue' => $total_revenue, 'total_transaction' => count($items)], 'items' => $items];
+        }
+
+        return $response->withJson($result, 201);
     }
 }
