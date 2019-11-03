@@ -242,7 +242,6 @@ class TransactionController extends BaseController
 
         if (isset($params['admin_id'])) {
             $inv_model = new \Model\InvoicesModel();
-
             $inv_data = [];
             if (isset($params['invoice_number'])) {
                 $series = $inv_model->getSeries();
@@ -741,35 +740,24 @@ class TransactionController extends BaseController
         $result = ['success' => 0];
         $params = $request->getParams();
         $model = new \Model\InvoiceFeesModel();
-        $items = $model->getData($params);
+        $items = $model->getSummaryData($params);
         if (is_array($items) && count($items) > 0) {
             $result['success'] = 1;
             $i_model = new \Model\InvoicesModel();
-            $total_revenue = 0;
+            $total_revenue = 0; $total_transaction = 0; $total_fee = 0;
             foreach ($items as $i => $item) {
-                $items[$i]['invoice_number'] = $i_model->getInvoiceFormatedNumber2($item['invoice_serie'], $item['invoice_nr']);
-                $items[$i]['configs'] = json_decode($item['configs'], true);
-                $items[$i]['invoice_configs'] = json_decode($item['invoice_configs'], true);
-                $status_order = 'Lunas';
-                if ($item['invoice_status'] == 0) {
-                    if ($item['delivered'] == 0) {
-                        $status_order = 'Belum Lunas';
-                    } elseif ($item['delivered'] == 1) {
-                        $status_order = 'Hutang Tempo';
-                    }
-                } else {
-                    if ($item['delivered'] == 0) {
-                        $status_order = 'Lunas';
-                    } elseif ($item['delivered'] == 1) {
-                        $status_order = 'Selesai';
-                    }
-                }
-                $items[$i]['status_order'] = $status_order;
-                unset($items[$i]['invoice_serie']);
-                unset($items[$i]['invoice_nr']);
                 $total_revenue = $total_revenue + $item['total_revenue'];
+                $total_transaction = $total_transaction + $item['total_transaction'];
+                $total_fee = $total_fee + $item['total_fee'];
             }
-            $result['data'] = ['summary' =>['total_revenue' => $total_revenue, 'total_transaction' => count($items)], 'items' => $items];
+            $result['data'] = [
+				'summary' => [
+					'total_revenue' => $total_revenue, 
+					'total_transaction' => $total_transaction,
+					'total_fee' => $total_fee
+				], 
+				'items' => $items
+			];
         }
 
         return $response->withJson($result, 201);
