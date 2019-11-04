@@ -32,7 +32,7 @@ class InvoiceFeesModel extends \Model\BaseModel
      */
     public function getData($data = array())
     {
-        $sql = 'SELECT t.*, i.serie AS invoice_serie, i.nr AS invoice_nr, i.status AS invoice_status, i.config AS invoice_configs,
+        $sql = 'SELECT t.*, i.serie AS invoice_serie, i.nr AS invoice_nr, i.status AS invoice_status, i.config AS invoice_configs, i.paid_at, i.delivered_at,
             w.title AS warehouse_name, SUM(ii.price*ii.quantity) AS total_revenue, SUM(t.fee) AS total_fee, COUNT(t.id) AS total_transaction     
             FROM {tablePrefix}ext_invoice_fee t 
             LEFT JOIN {tablePrefix}ext_warehouse w ON w.id = t.warehouse_id 
