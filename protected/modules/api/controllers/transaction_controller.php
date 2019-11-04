@@ -604,6 +604,7 @@ class TransactionController extends BaseController
 				}
 			}
 
+			$cfgs = ['items' => $params['items'], 'payments' => $params['payments']];
 			if (array_key_exists('items_change', $params)) {
 				if (!array_key_exists('id', $data)) {
 					$pmodel = \Model\ProductsModel::model()->findByAttributes(['title' => $data['name']]);
@@ -611,21 +612,18 @@ class TransactionController extends BaseController
 						$params['items_change'][$index]['id'] = $pmodel->id;
 					}
 				}
-				$model2->config = json_encode(
-				        [
-				            'items' => $params['items'],
-				            'payments' => $params['payments'],
-							'items_change' => $params['items_change']
-				        ]
-				    );
-			} else {
-				$model2->config = json_encode(
-				        [
-				            'items' => $params['items'],
-				            'payments' => $params['payments'],
-				        ]
-				    );
+				$cfgs['items_change'] = $params['items_change'];
 			}
+
+			if (array_key_exists('notes', $params)) {
+				$cfgs['notes'] = $params['notes'];
+			}
+
+			if (array_key_exists('reasons', $params)) {
+				$cfgs['reasons'] = $params['reasons'];
+			}
+
+			$model2->config = json_encode($cfgs);
 
             $model2->currency_id = 1;
             $model2->change_value = 1;
