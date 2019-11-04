@@ -788,6 +788,7 @@ class TransactionController extends BaseController
                 $total_fee = $total_fee + $item['total_fee'];
 				$items[$i]['configs'] = json_decode($items[$i]['configs'], true);
 				$items[$i]['invoice_configs'] = json_decode($items[$i]['invoice_configs'], true);
+				$items[$i]['invoice_number'] = $i_model->getInvoiceFormatedNumber(['id' => $item['invoice_id']]);
             }
 			
             $result['data'] = [
