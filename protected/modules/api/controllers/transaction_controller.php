@@ -21,13 +21,14 @@ class TransactionController extends BaseController
         $app->map(['POST'], '/complete-payment', [$this, 'complete_payment']);
         $app->map(['POST'], '/refund', [$this, 'refund']);
         $app->map(['GET'], '/list-fee', [$this, 'get_list_fee']);
+        $app->map(['GET'], '/list-fee-on', [$this, 'get_list_fee_on']);
     }
 
     public function accessRules()
     {
         return [
             ['allow',
-                'actions' => ['create', 'detail', 'complete', 'list', 'complete-payment', 'refund', 'list-fee'],
+                'actions' => ['create', 'detail', 'complete', 'list', 'complete-payment', 'refund', 'list-fee', 'list-fee-on'],
                 'users'=> ['@'],
             ]
         ];
@@ -748,6 +749,47 @@ class TransactionController extends BaseController
                 $total_transaction = $total_transaction + $item['total_transaction'];
                 $total_fee = $total_fee + $item['total_fee'];
             }
+            $result['data'] = [
+				'summary' => [
+					'total_revenue' => $total_revenue, 
+					'total_transaction' => $total_transaction,
+					'total_fee' => $total_fee
+				], 
+				'items' => $items
+			];
+        }
+
+        return $response->withJson($result, 201);
+    }
+
+	public function get_list_fee_on($request, $response, $args)
+    {
+        $isAllowed = $this->isAllowed($request, $response);
+
+        if (!$isAllowed['allow']) {
+            $result = [
+                'success' => 0,
+                'message' => $isAllowed['message'],
+            ];
+            return $response->withJson($result, 201);
+        }
+
+        $result = ['success' => 0];
+        $params = $request->getParams();
+        $model = new \Model\InvoiceFeesModel();
+        $items = $model->getData($params);
+        if (is_array($items) && count($items) > 0) {
+            $result['success'] = 1;
+            $i_model = new \Model\InvoicesModel();
+            $total_revenue = 0; $total_transaction = 0; $total_fee = 0;
+            foreach ($items as $i => $item) {
+                $total_revenue = $total_revenue + $item['total_revenue'];
+                $total_transaction = $total_transaction + $item['total_transaction'];
+                $total_fee = $total_fee + $item['total_fee'];
+				$items[$i]['configs'] = json_decode($items[$i]['configs'], true);
+				$items[$i]['invoice_configs'] = json_decode($items[$i]['invoice_configs'], true);
+            }
+			
             $result['data'] = [
 				'summary' => [
 					'total_revenue' => $total_revenue, 

@@ -33,7 +33,7 @@ class InvoiceFeesModel extends \Model\BaseModel
     public function getData($data = array())
     {
         $sql = 'SELECT t.*, i.serie AS invoice_serie, i.nr AS invoice_nr, i.status AS invoice_status, i.config AS invoice_configs,
-            w.title AS warehouse_name, SUM(ii.price*ii.quantity) AS total_revenue     
+            w.title AS warehouse_name, SUM(ii.price*ii.quantity) AS total_revenue, SUM(t.fee) AS total_fee, COUNT(t.id) AS total_transaction     
             FROM {tablePrefix}ext_invoice_fee t 
             LEFT JOIN {tablePrefix}ext_warehouse w ON w.id = t.warehouse_id 
             LEFT JOIN {tablePrefix}ext_invoice i ON i.id = t.invoice_id 
@@ -63,6 +63,11 @@ class InvoiceFeesModel extends \Model\BaseModel
                 $data['created_at_to'] = date("Y-m-t", strtotime($data['created_at_from']));
             }
             $params['created_at_to'] = $data['created_at_to'];
+        }
+
+		if (isset($data['created_at'])) {
+            $sql .= ' AND DATE_FORMAT(t.created_at,"%Y-%m-%d") =:created_at';
+            $params['created_at'] = $data['created_at'];
         }
 
 		if (isset($data['group_by'])) {
