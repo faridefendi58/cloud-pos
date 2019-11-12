@@ -154,13 +154,13 @@ class InvoiceFeesModel extends \Model\BaseModel
             $params['status'] = $data['status'];
         }
 
-        if (isset($data['date_from'])) {
+        if (isset($data['created_at_from'])) {
             $where .= ' DATE_FORMAT(t.created_at,"%Y-%m-%d") BETWEEN :date_from AND :date_to';
-            $params['created_at_from'] = $data['created_at_from'];
+            $params['date_from'] = $data['created_at_from'];
             if (!isset($data['created_at_to'])) {
                 $data['created_at_to'] = date("Y-m-t", strtotime($data['created_at_from']));
             }
-            $params['created_at_to'] = $data['created_at_to'];
+            $params['date_to'] = $data['created_at_to'];
         }
 
         $sql = str_replace(['{tablePrefix}'], [$this->_tbl_prefix], $sql);
