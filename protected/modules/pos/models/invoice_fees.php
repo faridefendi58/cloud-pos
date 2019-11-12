@@ -83,7 +83,7 @@ class InvoiceFeesModel extends \Model\BaseModel
         return $rows;
     }
 
-	public function getSummaryData($data = array())
+	public function getSummaryData1($data = array())
     {
         $sql = 'SELECT DATE_FORMAT(t.created_at, "%Y-%m-%d") AS created_date, COUNT(t.invoice_id) AS total_transaction, 
 			SUM(ii.price*ii.quantity) AS total_revenue, SUM(t.fee) AS total_fee     
@@ -119,6 +119,49 @@ class InvoiceFeesModel extends \Model\BaseModel
         }
 
         $sql .= ' GROUP BY DATE_FORMAT(t.created_at, "%Y-%m-%d") ORDER BY t.created_at ASC';
+
+        $sql = str_replace(['{tablePrefix}'], [$this->_tbl_prefix], $sql);
+
+        $rows = R::getAll( $sql, $params );
+
+        return $rows;
+    }
+
+	public function getSummaryData($data = array())
+    {
+        $where = '';
+		$sql = 'SELECT cuk.created_date, SUM(cuk.total_revenue1) AS total_revenue, COUNT(cuk.created_date) AS total_transaction, SUM(cuk.total_fee1) AS total_fee  
+			FROM (SELECT DATE_FORMAT(t.created_at, "%Y-%m-%d") AS created_date, 
+				(SELECT SUM(ii.price*ii.quantity) FROM {tablePrefix}ext_invoice_item ii WHERE ii.invoice_id = t.invoice_id) AS total_revenue1, 
+				SUM(t.fee) AS total_fee1 FROM {tablePrefix}ext_invoice_fee t 
+            	WHERE 1 '. $where .' 
+				GROUP BY t.invoice_id ORDER BY t.created_at ASC) AS cuk 
+			GROUP BY cuk.created_date';
+
+        $params = [];
+        if (isset($data['warehouse_id'])) {
+            $where .= ' AND t.warehouse_id =:warehouse_id';
+            $params['warehouse_id'] = $data['warehouse_id'];
+        }
+
+        if (isset($data['admin_id'])) {
+            $where .= ' AND t.admin_id =:admin_id';
+            $params['admin_id'] = $data['admin_id'];
+        }
+
+        if (isset($data['status'])) {
+            $where .= ' AND t.status =:status';
+            $params['status'] = $data['status'];
+        }
+
+        if (isset($data['date_from'])) {
+            $where .= ' DATE_FORMAT(t.created_at,"%Y-%m-%d") BETWEEN :date_from AND :date_to';
+            $params['created_at_from'] = $data['created_at_from'];
+            if (!isset($data['created_at_to'])) {
+                $data['created_at_to'] = date("Y-m-t", strtotime($data['created_at_from']));
+            }
+            $params['created_at_to'] = $data['created_at_to'];
+        }
 
         $sql = str_replace(['{tablePrefix}'], [$this->_tbl_prefix], $sql);
 
