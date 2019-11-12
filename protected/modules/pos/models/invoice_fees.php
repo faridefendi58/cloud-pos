@@ -130,13 +130,6 @@ class InvoiceFeesModel extends \Model\BaseModel
 	public function getSummaryData($data = array())
     {
         $where = '';
-		$sql = 'SELECT cuk.created_date, SUM(cuk.total_revenue1) AS total_revenue, COUNT(cuk.created_date) AS total_transaction, SUM(cuk.total_fee1) AS total_fee  
-			FROM (SELECT DATE_FORMAT(t.created_at, "%Y-%m-%d") AS created_date, 
-				(SELECT SUM(ii.price*ii.quantity) FROM {tablePrefix}ext_invoice_item ii WHERE ii.invoice_id = t.invoice_id) AS total_revenue1, 
-				SUM(t.fee) AS total_fee1 FROM {tablePrefix}ext_invoice_fee t 
-            	WHERE 1 '. $where .' 
-				GROUP BY t.invoice_id ORDER BY t.created_at ASC) AS cuk 
-			GROUP BY cuk.created_date';
 
         $params = [];
         if (isset($data['warehouse_id'])) {
@@ -155,13 +148,21 @@ class InvoiceFeesModel extends \Model\BaseModel
         }
 
         if (isset($data['created_at_from'])) {
-            $where .= ' DATE_FORMAT(t.created_at,"%Y-%m-%d") BETWEEN :date_from AND :date_to';
+            $where .= ' AND DATE_FORMAT(t.created_at,"%Y-%m-%d") BETWEEN :date_from AND :date_to';
             $params['date_from'] = $data['created_at_from'];
             if (!isset($data['created_at_to'])) {
                 $data['created_at_to'] = date("Y-m-t", strtotime($data['created_at_from']));
             }
             $params['date_to'] = $data['created_at_to'];
         }
+
+		$sql = 'SELECT cuk.created_date, SUM(cuk.total_revenue1) AS total_revenue, COUNT(cuk.created_date) AS total_transaction, SUM(cuk.total_fee1) AS total_fee  
+			FROM (SELECT DATE_FORMAT(t.created_at, "%Y-%m-%d") AS created_date, 
+				(SELECT SUM(ii.price*ii.quantity) FROM {tablePrefix}ext_invoice_item ii WHERE ii.invoice_id = t.invoice_id) AS total_revenue1, 
+				SUM(t.fee) AS total_fee1 FROM {tablePrefix}ext_invoice_fee t 
+            	WHERE 1 '. $where .'  
+				GROUP BY t.invoice_id ORDER BY t.created_at ASC) AS cuk 
+			GROUP BY cuk.created_date';
 
         $sql = str_replace(['{tablePrefix}'], [$this->_tbl_prefix], $sql);
 
