@@ -156,10 +156,11 @@ class InvoiceFeesModel extends \Model\BaseModel
             $params['date_to'] = $data['created_at_to'];
         }
 
-		$sql = 'SELECT cuk.created_date, SUM(cuk.total_revenue1) AS total_revenue, COUNT(cuk.created_date) AS total_transaction, SUM(cuk.total_fee1) AS total_fee  
+		$sql = 'SELECT cuk.created_date, SUM(cuk.total_revenue1) AS total_revenue, COUNT(cuk.created_date) AS total_transaction, SUM(cuk.total_fee1) AS total_fee, cuk.invoice_configs1 AS invoice_configs   
 			FROM (SELECT DATE_FORMAT(t.created_at, "%Y-%m-%d") AS created_date, 
 				(SELECT SUM(ii.price*ii.quantity) FROM {tablePrefix}ext_invoice_item ii WHERE ii.invoice_id = t.invoice_id) AS total_revenue1, 
-				SUM(t.fee) AS total_fee1 FROM {tablePrefix}ext_invoice_fee t 
+				SUM(t.fee) AS total_fee1, i.config AS invoice_configs1 FROM {tablePrefix}ext_invoice_fee t 
+				LEFT JOIN {tablePrefix}ext_invoice i ON i.id = t.invoice_id
             	WHERE 1 '. $where .'  
 				GROUP BY t.invoice_id ORDER BY t.created_at ASC) AS cuk 
 			GROUP BY cuk.created_date';
