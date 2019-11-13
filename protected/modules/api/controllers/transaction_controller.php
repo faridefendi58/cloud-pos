@@ -797,13 +797,26 @@ class TransactionController extends BaseController
         if (is_array($items) && count($items) > 0) {
             $result['success'] = 1;
             $i_model = new \Model\InvoicesModel();
-            $total_revenue = 0; $total_transaction = 0; $total_fee = 0;
+            $total_revenue = 0; $total_transaction = 0; $total_fee = 0; $payments = [];
             foreach ($items as $i => $item) {
                 $total_revenue = $total_revenue + $item['total_revenue'];
                 $total_transaction = $total_transaction + $item['total_transaction'];
                 $total_fee = $total_fee + $item['total_fee'];
 				$items[$i]['configs'] = json_decode($items[$i]['configs'], true);
 				$items[$i]['invoice_configs'] = json_decode($items[$i]['invoice_configs'], true);
+				$invoice_configs = $items[$i]['invoice_configs'];
+				if (array_key_exists('payment', $invoice_configs)) {
+					$items[$i]['payments'] = $invoice_configs['payment'];
+					if (is_array($invoice_configs['payment'])) {
+						foreach($invoice_configs['payment'] as $j => $pay_channel) {
+							if (array_key_exists($pay_channel['type'], $payments)) {
+								$payments[$pay_channel['type']] = $payments[$pay_channel['type']] + $pay_channel['amount_tendered'];
+							} else {
+								$payments[$pay_channel['type']] = $pay_channel['amount_tendered'];
+							}
+						}
+					}
+				}
 				$items[$i]['invoice_number'] = $i_model->getInvoiceFormatedNumber(['id' => $item['invoice_id']]);
             }
 			
@@ -811,7 +824,8 @@ class TransactionController extends BaseController
 				'summary' => [
 					'total_revenue' => $total_revenue, 
 					'total_transaction' => $total_transaction,
-					'total_fee' => $total_fee
+					'total_fee' => $total_fee,
+					'payments' => $payments
 				], 
 				'items' => $items
 			];
