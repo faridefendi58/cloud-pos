@@ -626,21 +626,32 @@ class TransactionController extends BaseController
 
 			$cfgs = ['items' => $params['items'], 'payments' => $params['payments']];
 			if (array_key_exists('items_change', $params)) {
-				if (!array_key_exists('id', $data)) {
-					$pmodel = \Model\ProductsModel::model()->findByAttributes(['title' => $data['name']]);
+				foreach ($params['items_change'] as $index => $data) {
 					$fee = 0;
-					if ($pmodel instanceof \RedBeanPHP\OODBBean) {	                   
-						$params['items_change'][$index]['id'] = $pmodel->id;
+					if (!array_key_exists('id', $data)) {
+						$pmodel = \Model\ProductsModel::model()->findByAttributes(['title' => $data['name']]);
+						if ($pmodel instanceof \RedBeanPHP\OODBBean) {	                   
+							$params['items_change'][$index]['id'] = $pmodel->id;
+							// set the fee
+		                    $fee = $wh_fee_model->getFee([
+		                        'warehouse_id' => $model->warehouse_id,
+		                        'product_id' => $pmodel->id,
+		                        'quantity' => $data['quantity'],
+		                        'total_quantity' => $data['quantity_total']
+		                    ]);
+						}
+		                $params['items_change'][$index]['fee'] = $fee;
+		                $fee_refund = $fee_refund + $fee;
+					} else {
 						// set the fee
-                        $fee = $wh_fee_model->getFee([
-                            'warehouse_id' => $model->warehouse_id,
-                            'product_id' => $pmodel->id,
-                            'quantity' => $params['items_change'][$index]['quantity'],
-                            'total_quantity' => $params['items_change'][$index]['quantity_total']
-                        ]);
+	 					$fee = $wh_fee_model->getFee([
+		                        'warehouse_id' => $model->warehouse_id,
+		                        'product_id' => $data['id'],
+		                        'quantity' => $data['quantity'],
+		                        'total_quantity' => $data['quantity_total']
+		                    ]);
+						$fee_refund = $fee_refund + $fee;
 					}
-                    $params['items_change'][$index]['fee'] = $fee;
-                    $fee_refund = $fee_refund + $fee;
 				}
 				$cfgs['items_change'] = $params['items_change'];
 			}
