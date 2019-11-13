@@ -374,4 +374,19 @@ class InvoicesModel extends \Model\BaseModel
 
         return $row['id'];
     }
+
+    public function getTotalQuantity($invoice_id = 0) {
+        $sql = 'SELECT SUM(ii.quantity) AS tot
+            FROM {tablePrefix}ext_invoice t 
+            JOIN {tablePrefix}ext_invoice_item ii ON t.id = ii.invoice_id 
+            WHERE t.id =:invoice_id';
+
+        $params = ['invoice_id' => $invoice_id];
+
+        $sql = str_replace(['{tablePrefix}'], [$this->_tbl_prefix], $sql);
+
+        $row = R::getRow( $sql, $params );
+
+        return (int)$row['tot'];
+    }
 }

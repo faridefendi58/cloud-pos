@@ -595,23 +595,52 @@ class TransactionController extends BaseController
                 $model2->refunded_by = (isset($params['admin_id']))? $params['admin_id'] : 1;
                 $model2->refunded_invoice_id = $model->id;
             }
-	
+
+            $wh_fee_model = new \Model\WarehouseProductFeesModel();
+            $total_quantity = $model2->getTotalQuantity($model->id);
+            if ($total_quantity <= 0) {
+                $total_quantity = 1;
+            }
+
+            $fee_refund = 0;
 			foreach ($params['items'] as $index => $data) {
 				if (!array_key_exists('id', $data)) {
 					$pmodel = \Model\ProductsModel::model()->findByAttributes(['title' => $data['name']]);
 					if ($pmodel instanceof \RedBeanPHP\OODBBean) {	                   
 						$params['items'][$index]['id'] = $pmodel->id;
+						$data['id'] = $pmodel->id;
 					}
 				}
+				if (array_key_exists('refunded_qty', $data) && $data['refunded_qty'] > 0) {
+                    $fee = $wh_fee_model->getFee([
+                        'warehouse_id' => $model->warehouse_id,
+                        'product_id' => $data['id'],
+                        'quantity' => $data['refunded_qty'],
+                        'total_quantity' => $total_quantity
+                    ]);
+                    if ($fee > 0) {
+                        $fee_refund = $fee_refund - $fee;
+                    }
+                }
 			}
 
 			$cfgs = ['items' => $params['items'], 'payments' => $params['payments']];
 			if (array_key_exists('items_change', $params)) {
 				if (!array_key_exists('id', $data)) {
 					$pmodel = \Model\ProductsModel::model()->findByAttributes(['title' => $data['name']]);
+					$fee = 0;
 					if ($pmodel instanceof \RedBeanPHP\OODBBean) {	                   
 						$params['items_change'][$index]['id'] = $pmodel->id;
+						// set the fee
+                        $fee = $wh_fee_model->getFee([
+                            'warehouse_id' => $model->warehouse_id,
+                            'product_id' => $pmodel->id,
+                            'quantity' => $params['items_change'][$index]['quantity'],
+                            'total_quantity' => $params['items_change'][$index]['quantity_total']
+                        ]);
 					}
+                    $params['items_change'][$index]['fee'] = $fee;
+                    $fee_refund = $fee_refund + $fee;
 				}
 				$cfgs['items_change'] = $params['items_change'];
 			}
@@ -665,6 +694,15 @@ class TransactionController extends BaseController
                     }
                 }
                 if ($success) {
+                    // update the fee data
+                    if ($fee_refund != 0) {
+                        $inv_fee_model = \Model\InvoiceFeesModel::model()->findByAttributes(['invoice_id' => $model->id]);
+                        if ($inv_fee_model instanceof \RedBeanPHP\OODBBean) {
+                            $inv_fee_model->fee_refund = $fee_refund;
+                            $up = \Model\InvoiceFeesModel::model()->update($inv_fee_model);
+                        }
+                    }
+
                     $result = [
                         "success" => 1,
                         "id" => $model2->id,
