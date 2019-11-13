@@ -812,7 +812,7 @@ class TransactionController extends BaseController
 							if (array_key_exists($pay_channel['type'], $payments)) {
 								$payments[$pay_channel['type']] = $payments[$pay_channel['type']] + $pay_channel['amount_tendered'];
 							} else {
-								$payments[$pay_channel['type']] = $pay_channel['amount_tendered'];
+								$payments[$pay_channel['type']] = $pay_channel['amount_tendered']*1;
 							}
 						}
 					}
