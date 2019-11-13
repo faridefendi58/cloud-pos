@@ -650,6 +650,7 @@ class TransactionController extends BaseController
 		                        'quantity' => $data['quantity'],
 		                        'total_quantity' => $data['quantity_total']
 		                    ]);
+						$params['items_change'][$index]['fee'] = $fee;
 						$fee_refund = $fee_refund + $fee;
 					}
 				}
