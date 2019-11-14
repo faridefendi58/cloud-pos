@@ -804,6 +804,12 @@ class TransactionsController extends BaseController
             return $this->notAllowedAction();
         }
 
+        $params = $request->getParams();
+        $sync = false;
+        if (array_key_exists('sync', $params) && $params['sync'] > 0) {
+            $sync = true;
+        }
+
         $c_model = new \Model\PaymentChannelsModel();
         $this->payment_channels = $c_model->getChannelIds();
 
@@ -815,13 +821,13 @@ class TransactionsController extends BaseController
                 if (is_array($configs) && array_key_exists('payments', $configs) && is_array($configs['payments'])) {
                     $items[$i]['payments'] = $configs['payments'];
                     $items[$i]['payment_str'] = $this->buildPaymentString($configs['payments']);
-                    if ((int)$item['payment_count'] <> count($configs['payments'])) {
+                    if ($sync && ((int)$item['payment_count'] <> count($configs['payments']))) {
                         $this->buildThePayment($item['id'], $configs['payments']);
                     }
                 } elseif (is_array($configs) && array_key_exists('payment', $configs) && is_array($configs['payment'])) {
                     $items[$i]['payments'] = $configs['payment'];
                     $items[$i]['payment_str'] = $this->buildPaymentString($configs['payment']);
-                    if ((int)$item['payment_count'] <> count($configs['payment'])) {
+                    if ($sync && ((int)$item['payment_count'] <> count($configs['payment']))) {
                         $this->buildThePayment($item['id'], $configs['payment']);
                     }
                 } else {

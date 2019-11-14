@@ -13,6 +13,7 @@ Riwayat Pembayaran - {{ App.params.site_name }}
                 <p class="text-muted">Halaman daftar semua transaksi penjualan</p>
             </div>
             <div class="col-sm-3 text-right">
+                <a class="btn btn-default" href="{{ 'pos/transactions/payment' | link }}?sync=1">Sinkronkan Data</a>
                 <a class="btn btn-default" href="{{ 'pos/transactions/create' | link }}">Transaksi Baru</a>
             </div>
         </div>
