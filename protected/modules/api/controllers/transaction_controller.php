@@ -802,13 +802,13 @@ class TransactionController extends BaseController
 				$invoice_configs = json_decode($items[$i]['invoice_configs'], true);
 				if (array_key_exists('payment', $invoice_configs)) {
 					$items[$i]['payments'] = $invoice_configs['payment'];
-					unset($items[$i]['invoice_configs']);
+					//unset($items[$i]['invoice_configs']);
 					if (is_array($invoice_configs['payment'])) {
 						foreach($invoice_configs['payment'] as $j => $pay_channel) {
 							if (array_key_exists($pay_channel['type'], $payments)) {
 								$payments[$pay_channel['type']] = $payments[$pay_channel['type']] + $pay_channel['amount_tendered'];
 							} else {
-								$payments[$pay_channel['type']] = $pay_channel['amount_tendered'];
+								$payments[$pay_channel['type']] = (int)$pay_channel['amount_tendered'];
 							}
 						}
 					}

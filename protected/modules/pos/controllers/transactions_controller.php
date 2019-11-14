@@ -31,6 +31,7 @@ class TransactionsController extends BaseController
         $app->map(['POST'], '/set-customer', [$this, 'set_customer']);
         $app->map(['POST'], '/set-type', [$this, 'set_type']);
         $app->map(['POST'], '/set-warehouse', [$this, 'set_warehouse']);
+        $app->map(['GET'], '/payment', [$this, 'payment']);
     }
 
     public function accessRules()
@@ -41,7 +42,7 @@ class TransactionsController extends BaseController
                     'view', 'create', 'update', 'delete', 'detail',
                     'scan', 'delete-item', 'cart', 'update-qty',
                     'payment-request', 'change-request', 'set-customer',
-                    'set-type', 'set-warehouse'
+                    'set-type', 'set-warehouse', 'payment'
                 ],
                 'users'=> ['@'],
             ],
@@ -789,5 +790,94 @@ class TransactionsController extends BaseController
             [
                 'status' => 'failed'
             ], 201);
+    }
+
+    const payment_channels = [];
+
+    public function payment($request, $response, $args)
+    {
+        $isAllowed = $this->isAllowed($request, $response);
+        if ($isAllowed instanceof \Slim\Http\Response)
+            return $isAllowed;
+
+        if(!$isAllowed){
+            return $this->notAllowedAction();
+        }
+
+        $c_model = new \Model\PaymentChannelsModel();
+        $this->payment_channels = $c_model->getChannelIds();
+
+        $model = new \Model\PaymentHistoryModel();
+        $items = $model->getDataByInvoice();
+        if (is_array($items)) {
+            foreach ($items as $i => $item) {
+                $configs = json_decode($item['config'], true);
+                if (is_array($configs) && array_key_exists('payments', $configs) && is_array($configs['payments'])) {
+                    $items[$i]['payments'] = $configs['payments'];
+                    $items[$i]['payment_str'] = $this->buildPaymentString($configs['payments']);
+                    if ((int)$item['payment_count'] <> count($configs['payments'])) {
+                        $this->buildThePayment($item['id'], $configs['payments']);
+                    }
+                } elseif (is_array($configs) && array_key_exists('payment', $configs) && is_array($configs['payment'])) {
+                    $items[$i]['payments'] = $configs['payment'];
+                    $items[$i]['payment_str'] = $this->buildPaymentString($configs['payment']);
+                    if ((int)$item['payment_count'] <> count($configs['payment'])) {
+                        $this->buildThePayment($item['id'], $configs['payment']);
+                    }
+                } else {
+                    unset($items[$i]);
+                }
+            }
+        }
+
+        return $this->_container->module->render(
+            $response,
+            'transactions/payment.html',
+            [
+                'items' => $items
+            ]
+        );
+    }
+
+    private function buildThePayment($invoice_id, $payment_items) {
+        if (is_array($payment_items) && count($payment_items) > 0) {
+            $clear = \Model\PaymentHistoryModel::model()->deleteAllByAttributes(['invoice_id' => $invoice_id]);
+            foreach ($payment_items as $i => $item) {
+                $model = new \Model\PaymentHistoryModel();
+                $model->invoice_id = $invoice_id;
+                $model->amount = $item['amount_tendered'];
+                if (array_key_exists($item['type'], $this->payment_channels)) {
+                    $model->channel_id = $this->payment_channels[$item['type']]['id'];
+                } else {
+                    if ($item['type'] == 'cash') {
+                        $model->channel_id = $this->payment_channels['cash_receive']['id'];
+                    } else {
+                        $model->channel_id = 0;
+                    }
+                }
+                $model->created_at = date("Y-m-d H:i:s");
+                $model->updated_at = date("Y-m-d H:i:s");
+                $save = \Model\PaymentHistoryModel::model()->save($model);
+            }
+        }
+    }
+
+    private function buildPaymentString($payment_items) {
+        $arr_payment = [];
+        foreach ($payment_items as $j => $pdata) {
+            $channel_name = $pdata['type'];
+            if (array_key_exists($pdata['type'], $this->payment_channels)) {
+                $channel_name = $this->payment_channels[$pdata['type']]['title'];
+            } else {
+                if ($pdata['type'] == 'cash') {
+                    $channel_name = $this->payment_channels['cash_receive']['title'];
+                }
+            }
+
+            $arr_payment[] = $channel_name.' : '. number_format($pdata['amount_tendered'], 0, ',', '.');
+        }
+        $payment_str = implode(", ", $arr_payment);
+
+        return $payment_str;
     }
 }
