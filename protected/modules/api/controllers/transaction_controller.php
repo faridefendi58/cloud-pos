@@ -930,7 +930,9 @@ class TransactionController extends BaseController
                 }
                 $model->created_at = date("Y-m-d H:i:s");
                 $model->updated_at = date("Y-m-d H:i:s");
-                $save = \Model\PaymentHistoryModel::model()->save($model);
+                if ($model->amount > 0) {
+                    $save = \Model\PaymentHistoryModel::model()->save($model);
+                }
             }
         }
     }
