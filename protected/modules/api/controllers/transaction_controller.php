@@ -208,6 +208,11 @@ class TransactionController extends BaseController
                     }
                 }
                 if ($success) {
+                    // save the payments
+                    try {
+                        $this->buildThePayment($model2->id, $params['payment']);
+                    } catch (\Exception $e){}
+
                     $result = [
                         "success" => 1,
                         "id" => $model2->id,
@@ -416,6 +421,13 @@ class TransactionController extends BaseController
                 try {
                     $this->onAfterInvoiceCompleted($model->id);
                 } catch (\Exception $e){}
+
+                if ($has_new_config) {
+                    // save the additional payments
+                    try {
+                        $this->buildThePayment($model->id, $params['payment']);
+                    } catch (\Exception $e){}
+                }
 
                 $result['success'] = 1;
                 $result['message'] = 'Data berhasil disimpan.';
@@ -715,6 +727,11 @@ class TransactionController extends BaseController
                         }
                     }
 
+                    // save the payments
+                    try {
+                        $this->buildThePayment($model2->id, $params['payment']);
+                    } catch (\Exception $e){}
+
                     $result = [
                         "success" => 1,
                         "id" => $model2->id,
@@ -882,5 +899,34 @@ class TransactionController extends BaseController
         }
 
         return $response->withJson($result, 201);
+    }
+
+    private function buildThePayment($invoice_id, $payment_items, $rebuild = false) {
+        if (is_array($payment_items) && count($payment_items) > 0) {
+            if ($rebuild) {
+                $clear = \Model\PaymentHistoryModel::model()->deleteAllByAttributes(['invoice_id' => $invoice_id]);
+            }
+
+            $c_model = new \Model\PaymentChannelsModel();
+            $payment_channels = $c_model->getChannelIds();
+
+            foreach ($payment_items as $i => $item) {
+                $model = new \Model\PaymentHistoryModel();
+                $model->invoice_id = $invoice_id;
+                $model->amount = $item['amount_tendered'];
+                if (array_key_exists($item['type'], $payment_channels)) {
+                    $model->channel_id = $payment_channels[$item['type']]['id'];
+                } else {
+                    if ($item['type'] == 'cash') {
+                        $model->channel_id = $payment_channels['cash_receive']['id'];
+                    } else {
+                        $model->channel_id = 0;
+                    }
+                }
+                $model->created_at = date("Y-m-d H:i:s");
+                $model->updated_at = date("Y-m-d H:i:s");
+                $save = \Model\PaymentHistoryModel::model()->save($model);
+            }
+        }
     }
 }
