@@ -48,7 +48,6 @@ class PaymentHistoryModel extends \Model\BaseModel
         $sql = 'SELECT t.*, (SELECT COUNT(h.id) AS tot FROM {tablePrefix}ext_payment_history h WHERE h.invoice_id = t.id) AS payment_count, 
             wh.title AS warehouse_name   
             FROM {tablePrefix}ext_invoice t
-            LEFT JOIN {tablePrefix}ext_payment_history h ON h.invoice_id = t.id 
             LEFT JOIN {tablePrefix}ext_warehouse wh ON wh.id = t.warehouse_id 
             WHERE 1';
 

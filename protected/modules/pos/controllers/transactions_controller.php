@@ -887,7 +887,14 @@ class TransactionsController extends BaseController
                 }
             }
 
-            $arr_payment[] = $channel_name.' : '. number_format($pdata['amount_tendered'], 0, ',', '.');
+            $amount = 0;
+            if (array_key_exists('amount_tendered', $pdata)) {
+                $amount = $pdata['amount_tendered'];
+            } elseif (array_key_exists('amount', $pdata)) {
+                $amount = $pdata['amount'];
+            }
+
+            $arr_payment[] = $channel_name.' : '. number_format($amount, 0, ',', '.');
         }
         $payment_str = implode(", ", $arr_payment);
 
