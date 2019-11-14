@@ -120,6 +120,9 @@ class TransactionController extends BaseController
                 $model2->refunded_by = (isset($params['admin_id']))? $params['admin_id'] : 1;
             }
 
+            if ($params['discount'] > 0) {
+                $model2->discount = (int)$params['discount'];
+            }
             $model2->config = json_encode(
                 [
                     'items_belanja' => $params['items_belanja'],
