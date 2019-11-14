@@ -845,7 +845,12 @@ class TransactionsController extends BaseController
             foreach ($payment_items as $i => $item) {
                 $model = new \Model\PaymentHistoryModel();
                 $model->invoice_id = $invoice_id;
-                $model->amount = $item['amount_tendered'];
+                $model->amount = 0;
+                if (array_key_exists('amount_tendered', $item)) {
+                    $model->amount = $item['amount_tendered'];
+                } elseif (array_key_exists('amount', $item)) {
+                    $model->amount = $item['amount'];
+                }
                 if (array_key_exists($item['type'], $this->payment_channels)) {
                     $model->channel_id = $this->payment_channels[$item['type']]['id'];
                 } else {
