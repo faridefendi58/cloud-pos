@@ -156,14 +156,70 @@ class InvoiceFeesModel extends \Model\BaseModel
             $params['date_to'] = $data['created_at_to'];
         }
 
-		$sql = 'SELECT cuk.created_date, SUM(cuk.total_revenue1) AS total_revenue, COUNT(cuk.created_date) AS total_transaction, SUM(cuk.total_fee1) AS total_fee, cuk.invoice_configs1 AS invoice_configs   
+		$sql = 'SELECT cuk.created_date, SUM(cuk.total_revenue1) AS total_revenue, COUNT(cuk.created_date) AS total_transaction, SUM(cuk.total_fee1) AS total_fee, cuk.invoice_configs1 AS invoice_configs
 			FROM (SELECT DATE_FORMAT(t.created_at, "%Y-%m-%d") AS created_date, 
-				(SELECT SUM(ii.price*ii.quantity) FROM {tablePrefix}ext_invoice_item ii WHERE ii.invoice_id = t.invoice_id) AS total_revenue1, 
+				(SELECT (SUM(ii.price*ii.quantity) - iv.discount) AS itot FROM {tablePrefix}ext_invoice_item ii 
+				   LEFT JOIN {tablePrefix}ext_invoice iv ON iv.id = ii.invoice_id WHERE ii.invoice_id = t.invoice_id) AS total_revenue1, 
 				SUM(t.fee + t.fee_refund) AS total_fee1, i.config AS invoice_configs1 FROM {tablePrefix}ext_invoice_fee t 
 				LEFT JOIN {tablePrefix}ext_invoice i ON i.id = t.invoice_id
             	WHERE 1 '. $where .'  
 				GROUP BY t.invoice_id ORDER BY t.created_at ASC) AS cuk 
 			GROUP BY cuk.created_date';
+
+        $sql = str_replace(['{tablePrefix}'], [$this->_tbl_prefix], $sql);
+
+        $rows = R::getAll( $sql, $params );
+
+        return $rows;
+    }
+
+    /**
+     * @param array $data: dates = array(), warehouse_id
+     * @return array
+     */
+    public function getPaymentEachDateRange($data = array())
+    {
+        if (!array_key_exists('dates', $data)) {
+            return [];
+        }
+
+        $date_range = "'". implode("', '", $data['dates']). "'";
+        $params = ['warehouse_id' => $data['warehouse_id']];
+
+        $sql = 'SELECT t.invoice_id, DATE_FORMAT(h.created_at,"%Y-%m-%d") AS created_date, ch.code AS pay_channel, t.amount 
+          FROM {tablePrefix}ext_payment_history t 
+          LEFT JOIN {tablePrefix}ext_invoice_fee h ON h.invoice_id = t.invoice_id
+          LEFT JOIN {tablePrefix}ext_payment_channel ch ON ch.id = t.channel_id
+          WHERE h.warehouse_id =:warehouse_id AND DATE_FORMAT(h.created_at,"%Y-%m-%d") IN ('. $date_range .')';
+
+        $sql .= ' ORDER BY created_date ASC';
+
+        $sql = str_replace(['{tablePrefix}'], [$this->_tbl_prefix], $sql);
+
+        $rows = R::getAll( $sql, $params );
+
+        return $rows;
+    }
+
+    /**
+     * @param array $data: date, warehouse_id
+     * @return array
+     */
+    public function getPaymentEachDate($data = array())
+    {
+        if (!array_key_exists('date', $data)) {
+            return [];
+        }
+
+        $params = ['warehouse_id' => $data['warehouse_id'], 'created_at' => $data['date']];
+
+        $sql = 'SELECT t.invoice_id, ch.code AS pay_channel, SUM(t.amount) AS amount 
+          FROM {tablePrefix}ext_payment_history t 
+          LEFT JOIN {tablePrefix}ext_invoice_fee h ON h.invoice_id = t.invoice_id
+          LEFT JOIN {tablePrefix}ext_payment_channel ch ON ch.id = t.channel_id
+          WHERE h.warehouse_id =:warehouse_id AND DATE_FORMAT(h.created_at,"%Y-%m-%d") =:created_at';
+
+        $sql .= ' GROUP BY ch.code ORDER BY ch.id ASC';
 
         $sql = str_replace(['{tablePrefix}'], [$this->_tbl_prefix], $sql);
 

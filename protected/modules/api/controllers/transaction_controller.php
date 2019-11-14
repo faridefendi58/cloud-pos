@@ -812,14 +812,15 @@ class TransactionController extends BaseController
             $i_model = new \Model\InvoicesModel();
             $total_revenue = 0; $total_transaction = 0; $total_fee = 0;
 			$payments = [];
+			$dates = [];
             foreach ($items as $i => $item) {
                 $total_revenue = $total_revenue + $item['total_revenue'];
                 $total_transaction = $total_transaction + $item['total_transaction'];
                 $total_fee = $total_fee + $item['total_fee'];
-				$invoice_configs = json_decode($items[$i]['invoice_configs'], true);
+				/*$invoice_configs = json_decode($items[$i]['invoice_configs'], true);
 				if (array_key_exists('payment', $invoice_configs)) {
 					$items[$i]['payments'] = $invoice_configs['payment'];
-					//unset($items[$i]['invoice_configs']);
+					unset($items[$i]['invoice_configs']);
 					if (is_array($invoice_configs['payment'])) {
 						foreach($invoice_configs['payment'] as $j => $pay_channel) {
 							if (array_key_exists($pay_channel['type'], $payments)) {
@@ -829,8 +830,22 @@ class TransactionController extends BaseController
 							}
 						}
 					}
-				}
+				}*/
+                unset($items[$i]['invoice_configs']);
+                $payment_data = $model->getPaymentEachDate(['date' => $item['created_date'], 'warehouse_id' => $params['warehouse_id']]);
+                $paid = 0;
+                foreach ($payment_data as $j => $pdata) {
+                    if (array_key_exists($pdata['pay_channel'], $payments)) {
+                        $payments[$pdata['pay_channel']] = $payments[$pdata['pay_channel']] + $pdata['amount'];
+                    } else {
+                        $payments[$pdata['pay_channel']] = (int)$pdata['amount'];
+                    }
+                    $paid = $paid + $pdata['amount'];
+                }
+                $items[$i]['total_payment'] = $paid;
+				$dates[] = $item['created_date'];
             }
+
             $result['data'] = [
 				'summary' => [
 					'total_revenue' => $total_revenue, 

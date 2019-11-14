@@ -32,6 +32,7 @@ class TransactionsController extends BaseController
         $app->map(['POST'], '/set-type', [$this, 'set_type']);
         $app->map(['POST'], '/set-warehouse', [$this, 'set_warehouse']);
         $app->map(['GET'], '/payment', [$this, 'payment']);
+        $app->map(['GET'], '/tools', [$this, 'tools']);
     }
 
     public function accessRules()
@@ -42,7 +43,7 @@ class TransactionsController extends BaseController
                     'view', 'create', 'update', 'delete', 'detail',
                     'scan', 'delete-item', 'cart', 'update-qty',
                     'payment-request', 'change-request', 'set-customer',
-                    'set-type', 'set-warehouse', 'payment'
+                    'set-type', 'set-warehouse', 'payment', 'tools'
                 ],
                 'users'=> ['@'],
             ],
@@ -899,5 +900,40 @@ class TransactionsController extends BaseController
         $payment_str = implode(", ", $arr_payment);
 
         return $payment_str;
+    }
+
+    /**
+     * Tools for everything
+     * @param $request
+     * @param $response
+     * @param $args
+     * @return bool|void
+     */
+    public function tools($request, $response, $args) {
+        $isAllowed = $this->isAllowed($request, $response);
+        if ($isAllowed instanceof \Slim\Http\Response)
+            return $isAllowed;
+
+        if(!$isAllowed){
+            return $this->notAllowedAction();
+        }
+
+        $params = $request->getParams();
+        $result = [];
+        if ($params['task'] == 'adjust_discount') {
+            $models = \Model\InvoicesModel::model()->findAllByAttributes(['discount' => 0]);
+            foreach ($models as $model) {
+                $config = json_decode($model->config, true);
+                if (is_array($config) && $config['discount'] > 0) {
+                    $model->discount = (int)$config['discount'];
+                    $update = \Model\InvoicesModel::model()->update($model);
+                    if ($update) {
+                        $result[$model->id] = (int)$config['discount'];
+                    }
+                }
+            }
+        }
+
+        return $response->withJson($result, 201);
     }
 }
