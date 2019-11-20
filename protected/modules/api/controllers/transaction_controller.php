@@ -22,14 +22,15 @@ class TransactionController extends BaseController
         $app->map(['POST'], '/refund', [$this, 'refund']);
         $app->map(['GET'], '/list-fee', [$this, 'get_list_fee']);
         $app->map(['GET'], '/list-fee-on', [$this, 'get_list_fee_on']);
+        $app->map(['POST'], '/verify-transfer', [$this, 'verify_transfer']);
     }
 
     public function accessRules()
     {
         return [
             ['allow',
-                'actions' => ['create', 'detail', 'complete', 'list', 'complete-payment', 'refund', 'list-fee', 'list-fee-on'],
-                'users'=> ['@'],
+                'actions' => ['create', 'detail', 'complete', 'list', 'complete-payment', 'refund', 'list-fee', 'list-fee-on', 'verify-transfer'],
+                'users' => ['@'],
             ]
         ];
     }
@@ -58,7 +59,7 @@ class TransactionController extends BaseController
                     $model2->customer_id = $params['customer']['id'];
                     $cust_id = $params['customer']['id'];
                 } else {
-                    if (isset($params['customer']['email']) && ($params['customer']['email'])!="-") {
+                    if (isset($params['customer']['email']) && ($params['customer']['email']) != "-") {
                         $cmodel = \Model\CustomersModel::model()->findByAttributes(['email' => $params['customer']['email']]);
                         if ($cmodel instanceof \RedBeanPHP\OODBBean) {
                             $model2->customer_id = $cmodel->id;
@@ -78,12 +79,12 @@ class TransactionController extends BaseController
                 if ($cust_id == 0) {
                     $cmodel = new \Model\CustomersModel();
                     $cmodel->name = $params['customer']['name'];
-                    $cmodel->email = (!empty($params['customer']['email']))? $params['customer']['email'] : "-";
+                    $cmodel->email = (!empty($params['customer']['email'])) ? $params['customer']['email'] : "-";
                     $cmodel->telephone = $params['customer']['phone'];
                     $cmodel->address = $params['customer']['address'];
                     $cmodel->status = \Model\CustomersModel::STATUS_ACTIVE;
                     $cmodel->created_at = date("Y-m-d H:i:s");
-                    $cmodel->created_by = (isset($params['admin_id']))? $params['admin_id'] : 1;
+                    $cmodel->created_by = (isset($params['admin_id'])) ? $params['admin_id'] : 1;
                     $csave = \Model\CustomersModel::model()->save(@$cmodel);
                     if ($csave) {
                         $model2->customer_id = $cmodel->id;
@@ -112,12 +113,12 @@ class TransactionController extends BaseController
             $model2->nr = $model2->getInvoiceNumber($model2->status, 'nr');
             if ($model2->status == \Model\InvoicesModel::STATUS_PAID) {
                 $model2->paid_at = date(c);
-                $model2->paid_by = (isset($params['admin_id']))? $params['admin_id'] : 1;
+                $model2->paid_by = (isset($params['admin_id'])) ? $params['admin_id'] : 1;
             }
 
             if ($model2->status == \Model\InvoicesModel::STATUS_REFUND) {
                 $model2->refunded_at = date(c);
-                $model2->refunded_by = (isset($params['admin_id']))? $params['admin_id'] : 1;
+                $model2->refunded_by = (isset($params['admin_id'])) ? $params['admin_id'] : 1;
             }
 
             if ($params['discount'] > 0) {
@@ -129,8 +130,8 @@ class TransactionController extends BaseController
                     'payment' => $params['payment'],
                     'customer' => $params['customer'],
                     //'promocode' => $params['promocode'],
-					'discount' => $params['discount'],
-					'shipping' => $params['shipping']
+                    'discount' => $params['discount'],
+                    'shipping' => $params['shipping']
                 ]
             );
             $model2->currency_id = 1;
@@ -142,16 +143,16 @@ class TransactionController extends BaseController
                 $model2->warehouse_id = $params['warehouse_id'];
             }
             if (!empty($params['shipping']) && array_key_exists("pickup_date", $params['shipping'][0]) && !empty($params['shipping'][0]['pickup_date'])) {
-				if (strtotime($params['shipping'][0]['pickup_date']) > 0) {
-                	$model2->delivered_plan_at = date("Y-m-d H:i:s", strtotime($params['shipping'][0]['pickup_date']));
-				} else {
-					$model2->delivered_plan_at = date("Y-m-d H:i:s", strtotime($params['shipping'][0]['date_added']));
-				}
+                if (strtotime($params['shipping'][0]['pickup_date']) > 0) {
+                    $model2->delivered_plan_at = date("Y-m-d H:i:s", strtotime($params['shipping'][0]['pickup_date']));
+                } else {
+                    $model2->delivered_plan_at = date("Y-m-d H:i:s", strtotime($params['shipping'][0]['date_added']));
+                }
             } else {
-				$model2->delivered_plan_at = date("Y-m-d H:i:s");
-			}
+                $model2->delivered_plan_at = date("Y-m-d H:i:s");
+            }
             $model2->created_at = date("Y-m-d H:i:s");
-            $model2->created_by = (isset($params['admin_id']))? $params['admin_id'] : 1;
+            $model2->created_by = (isset($params['admin_id'])) ? $params['admin_id'] : 1;
 
             $save = \Model\InvoicesModel::model()->save(@$model2);
             if ($save) {
@@ -183,13 +184,13 @@ class TransactionController extends BaseController
                     }
                     $model3->currency_id = $model2->currency_id;
                     $model3->change_value = $model2->change_value;
-                    $model3->type = (!empty($params['payment_type']))? $params['payment_type'] : 1;
+                    $model3->type = (!empty($params['payment_type'])) ? $params['payment_type'] : 1;
                     if (!empty($params['warehouse_id'])) {
                         $model3->warehouse_id = $params['warehouse_id'];
                     }
                     $model3->status = 1;
                     $model3->created_at = date("Y-m-d H:i:s");
-                    $model3->created_by = (isset($params['admin_id']))? $params['admin_id'] : 1;
+                    $model3->created_by = (isset($params['admin_id'])) ? $params['admin_id'] : 1;
                     $save2 = \Model\OrdersModel::model()->save(@$model3);
                     if ($save2) {
                         $model4 = new \Model\InvoiceItemsModel();
@@ -200,7 +201,7 @@ class TransactionController extends BaseController
                         $model4->quantity = $model3->quantity;
                         $model4->price = $model3->price;
                         $model4->created_at = date("Y-m-d H:i:s");
-                        $model4->created_by = (isset($params['admin_id']))? $params['admin_id'] : 1;
+                        $model4->created_by = (isset($params['admin_id'])) ? $params['admin_id'] : 1;
                         $save3 = \Model\InvoiceItemsModel::model()->save(@$model4);
                         if (!$save3) {
                             $success &= false;
@@ -214,12 +215,13 @@ class TransactionController extends BaseController
                     // save the payments
                     try {
                         $this->buildThePayment($model2->id, $params['payment']);
-                    } catch (\Exception $e){}
+                    } catch (\Exception $e) {
+                    }
 
                     $result = [
                         "success" => 1,
                         "id" => $model2->id,
-						"invoice_number" => $model2->getInvoiceFormatedNumber(['id' => $model2->id]),
+                        "invoice_number" => $model2->getInvoiceFormatedNumber(['id' => $model2->id]),
                         'message' => 'Data berhasil disimpan.'
                     ];
                 } else {
@@ -256,7 +258,7 @@ class TransactionController extends BaseController
                 $series = $inv_model->getSeries();
                 $serie = null;
                 foreach ($series as $i => $s_row) {
-                    if (strpos($params['invoice_number'], $s_row['serie'])!== false) {
+                    if (strpos($params['invoice_number'], $s_row['serie']) !== false) {
                         $serie = $s_row['serie'];
                     }
                 }
@@ -283,8 +285,8 @@ class TransactionController extends BaseController
             }
 
             if (array_key_exists("serie", $inv_data) && array_key_exists("nr", $inv_data)) {
-                $zero = str_repeat('0',4-strlen($inv_data['nr']));
-                $inv_data['invoice_number'] = $inv_data['serie'].$zero.$inv_data['nr'];
+                $zero = str_repeat('0', 4 - strlen($inv_data['nr']));
+                $inv_data['invoice_number'] = $inv_data['serie'] . $zero . $inv_data['nr'];
                 unset($inv_data['serie']);
                 unset($inv_data['nr']);
             }
@@ -317,8 +319,8 @@ class TransactionController extends BaseController
                 }
 
                 if (array_key_exists("serie", $refund_data) && array_key_exists("nr", $refund_data)) {
-                    $zero = str_repeat('0',4-strlen($refund_data['nr']));
-                    $refund_data['invoice_number'] = $refund_data['serie'].$zero.$refund_data['nr'];
+                    $zero = str_repeat('0', 4 - strlen($refund_data['nr']));
+                    $refund_data['invoice_number'] = $refund_data['serie'] . $zero . $refund_data['nr'];
                     unset($refund_data['serie']);
                     unset($refund_data['nr']);
                 }
@@ -388,18 +390,18 @@ class TransactionController extends BaseController
                 $model->paid_by = (isset($params['admin_id'])) ? $params['admin_id'] : 1;
             }
 
-			if (empty($model->delivered_plan_at)) {
-				$model->delivered_plan_at = $model->paid_at;
-			}
+            if (empty($model->delivered_plan_at)) {
+                $model->delivered_plan_at = $model->paid_at;
+            }
 
             $model->delivered = 1;
             $model->delivered_at = date("Y-m-d H:i:s");
-            $model->delivered_by = (isset($params['admin_id']))? $params['admin_id'] : 1;
+            $model->delivered_by = (isset($params['admin_id'])) ? $params['admin_id'] : 1;
             if ($has_new_config) {
                 $model->config = json_encode($configs);
             }
             $model->updated_at = date("Y-m-d H:i:s");
-            $model->updated_by = (isset($params['admin_id']))? $params['admin_id'] : 1;
+            $model->updated_by = (isset($params['admin_id'])) ? $params['admin_id'] : 1;
             $update = \Model\InvoicesModel::model()->update(@$model);
             if ($update) {
                 // real update the stock
@@ -415,7 +417,7 @@ class TransactionController extends BaseController
                         if ($stock instanceof \RedBeanPHP\OODBBean) {
                             $stock->quantity = $stock->quantity - $item_belanja['qty'];
                             $stock->updated_at = date("Y-m-d H:i:s");
-                            $stock->updated_by = (isset($params['admin_id']))? $params['admin_id'] : 1;
+                            $stock->updated_by = (isset($params['admin_id'])) ? $params['admin_id'] : 1;
                             $update_stock = \Model\ProductStocksModel::model()->update($stock);
                         }
                     }
@@ -423,13 +425,15 @@ class TransactionController extends BaseController
                 //store the manager fee
                 try {
                     $this->onAfterInvoiceCompleted($model->id);
-                } catch (\Exception $e){}
+                } catch (\Exception $e) {
+                }
 
                 if ($has_new_config) {
                     // save the additional payments
                     try {
                         $this->buildThePayment($model->id, $params['payment']);
-                    } catch (\Exception $e){}
+                    } catch (\Exception $e) {
+                    }
                 }
 
                 $result['success'] = 1;
@@ -456,17 +460,17 @@ class TransactionController extends BaseController
         $result = ['success' => 0];
         $params = $request->getParams();
         $i_model = new \Model\InvoicesModel();
-		$limit = 20;
-		if (isset($params['limit'])) {
-			$limit = $params['limit'];
-			$params['limit'] = $params['limit'] + 1;
-		} else {
-			$params['limit'] = 21;
-		}
+        $limit = 20;
+        if (isset($params['limit'])) {
+            $limit = $params['limit'];
+            $params['limit'] = $params['limit'] + 1;
+        } else {
+            $params['limit'] = 21;
+        }
         $items = $i_model->getData($params);
-        if (is_array($items)){
+        if (is_array($items)) {
             $result['success'] = 1;
-			$ids = [];
+            $ids = [];
             foreach ($items as $i => $item) {
                 $items[$i]['invoice_number'] = $i_model->getInvoiceFormatedNumber2($item['serie'], $item['nr']);
                 $items[$i]['config'] = json_decode($item['config'], true);
@@ -484,15 +488,15 @@ class TransactionController extends BaseController
                         $status_order = 'Selesai';
                     }
                 }
-				$items[$i]['status_order'] = $status_order;
-				array_push($ids, $item['id']);
+                $items[$i]['status_order'] = $status_order;
+                array_push($ids, $item['id']);
             }
             $result['data'] = $items;
-			$result['next_id'] = 0;
-			if (count($items) > $limit) {
-				$result['next_id'] = max($ids);
-				unset($items[$limit]);
-			}
+            $result['next_id'] = 0;
+            if (count($items) > $limit) {
+                $result['next_id'] = max($ids);
+                unset($items[$limit]);
+            }
         } else {
             $result = [
                 'success' => 0,
@@ -503,7 +507,7 @@ class TransactionController extends BaseController
         return $response->withJson($result, 201);
     }
 
-	public function complete_payment($request, $response, $args)
+    public function complete_payment($request, $response, $args)
     {
         $isAllowed = $this->isAllowed($request, $response);
 
@@ -551,15 +555,15 @@ class TransactionController extends BaseController
                 $model->paid_by = (isset($params['admin_id'])) ? $params['admin_id'] : 1;
             }
 
-			if (empty($model->delivered_plan_at)) {
-				$model->delivered_plan_at = $model->paid_at;
-			}
+            if (empty($model->delivered_plan_at)) {
+                $model->delivered_plan_at = $model->paid_at;
+            }
 
             if ($has_new_config) {
                 $model->config = json_encode($configs);
             }
             $model->updated_at = date("Y-m-d H:i:s");
-            $model->updated_by = (isset($params['admin_id']))? $params['admin_id'] : 1;
+            $model->updated_by = (isset($params['admin_id'])) ? $params['admin_id'] : 1;
             $update = \Model\InvoicesModel::model()->update($model);
             if ($update) {
                 $result['success'] = 1;
@@ -607,7 +611,7 @@ class TransactionController extends BaseController
             $model2->nr = $model2->getInvoiceNumber($model2->status, 'nr');
             if ($model2->status == \Model\InvoicesModel::STATUS_REFUND) {
                 $model2->refunded_at = date(c);
-                $model2->refunded_by = (isset($params['admin_id']))? $params['admin_id'] : 1;
+                $model2->refunded_by = (isset($params['admin_id'])) ? $params['admin_id'] : 1;
                 $model2->refunded_invoice_id = $model->id;
             }
 
@@ -618,15 +622,15 @@ class TransactionController extends BaseController
             }
 
             $fee_refund = 0;
-			foreach ($params['items'] as $index => $data) {
-				if (!array_key_exists('id', $data)) {
-					$pmodel = \Model\ProductsModel::model()->findByAttributes(['title' => $data['name']]);
-					if ($pmodel instanceof \RedBeanPHP\OODBBean) {	                   
-						$params['items'][$index]['id'] = $pmodel->id;
-						$data['id'] = $pmodel->id;
-					}
-				}
-				if (array_key_exists('refunded_qty', $data) && $data['refunded_qty'] > 0) {
+            foreach ($params['items'] as $index => $data) {
+                if (!array_key_exists('id', $data)) {
+                    $pmodel = \Model\ProductsModel::model()->findByAttributes(['title' => $data['name']]);
+                    if ($pmodel instanceof \RedBeanPHP\OODBBean) {
+                        $params['items'][$index]['id'] = $pmodel->id;
+                        $data['id'] = $pmodel->id;
+                    }
+                }
+                if (array_key_exists('refunded_qty', $data) && $data['refunded_qty'] > 0) {
                     $fee = $wh_fee_model->getFee([
                         'warehouse_id' => $model->warehouse_id,
                         'product_id' => $data['id'],
@@ -637,50 +641,50 @@ class TransactionController extends BaseController
                         $fee_refund = $fee_refund - $fee;
                     }
                 }
-			}
+            }
 
-			$cfgs = ['items' => $params['items'], 'payments' => $params['payments']];
-			if (array_key_exists('items_change', $params)) {
-				foreach ($params['items_change'] as $index => $data) {
-					$fee = 0;
-					if (!array_key_exists('id', $data)) {
-						$pmodel = \Model\ProductsModel::model()->findByAttributes(['title' => $data['name']]);
-						if ($pmodel instanceof \RedBeanPHP\OODBBean) {	                   
-							$params['items_change'][$index]['id'] = $pmodel->id;
-							// set the fee
-		                    $fee = $wh_fee_model->getFee([
-		                        'warehouse_id' => $model->warehouse_id,
-		                        'product_id' => $pmodel->id,
-		                        'quantity' => $data['quantity'],
-		                        'total_quantity' => $data['quantity_total']
-		                    ]);
-						}
-		                $params['items_change'][$index]['fee'] = $fee;
-		                $fee_refund = $fee_refund + $fee;
-					} else {
-						// set the fee
-	 					$fee = $wh_fee_model->getFee([
-		                        'warehouse_id' => $model->warehouse_id,
-		                        'product_id' => $data['id'],
-		                        'quantity' => $data['quantity'],
-		                        'total_quantity' => $data['quantity_total']
-		                    ]);
-						$params['items_change'][$index]['fee'] = $fee;
-						$fee_refund = $fee_refund + $fee;
-					}
-				}
-				$cfgs['items_change'] = $params['items_change'];
-			}
+            $cfgs = ['items' => $params['items'], 'payments' => $params['payments']];
+            if (array_key_exists('items_change', $params)) {
+                foreach ($params['items_change'] as $index => $data) {
+                    $fee = 0;
+                    if (!array_key_exists('id', $data)) {
+                        $pmodel = \Model\ProductsModel::model()->findByAttributes(['title' => $data['name']]);
+                        if ($pmodel instanceof \RedBeanPHP\OODBBean) {
+                            $params['items_change'][$index]['id'] = $pmodel->id;
+                            // set the fee
+                            $fee = $wh_fee_model->getFee([
+                                'warehouse_id' => $model->warehouse_id,
+                                'product_id' => $pmodel->id,
+                                'quantity' => $data['quantity'],
+                                'total_quantity' => $data['quantity_total']
+                            ]);
+                        }
+                        $params['items_change'][$index]['fee'] = $fee;
+                        $fee_refund = $fee_refund + $fee;
+                    } else {
+                        // set the fee
+                        $fee = $wh_fee_model->getFee([
+                            'warehouse_id' => $model->warehouse_id,
+                            'product_id' => $data['id'],
+                            'quantity' => $data['quantity'],
+                            'total_quantity' => $data['quantity_total']
+                        ]);
+                        $params['items_change'][$index]['fee'] = $fee;
+                        $fee_refund = $fee_refund + $fee;
+                    }
+                }
+                $cfgs['items_change'] = $params['items_change'];
+            }
 
-			if (array_key_exists('notes', $params)) {
-				$cfgs['notes'] = $params['notes'];
-			}
+            if (array_key_exists('notes', $params)) {
+                $cfgs['notes'] = $params['notes'];
+            }
 
-			if (array_key_exists('reasons', $params)) {
-				$cfgs['reasons'] = $params['reasons'];
-			}
+            if (array_key_exists('reasons', $params)) {
+                $cfgs['reasons'] = $params['reasons'];
+            }
 
-			$model2->config = json_encode($cfgs);
+            $model2->config = json_encode($cfgs);
 
             $model2->currency_id = 1;
             $model2->change_value = 1;
@@ -690,7 +694,7 @@ class TransactionController extends BaseController
 
             $model2->warehouse_id = $model->warehouse_id;
             $model2->created_at = date("Y-m-d H:i:s");
-            $model2->created_by = (isset($params['admin_id']))? $params['admin_id'] : 1;
+            $model2->created_by = (isset($params['admin_id'])) ? $params['admin_id'] : 1;
 
             $save = \Model\InvoicesModel::model()->save(@$model2);
             if ($save) {
@@ -702,19 +706,19 @@ class TransactionController extends BaseController
                     $model3->type = \Model\InvoiceItemsModel::TYPE_REFUND;
                     // find the order
                     $o_model = \Model\OrdersModel::model()->findByAttributes(['invoice_id' => $model->id, 'product_id' => $data['id']]);
-					if ($o_model instanceof \RedBeanPHP\OODBBean) {
-                    	$model3->rel_id = $o_model->id;
-					} else {
-						$ii_model = \Model\InvoiceItemsModel::model()->findByAttributes(['invoice_id' => $model->id, 'title' => $data['name']]);
-						if ($ii_model instanceof \RedBeanPHP\OODBBean) {
-		                	$model3->rel_id = $ii_model->rel_id;
-						}
-					}
+                    if ($o_model instanceof \RedBeanPHP\OODBBean) {
+                        $model3->rel_id = $o_model->id;
+                    } else {
+                        $ii_model = \Model\InvoiceItemsModel::model()->findByAttributes(['invoice_id' => $model->id, 'title' => $data['name']]);
+                        if ($ii_model instanceof \RedBeanPHP\OODBBean) {
+                            $model3->rel_id = $ii_model->rel_id;
+                        }
+                    }
                     $model3->title = $data['name'];
                     $model3->quantity = $data['refunded_qty'];
                     $model3->price = $data['price'];
                     $model3->created_at = date("Y-m-d H:i:s");
-                    $model3->created_by = (isset($params['admin_id']))? $params['admin_id'] : 1;
+                    $model3->created_by = (isset($params['admin_id'])) ? $params['admin_id'] : 1;
                     $save2 = \Model\InvoiceItemsModel::model()->save(@$model3);
                     if (!$save2) {
                         $success &= false;
@@ -733,7 +737,8 @@ class TransactionController extends BaseController
                     // save the payments
                     try {
                         $this->buildThePayment($model2->id, $params['payment']);
-                    } catch (\Exception $e){}
+                    } catch (\Exception $e) {
+                    }
 
                     $result = [
                         "success" => 1,
@@ -756,7 +761,8 @@ class TransactionController extends BaseController
      * @param $id
      * store pic fees
      */
-    private function onAfterInvoiceCompleted($id) {
+    private function onAfterInvoiceCompleted($id)
+    {
         $inv_model = new \Model\InvoicesModel();
         $inv_data = $inv_model->getItem(['id' => $id]);
         if (is_array($inv_data) && array_key_exists('status', $inv_data) && $inv_data['status'] == \Model\InvoicesModel::STATUS_PAID) {
@@ -813,27 +819,29 @@ class TransactionController extends BaseController
         if (is_array($items) && count($items) > 0) {
             $result['success'] = 1;
             $i_model = new \Model\InvoicesModel();
-            $total_revenue = 0; $total_transaction = 0; $total_fee = 0;
-			$payments = [];
-			$dates = [];
+            $total_revenue = 0;
+            $total_transaction = 0;
+            $total_fee = 0;
+            $payments = [];
+            $dates = [];
             foreach ($items as $i => $item) {
                 $total_revenue = $total_revenue + $item['total_revenue'];
                 $total_transaction = $total_transaction + $item['total_transaction'];
                 $total_fee = $total_fee + $item['total_fee'];
-				/*$invoice_configs = json_decode($items[$i]['invoice_configs'], true);
-				if (array_key_exists('payment', $invoice_configs)) {
-					$items[$i]['payments'] = $invoice_configs['payment'];
-					unset($items[$i]['invoice_configs']);
-					if (is_array($invoice_configs['payment'])) {
-						foreach($invoice_configs['payment'] as $j => $pay_channel) {
-							if (array_key_exists($pay_channel['type'], $payments)) {
-								$payments[$pay_channel['type']] = $payments[$pay_channel['type']] + $pay_channel['amount_tendered'];
-							} else {
-								$payments[$pay_channel['type']] = (int)$pay_channel['amount_tendered'];
-							}
-						}
-					}
-				}*/
+                /*$invoice_configs = json_decode($items[$i]['invoice_configs'], true);
+                if (array_key_exists('payment', $invoice_configs)) {
+                    $items[$i]['payments'] = $invoice_configs['payment'];
+                    unset($items[$i]['invoice_configs']);
+                    if (is_array($invoice_configs['payment'])) {
+                        foreach($invoice_configs['payment'] as $j => $pay_channel) {
+                            if (array_key_exists($pay_channel['type'], $payments)) {
+                                $payments[$pay_channel['type']] = $payments[$pay_channel['type']] + $pay_channel['amount_tendered'];
+                            } else {
+                                $payments[$pay_channel['type']] = (int)$pay_channel['amount_tendered'];
+                            }
+                        }
+                    }
+                }*/
                 unset($items[$i]['invoice_configs']);
                 $payment_data = $model->getPaymentEachDate(['date' => $item['created_date'], 'warehouse_id' => $params['warehouse_id']]);
                 $paid = 0;
@@ -846,24 +854,24 @@ class TransactionController extends BaseController
                     $paid = $paid + $pdata['amount'];
                 }
                 $items[$i]['total_payment'] = $paid;
-				$dates[] = $item['created_date'];
+                $dates[] = $item['created_date'];
             }
 
             $result['data'] = [
-				'summary' => [
-					'total_revenue' => $total_revenue, 
-					'total_transaction' => $total_transaction,
-					'total_fee' => $total_fee,
-					'payments' => $payments
-				], 
-				'items' => $items
-			];
+                'summary' => [
+                    'total_revenue' => $total_revenue,
+                    'total_transaction' => $total_transaction,
+                    'total_fee' => $total_fee,
+                    'payments' => $payments
+                ],
+                'items' => $items
+            ];
         }
 
         return $response->withJson($result, 201);
     }
 
-	public function get_list_fee_on($request, $response, $args)
+    public function get_list_fee_on($request, $response, $args)
     {
         $isAllowed = $this->isAllowed($request, $response);
 
@@ -882,44 +890,48 @@ class TransactionController extends BaseController
         if (is_array($items) && count($items) > 0) {
             $result['success'] = 1;
             $i_model = new \Model\InvoicesModel();
-            $total_revenue = 0; $total_transaction = 0; $total_fee = 0; $payments = [];
+            $total_revenue = 0;
+            $total_transaction = 0;
+            $total_fee = 0;
+            $payments = [];
             foreach ($items as $i => $item) {
                 $total_revenue = $total_revenue + $item['total_revenue'];
                 $total_transaction = $total_transaction + $item['total_transaction'];
                 $total_fee = $total_fee + $item['total_fee'];
-				$items[$i]['configs'] = json_decode($items[$i]['configs'], true);
-				$items[$i]['invoice_configs'] = json_decode($items[$i]['invoice_configs'], true);
-				$invoice_configs = $items[$i]['invoice_configs'];
-				if (array_key_exists('payment', $invoice_configs)) {
-					$items[$i]['payments'] = $invoice_configs['payment'];
-					if (is_array($invoice_configs['payment'])) {
-						foreach($invoice_configs['payment'] as $j => $pay_channel) {
-							if (array_key_exists($pay_channel['type'], $payments)) {
-								$payments[$pay_channel['type']] = $payments[$pay_channel['type']] + $pay_channel['amount_tendered'];
-							} else {
-								$payments[$pay_channel['type']] = $pay_channel['amount_tendered']*1;
-							}
-						}
-					}
-				}
-				$items[$i]['invoice_number'] = $i_model->getInvoiceFormatedNumber(['id' => $item['invoice_id']]);
+                $items[$i]['configs'] = json_decode($items[$i]['configs'], true);
+                $items[$i]['invoice_configs'] = json_decode($items[$i]['invoice_configs'], true);
+                $invoice_configs = $items[$i]['invoice_configs'];
+                if (array_key_exists('payment', $invoice_configs)) {
+                    $items[$i]['payments'] = $invoice_configs['payment'];
+                    if (is_array($invoice_configs['payment'])) {
+                        foreach ($invoice_configs['payment'] as $j => $pay_channel) {
+                            if (array_key_exists($pay_channel['type'], $payments)) {
+                                $payments[$pay_channel['type']] = $payments[$pay_channel['type']] + $pay_channel['amount_tendered'];
+                            } else {
+                                $payments[$pay_channel['type']] = $pay_channel['amount_tendered'] * 1;
+                            }
+                        }
+                    }
+                }
+                $items[$i]['invoice_number'] = $i_model->getInvoiceFormatedNumber(['id' => $item['invoice_id']]);
             }
-			
+
             $result['data'] = [
-				'summary' => [
-					'total_revenue' => $total_revenue, 
-					'total_transaction' => $total_transaction,
-					'total_fee' => $total_fee,
-					'payments' => $payments
-				], 
-				'items' => $items
-			];
+                'summary' => [
+                    'total_revenue' => $total_revenue,
+                    'total_transaction' => $total_transaction,
+                    'total_fee' => $total_fee,
+                    'payments' => $payments
+                ],
+                'items' => $items
+            ];
         }
 
         return $response->withJson($result, 201);
     }
 
-    private function buildThePayment($invoice_id, $payment_items, $rebuild = false) {
+    private function buildThePayment($invoice_id, $payment_items, $rebuild = false)
+    {
         if (is_array($payment_items) && count($payment_items) > 0) {
             if ($rebuild) {
                 $clear = \Model\PaymentHistoryModel::model()->deleteAllByAttributes(['invoice_id' => $invoice_id]);
@@ -953,5 +965,55 @@ class TransactionController extends BaseController
                 }
             }
         }
+    }
+
+    public function verify_transfer($request, $response, $args)
+    {
+        $isAllowed = $this->isAllowed($request, $response);
+
+        if (!$isAllowed['allow']) {
+            $result = [
+                'success' => 0,
+                'message' => $isAllowed['message'],
+            ];
+            return $response->withJson($result, 201);
+        }
+
+        $result = ['success' => 0];
+        $params = $request->getParams();
+
+        if (isset($params['admin_id']) && isset($params['invoice_id'])) {
+            $model = \Model\InvoicesModel::model()->findByPk($params['invoice_id']);
+            if ($model instanceof \RedBeanPHP\OODBBean) {
+                $hmodels = \Model\PaymentHistoryModel::model()->findAllByAttributes(['invoice_id' => $model->id]);
+                $success_counter = 0;
+                foreach ($hmodels as $hmodel) {
+                    $hmodel->is_checked = 1;
+                    $hmodel->checked_at = date("Y-m-d H:i:s");
+                    $hmodel->checked_by = $params['admin_id'];
+                    $hmodel->updated_at = date("Y-m-d H:i:s");
+                    $update1 = \Model\PaymentHistoryModel::model()->update($hmodel);
+                    if ($update1) {
+                        $success_counter = $success_counter + 1;
+                    }
+                }
+                if ($success_counter > 0) {
+                    $config = json_decode($model->config, true);
+                    if (is_array($config)) {
+                        $config['is_verified_payment'] = 1;
+                        $model->config = json_encode($config);
+                        $update2 = \Model\InvoicesModel::model()->update($model);
+                        if ($update2) {
+                            $result['success'] = 1;
+                            $result['message'] = 'Data telah berhasil disimpan.';
+                        }
+                    }
+                }
+            } else {
+                $result['message'] = 'Data gagal disimpan';
+            }
+        }
+
+        return $response->withJson($result, 201);
     }
 }
