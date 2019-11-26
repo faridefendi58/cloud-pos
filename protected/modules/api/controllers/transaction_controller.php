@@ -124,16 +124,20 @@ class TransactionController extends BaseController
             if ($params['discount'] > 0) {
                 $model2->discount = (int)$params['discount'];
             }
-            $model2->config = json_encode(
-                [
+
+			$cf = [
                     'items_belanja' => $params['items_belanja'],
                     'payment' => $params['payment'],
                     'customer' => $params['customer'],
                     //'promocode' => $params['promocode'],
                     'discount' => $params['discount'],
                     'shipping' => $params['shipping']
-                ]
-            );
+                ];
+
+			if (isset($params['merchant'])) {
+				$cf['merchant'] = $params['merchant'];
+			}
+            $model2->config = json_encode($cf);
             $model2->currency_id = 1;
             $model2->change_value = 1;
             if (!empty($params['notes'])) {
