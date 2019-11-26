@@ -922,13 +922,19 @@ class TransactionController extends BaseController
                 $items[$i]['invoice_number'] = $i_model->getInvoiceFormatedNumber(['id' => $item['invoice_id']]);
             }
 
-            $result['data'] = [
-                'summary' => [
+			$sum = [
                     'total_revenue' => $total_revenue,
                     'total_transaction' => $total_transaction,
                     'total_fee' => $total_fee,
                     'payments' => $payments
-                ],
+                ];
+			$refunds = $model->getRefundData($params);
+			if (is_array($refunds) && count($refunds)) {
+				$sum['refunds'] = $refunds;
+			}
+
+            $result['data'] = [
+                'summary' => $sum,
                 'items' => $items
             ];
         }

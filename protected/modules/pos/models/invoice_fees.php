@@ -258,6 +258,11 @@ class InvoiceFeesModel extends \Model\BaseModel
             $params['date_to'] = $data['created_at_to'];
         }
 
+		if (isset($data['created_at'])) {
+            $where .= ' AND DATE_FORMAT(t.created_at,"%Y-%m-%d") =:created_at';
+			$params['created_at'] = $data['created_at'];
+        }
+
 		$sql = 'SELECT i.config FROM {tablePrefix}ext_invoice_fee t 
 				LEFT JOIN {tablePrefix}ext_invoice i ON i.refunded_invoice_id = t.invoice_id
             	WHERE 1 '. $where .' AND i.id IS NOT NULL 
