@@ -25,9 +25,9 @@
                 <div class="form-group">
                     <label>&nbsp;</label>
                     <select name="WarehouseProducts[{{ product.id }}][delimeter][]" class="form-control">
-                        <option value="less_than" {% if price.delimeter == 'less_than' %}selected="selected"{% endif %}>{{ "< (kurang dari)" }}</option>
+                        {#<option value="less_than" {% if price.delimeter == 'less_than' %}selected="selected"{% endif %}>{{ "< (kurang dari)" }}</option>
                         <option value="more_than" {% if price.delimeter == 'more_than' %}selected="selected"{% endif %}>{{ '> (lebih dari)' }}</option>
-                        <option value="less_than_equal" {% if price.delimeter == 'less_than_equal' %}selected="selected"{% endif %}>{{ "<= (kurang dari sama dengan)" }}</option>
+                        <option value="less_than_equal" {% if price.delimeter == 'less_than_equal' %}selected="selected"{% endif %}>{{ "<= (kurang dari sama dengan)" }}</option>#}
                         <option value="more_than_equal" {% if price.delimeter == 'more_than_equal' %}selected="selected"{% endif %}>{{ '>= (lebih dari sama dengan)' }}</option>
                     </select>
                 </div>

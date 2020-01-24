@@ -23,13 +23,15 @@ class TransactionController extends BaseController
         $app->map(['GET'], '/list-fee', [$this, 'get_list_fee']);
         $app->map(['GET'], '/list-fee-on', [$this, 'get_list_fee_on']);
         $app->map(['POST'], '/verify-transfer', [$this, 'verify_transfer']);
+        $app->map(['GET'], '/list-sale-counter', [$this, 'get_sale_counter']);
     }
 
     public function accessRules()
     {
         return [
             ['allow',
-                'actions' => ['create', 'detail', 'complete', 'list', 'complete-payment', 'refund', 'list-fee', 'list-fee-on', 'verify-transfer'],
+                'actions' => ['create', 'detail', 'complete', 'list', 
+					'complete-payment', 'refund', 'list-fee', 'list-fee-on', 'verify-transfer', 'list-sale-counter'],
                 'users' => ['@'],
             ]
         ];
@@ -827,7 +829,9 @@ class TransactionController extends BaseController
             $total_transaction = 0;
             $total_fee = 0;
             $payments = [];
+            $payments_net = [];
             $dates = [];
+			$change_due = 0;
             foreach ($items as $i => $item) {
                 $total_revenue = $total_revenue + $item['total_revenue'];
                 $total_transaction = $total_transaction + $item['total_transaction'];
@@ -851,21 +855,33 @@ class TransactionController extends BaseController
                 $paid = 0;
                 foreach ($payment_data as $j => $pdata) {
                     if (array_key_exists($pdata['pay_channel'], $payments)) {
-                        $payments[$pdata['pay_channel']] = $payments[$pdata['pay_channel']] + $pdata['amount'];
+                        $payments[$pdata['pay_channel']] = $payments[$pdata['pay_channel']] + $pdata['amount_tendered'];
+                        $payments_net[$pdata['pay_channel']] = $payments_net[$pdata['pay_channel']] + $pdata['amount'];
                     } else {
-                        $payments[$pdata['pay_channel']] = (int)$pdata['amount'];
+                        $payments[$pdata['pay_channel']] = (int)$pdata['amount_tendered'];
+                        $payments_net[$pdata['pay_channel']] = (int)$pdata['amount'];
                     }
                     $paid = $paid + $pdata['amount'];
+					$change_due = $change_due + (int)$pdata['change_due'];
                 }
                 $items[$i]['total_payment'] = $paid;
                 $dates[] = $item['created_date'];
+
+				$refund_data = $model->getRefundData(['warehouse_id' => $params['warehouse_id'], 'created_at' => $item['created_date']]);
+				$total_ref = 0;
+				if (is_array($refund_data) && count($refund_data) > 0) {
+					$total_ref = array_sum($refund_data);
+				}
+				$items[$i]['total_refund'] = $total_ref;
             }
 
 			$sum = [
                     'total_revenue' => $total_revenue,
                     'total_transaction' => $total_transaction,
                     'total_fee' => $total_fee,
-                    'payments' => $payments
+                    'payments' => $payments,
+                    'payments_net' => $payments_net,
+					'change_due' => $change_due
                 ];
 			$refunds = $model->getRefundData($params);
 			if (is_array($refunds) && count($refunds)) {
@@ -904,6 +920,7 @@ class TransactionController extends BaseController
             $total_transaction = 0;
             $total_fee = 0;
             $payments = [];
+			$change_due = 0;
             foreach ($items as $i => $item) {
                 $total_revenue = $total_revenue + $item['total_revenue'];
                 $total_transaction = $total_transaction + $item['total_transaction'];
@@ -920,17 +937,33 @@ class TransactionController extends BaseController
                             } else {
                                 $payments[$pay_channel['type']] = $pay_channel['amount_tendered'] * 1;
                             }
+							if (array_key_exists('change_due', $pay_channel)) {
+								$change_due = $change_due + ($pay_channel['change_due'] * 1);
+							}
                         }
                     }
                 }
                 $items[$i]['invoice_number'] = $i_model->getInvoiceFormatedNumber(['id' => $item['invoice_id']]);
+				$rmodel = \Model\InvoicesModel::model()->findByAttributes(['refunded_invoice_id' => $item['invoice_id']]);
+				$items[$i]['total_refund'] = 0;
+				if ($rmodel instanceof \RedBeanPHP\OODBBean) {
+					$cfg = json_decode($rmodel->config, true);
+					if (array_key_exists('payments', $cfg) && !empty($cfg['payments'])) {
+						if (is_array($cfg['payments'])) {
+							foreach ($cfg['payments'] as $j => $payment) {
+								$items[$i]['total_refund'] =  $items[$i]['total_refund'] + ($payment['amount'] * 1);
+							}
+						}
+					}
+				}
             }
 
 			$sum = [
                     'total_revenue' => $total_revenue,
                     'total_transaction' => $total_transaction,
                     'total_fee' => $total_fee,
-                    'payments' => $payments
+                    'payments' => $payments,
+					'change_due' => $change_due 
                 ];
 			$refunds = $model->getRefundData($params);
 			if (is_array($refunds) && count($refunds)) {
@@ -965,6 +998,11 @@ class TransactionController extends BaseController
                 } elseif (array_key_exists('amount', $item)) {
                     $model->amount = $item['amount'];
                 }
+
+				if (array_key_exists('change_due', $item)) {
+                    $model->change_due = $item['change_due'];
+                }
+
                 if (array_key_exists($item['type'], $payment_channels)) {
                     $model->channel_id = $payment_channels[$item['type']]['id'];
                 } else {
@@ -1028,6 +1066,119 @@ class TransactionController extends BaseController
             } else {
                 $result['message'] = 'Data gagal disimpan';
             }
+        }
+
+        return $response->withJson($result, 201);
+    }
+
+	public function get_sale_counter($request, $response, $args)
+    {
+        $isAllowed = $this->isAllowed($request, $response);
+
+        if (!$isAllowed['allow']) {
+            $result = [
+                'success' => 0,
+                'message' => $isAllowed['message'],
+            ];
+            return $response->withJson($result, 201);
+        }
+
+        $result = ['success' => 0];
+        $params = $request->getParams();
+		$model = new \Model\InvoiceFeesModel();
+        $items = $model->getCounterData($params);
+
+        if (is_array($items) && count($items) > 0) {
+            $result['success'] = 1;
+			$datas = [];
+			$datas_ori = [];
+			$summary = [];
+			$summary_ori = [];
+			$returs = [];
+            foreach ($items as $i => $item) {
+				$title = ucwords($item['title']);
+				$summary[$title] += $item['quantity'];
+				// refund data
+				$refund_configs = null;
+				if (!empty($item['refund_configs'])) {
+					$refund_configs = json_decode($item['refund_configs'], true);
+				}
+                if ($item['tot_quantity']<5) {
+					$datas['eceran'][$title] += $item['quantity'];
+					$datas_ori['eceran'][$title] += $item['quantity'];
+					if (!empty($refund_configs)) {
+						foreach($refund_configs['items'] as $ci => $citem) {
+							if (strtolower($citem['name']) == strtolower($title) && $citem['returned_qty'] > 0) {
+								$returs['eceran'][$title] -= $citem['returned_qty'];
+								$datas['eceran'][$title] -= $citem['returned_qty'];
+							}
+						}
+						if (array_key_exists('items_change', $refund_configs)) {
+							foreach($refund_configs['items_change'] as $chi => $chitem) {
+								if (strtolower($chitem['name']) == strtolower($title)) {
+									$returs['eceran'][$title] += $chitem['quantity'];
+									$datas['eceran'][$title] += $chitem['quantity'];
+								}
+							}
+						}
+					}
+				} elseif ($item['tot_quantity']>=5 && $item['tot_quantity']<10) {
+					$datas['semi_grosir'][$title] += $item['quantity'];
+					$datas_ori['semi_grosir'][$title] += $item['quantity'];
+					if (!empty($refund_configs)) {
+						foreach($refund_configs['items'] as $ci => $citem) {
+							if (strtolower($citem['name']) == strtolower($title) && $citem['returned_qty'] > 0) {
+								$returs['semi_grosir'][$title] -= $citem['returned_qty'];
+								$datas['semi_grosir'][$title] -= $citem['returned_qty'];
+							}
+						}
+						if (array_key_exists('items_change', $refund_configs)) {
+							foreach($refund_configs['items_change'] as $chi => $chitem) {
+								if (strtolower($chitem['name']) == strtolower($title)) {
+									$returs['semi_grosir'][$title] += $chitem['quantity'];
+									$datas['semi_grosir'][$title] += $chitem['quantity'];
+								}
+							}
+						}
+					}
+				} else {
+					$datas['grosir'][$title] += $item['quantity'];
+					$datas_ori['grosir'][$title] += $item['quantity'];
+					if (!empty($refund_configs)) {
+						foreach($refund_configs['items'] as $ci => $citem) {
+							if (strtolower($citem['name']) == strtolower($title) && $citem['returned_qty'] > 0) {
+								$returs['grosir'][$title] -= $citem['returned_qty'];
+								$datas['grosir'][$title] -= $citem['returned_qty'];
+							}
+						}
+						if (array_key_exists('items_change', $refund_configs)) {
+							foreach($refund_configs['items_change'] as $chi => $chitem) {
+								if (strtolower($chitem['name']) == strtolower($title)) {
+									$returs['grosir'][$title] += $chitem['quantity'];
+									$datas['grosir'][$title] += $chitem['quantity'];
+								}
+							}
+						}
+					}
+				}
+			}
+
+			$summary_ori = $summary;
+			if (count($returs) > 0) {
+				foreach($returs as $type => $products) {
+					foreach($products as $p => $tot) {
+						$summary[$p] += $tot;
+					}
+				}
+			}
+
+            $result['data'] = [
+				'items_original' => $datas_ori,
+				'summary_original' => $summary_ori,
+				'items' => $datas,
+				'summary' => $summary,
+				'returs' => $returs
+			];
         }
 
         return $response->withJson($result, 201);

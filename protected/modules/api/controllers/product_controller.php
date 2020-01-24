@@ -60,6 +60,7 @@ class ProductController extends BaseController
         if ($warehouse_id > 0) {
             $wpmodel = new \Model\WarehouseProductsModel();
             $psmodel = new \Model\ProductStocksModel();
+            $ppmodel = new \Model\ProductPricesModel();
             $items = $wpmodel->getData(['warehouse_id' => $warehouse_id]);
             if (is_array($items) && count($items) > 0) {
                 $result['success'] = 1;
@@ -68,7 +69,8 @@ class ProductController extends BaseController
                 foreach ($items as $i => $item) {
                     // geting the prices
                     $prices = json_decode($item['configs'], true);
-                    $base_price = $prices[0]['price'];
+                    //$base_price = $prices[0]['price']; // wrong if there is no 1-4 qty config price
+                    $base_price = $ppmodel->getPrice($item['product_id']); // default to base config price
                     foreach ($prices as $i => $price) {
                         if ($price['quantity'] == 1) {
                             $base_price = $price['price'];

@@ -700,7 +700,7 @@ class WarehousesController extends BaseController
                             if (array_key_exists($_qid+1, $_POST['WarehouseProducts'][$product_id]['_qty'])) {
                                 $_POST['WarehouseProducts'][$product_id]['quantity_max'][$_qid] = (int)$_POST['WarehouseProducts'][$product_id]['_qty'][$_qid+1];
                             } else {
-                                $_POST['WarehouseProducts'][$product_id]['quantity_max'][$_qid] = 1000;
+                                $_POST['WarehouseProducts'][$product_id]['quantity_max'][$_qid] = 10000;
                             }
                             $_POST['WarehouseProducts'][$product_id]['quantity'][$_qid] = $_qty + 1;
                         } elseif ($delimeter == 'less_than_equal') {
@@ -713,9 +713,9 @@ class WarehousesController extends BaseController
                         } else { //should be more than equal
                             // has next data
                             if (array_key_exists($_qid+1, $_POST['WarehouseProducts'][$product_id]['_qty'])) {
-                                $_POST['WarehouseProducts'][$product_id]['quantity_max'][$_qid] = (int)$_POST['WarehouseProducts'][$product_id]['_qty'][$_qid+1];
+                                $_POST['WarehouseProducts'][$product_id]['quantity_max'][$_qid] = (int)$_POST['WarehouseProducts'][$product_id]['_qty'][$_qid+1]-1;
                             } else {
-                                $_POST['WarehouseProducts'][$product_id]['quantity_max'][$_qid] = 1000;
+                                $_POST['WarehouseProducts'][$product_id]['quantity_max'][$_qid] = 10000;
                             }
                             $_POST['WarehouseProducts'][$product_id]['quantity'][$_qid] = (int)$_qty;
                         }

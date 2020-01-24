@@ -214,7 +214,7 @@ class InvoiceFeesModel extends \Model\BaseModel
 
         $params = ['warehouse_id' => $data['warehouse_id'], 'created_at' => $data['date']];
 
-        $sql = 'SELECT t.invoice_id, ch.code AS pay_channel, SUM(t.amount - t.change_due) AS amount 
+        $sql = 'SELECT t.invoice_id, ch.code AS pay_channel, SUM(t.amount - t.change_due) AS amount, t.amount AS amount_tendered, t.change_due 
           FROM {tablePrefix}ext_payment_history t 
           LEFT JOIN {tablePrefix}ext_invoice_fee h ON h.invoice_id = t.invoice_id
           LEFT JOIN {tablePrefix}ext_payment_channel ch ON ch.id = t.channel_id
@@ -291,5 +291,49 @@ class InvoiceFeesModel extends \Model\BaseModel
 		}
 
         return $items;
+    }
+
+	public function getCounterData($data = array())
+    {
+        $where = '';
+
+        $params = [];
+        if (isset($data['warehouse_id'])) {
+            $where .= ' AND t.warehouse_id =:warehouse_id';
+            $params['warehouse_id'] = $data['warehouse_id'];
+        }
+
+        if (isset($data['admin_id'])) {
+            $where .= ' AND t.admin_id =:admin_id';
+            $params['admin_id'] = $data['admin_id'];
+        }
+
+        if (isset($data['status'])) {
+            $where .= ' AND t.status =:status';
+            $params['status'] = $data['status'];
+        }
+
+        if (isset($data['created_at_from'])) {
+            $where .= ' AND DATE_FORMAT(t.created_at,"%Y-%m-%d") BETWEEN :date_from AND :date_to';
+            $params['date_from'] = $data['created_at_from'];
+            if (!isset($data['created_at_to'])) {
+                $data['created_at_to'] = date("Y-m-t", strtotime($data['created_at_from']));
+            }
+            $params['date_to'] = $data['created_at_to'];
+        }
+
+		$sql = 'SELECT t.invoice_id, ii.title, ii.quantity, 
+			(SELECT SUM(it.quantity) FROM {tablePrefix}ext_invoice_item it WHERE it.invoice_id = t.invoice_id) AS tot_quantity,
+			(SELECT i.config FROM {tablePrefix}ext_invoice i WHERE i.refunded_invoice_id = t.invoice_id) AS refund_configs
+			FROM {tablePrefix}ext_invoice_fee t 
+			LEFT JOIN {tablePrefix}ext_invoice_item ii ON ii.invoice_id = t.invoice_id
+            WHERE 1 '. $where .'  
+			ORDER BY t.created_at ASC';
+
+        $sql = str_replace(['{tablePrefix}'], [$this->_tbl_prefix], $sql);
+
+        $rows = R::getAll( $sql, $params );
+
+        return $rows;
     }
 }

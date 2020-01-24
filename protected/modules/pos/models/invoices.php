@@ -99,11 +99,12 @@ class InvoicesModel extends \Model\BaseModel
                 WHEN t.status = 1 AND t.delivered = 0 THEN "1-Lunas"
                 WHEN t.status = 0 AND t.delivered = 1 THEN "3-Utang Tempo"
                 WHEN t.status = 0 AND t.delivered = 0 THEN "2-Belum Lunas"
-            END) AS status_order_code 
+            END) AS status_order_code, h.is_checked
             FROM {tablePrefix}ext_invoice t 
             LEFT JOIN {tablePrefix}ext_invoice_item i ON t.id = i.invoice_id 
             LEFT JOIN {tablePrefix}ext_customer c ON c.id = t.customer_id 
             LEFT JOIN {tablePrefix}ext_warehouse w ON w.id = t.warehouse_id 
+            LEFT JOIN {tablePrefix}ext_payment_history h ON h.invoice_id = t.id 
             WHERE 1';
 
         $params = [];
@@ -131,7 +132,11 @@ class InvoicesModel extends \Model\BaseModel
 				unset($data['delivered_at_to']);
             } elseif (strtolower($data['status_order']) == 'belum_lunas') {
                 $sql .= ' AND t.status = 0 AND t.delivered = 0';
-            }
+            } elseif (strtolower($data['status_order']) == 'verified') {
+				$sql .= ' AND h.is_checked =1';
+			} elseif (strtolower($data['status_order']) == 'unverified') {
+				$sql .= ' AND h.is_checked = 0 AND h.channel_id IN (2,3,4,5,7,8)';
+			}
         }
 
         if (isset($data['warehouse_id'])) {
@@ -185,6 +190,9 @@ class InvoicesModel extends \Model\BaseModel
 				$params['invoice_number'] = (int)$nr;
 			} else {
 				$params['invoice_number'] = (int)$data['invoice_number'];
+			}
+			if (!empty($params['delivered_plan_at_from'])) {
+				$params['delivered_plan_at_from'] = date("d-m-Y", strtotime($params['delivered_plan_at_from'].' -3 months'));
 			}
         }
 
