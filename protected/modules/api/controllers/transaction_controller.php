@@ -411,20 +411,25 @@ class TransactionController extends BaseController
             $update = \Model\InvoicesModel::model()->update(@$model);
             if ($update) {
                 // real update the stock
+                $prod_model = new \Model\ProductsModel();
+                $avoid_stocks = $prod_model->getAvoidStockProducts();
                 if (array_key_exists("items_belanja", $configs)) {
                     $smodel = new \Model\ProductStocksModel();
                     foreach ($configs['items_belanja'] as $i => $item_belanja) {
-                        $stock = $smodel->getStockByQuantity([
-                            'product_id' => $item_belanja['barcode'],
-                            'warehouse_id' => $model->warehouse_id,
-                            'quantity' => $item_belanja['qty']
-                        ]);
+                        // several product has been flaged to be uncalculated stock
+                        if (!in_array($item_belanja['barcode'], $avoid_stocks)) {
+                            $stock = $smodel->getStockByQuantity([
+                                'product_id' => $item_belanja['barcode'],
+                                'warehouse_id' => $model->warehouse_id,
+                                'quantity' => $item_belanja['qty']
+                            ]);
 
-                        if ($stock instanceof \RedBeanPHP\OODBBean) {
-                            $stock->quantity = $stock->quantity - $item_belanja['qty'];
-                            $stock->updated_at = date("Y-m-d H:i:s");
-                            $stock->updated_by = (isset($params['admin_id'])) ? $params['admin_id'] : 1;
-                            $update_stock = \Model\ProductStocksModel::model()->update($stock);
+                            if ($stock instanceof \RedBeanPHP\OODBBean) {
+                                $stock->quantity = $stock->quantity - $item_belanja['qty'];
+                                $stock->updated_at = date("Y-m-d H:i:s");
+                                $stock->updated_by = (isset($params['admin_id'])) ? $params['admin_id'] : 1;
+                                $update_stock = \Model\ProductStocksModel::model()->update($stock);
+                            }
                         }
                     }
                 }

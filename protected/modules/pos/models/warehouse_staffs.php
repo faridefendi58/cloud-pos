@@ -83,4 +83,28 @@ class WarehouseStaffsModel extends \Model\BaseModel
 
         return $row;
     }
+
+    public function getAccessWarehouses($data = []) {
+        $datas = self::getData($data);
+        $items = [];
+        if (is_array($datas)) {
+            foreach ($datas as $dt) {
+                $items[$dt['id']] = $dt['warehouse_name'];
+            }
+        }
+
+        return $items;
+    }
+
+    public function getCurrentRole($data = []) {
+        $sql = 'SELECT t.role_id  
+            FROM {tablePrefix}ext_warehouse_staff t 
+            WHERE t.id =:id';
+
+        $sql = str_replace(['{tablePrefix}'], [$this->_tbl_prefix], $sql);
+
+        $row = R::getRow( $sql, ['id' => $data['id']] );
+
+        return (!empty($row))? $row['role_id'] : 1;
+    }
 }

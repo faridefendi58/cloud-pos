@@ -1,0 +1,46 @@
+<link href="{{ 'lib/multi-select/css/multi-select.css' | admin_asset_url }}" rel="stylesheet">
+<div class="row mt30">
+    {% set whs = App.call.model("\\Model\\WarehousesModel", 'getData', {}) %}
+    <div class="col-md-6">
+        {% set related_whs = App.call.model("\\Model\\WarehouseStaffsModel", 'getAccessWarehouses', {'admin_id':model.id}) %}
+        <label class="control-label mb20">Hak akses ke warehouse :</label>
+        <select name="2col_callbacks" id="2col_callbacks" multiple class="form-control">
+            {% for i, wh in whs %}
+            {% if wh.id != model.id %}
+            <option value="{{ wh.id }}" {% if wh.title in related_whs %}selected="selected"{% endif %}>{{ wh.title }}</option>
+            {% endif %}
+            {% endfor %}
+        </select>
+    </div>
+</div>
+<script src="{{ 'lib/multi-select/js/jquery.multi-select.js' | admin_asset_url }}"></script>
+<script type="text/javascript">
+    $(function () {
+        if($('#2col_callbacks').length) {
+            $('#2col_callbacks').multiSelect({
+                afterSelect: function(values){
+                    updateRelationship(values[0], 1);
+                },
+                afterDeselect: function(values){
+                    updateRelationship(values[0], 0);
+                }
+            });
+        }
+    });
+
+    function updateRelationship(id, is_added, rel_type) {
+        var warehouse_id = "{{ model.id }}";
+        $.ajax({
+            'url': "{{ 'pos/warehouses/assign-user' | link }}/"+ warehouse_id,
+            'type':'post',
+            'data': {'id':id, 'is_added':is_added},
+            'success': function(data) {
+                console.log(data);
+                if (data.status == 'success') {
+
+                }
+            }
+        });
+        return false;
+    }
+</script>

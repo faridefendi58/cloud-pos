@@ -94,6 +94,11 @@ class PurchaseOrdersModel extends \Model\BaseModel
             if (isset($data['already_received'])) {
                 $sql .= ' AND t.received_at IS NOT NULL';
             }
+
+			if (isset($data['warehouse_id'])) {
+                $sql .= ' AND t.warehouse_id =:warehouse_id';
+                $params['warehouse_id'] = $data['warehouse_id'];
+            }
         }
 
         $sql .= ' ORDER BY t.date_order DESC';

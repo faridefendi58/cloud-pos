@@ -39,6 +39,9 @@ Kelola Warehouse - {{ App.params.site_name }}
                                     <a data-toggle="tab" href="#adjustment">Stock Adjustment</a>
                                 </li>
                                 <li>
+                                    <a data-toggle="tab" href="#transfer">Transfer Relation</a>
+                                </li>
+                                <li>
                                     <a data-toggle="tab" href="#transaction">Transaksi Penjualan</a>
                                 </li>
                             </ul>
@@ -57,6 +60,9 @@ Kelola Warehouse - {{ App.params.site_name }}
                                 </div>
                                 <div id="adjustment" class="tab-pane fade">
                                     {% include 'warehouses/_stock_adjustment.html' with {'model':model} %}
+                                </div>
+                                <div id="transfer" class="tab-pane fade">
+                                    {% include 'warehouses/_transfer_relation.html' with {'model':model} %}
                                 </div>
                                 <div id="transaction" class="tab-pane fade">
                                     {% include 'warehouses/_transaction.html' with {'model':model} %}

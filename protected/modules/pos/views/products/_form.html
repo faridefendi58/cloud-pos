@@ -29,6 +29,13 @@
             <input type="text" id="unit" name="Products[unit]" class="form-control" {% if model.unit %}value="{{ model.unit }}"{% endif %} required>
             <span class="help-block">Contoh: box, pcs, gram, kilogram, dll.</span>
         </div>
+
+        {% set config = model.config | json_decode %}
+        <div class="form-group">
+            <label class="checkbox-inline">
+                <input type="checkbox" name="Products[avoid_stock]" {% if config.avoid_stock %}checked{% endif %}> Avoid Stock
+            </label>
+        </div>
     </div>
 
     <div class="col-md-4 hide">
@@ -53,7 +60,6 @@
         </div>
 
         <div class="form-group">
-            {% set config = model.config | json_decode %}
             {% if config.image %}
             <img src="{{ config.image | link }}" width="100px"/>
             {% endif %}

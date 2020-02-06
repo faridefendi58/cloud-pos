@@ -20,13 +20,14 @@ class PurchaseController extends BaseController
         $app->map(['GET'], '/detail', [$this, 'get_detail']);
         $app->map(['POST'], '/update', [$this, 'update']);
         $app->map(['POST'], '/delete', [$this, 'delete']);
+        $app->map(['POST'], '/create-v2', [$this, 'create_v2']);
     }
 
     public function accessRules()
     {
         return [
             ['allow',
-                'actions' => ['create', 'list', 'create-shipping', 'detail', 'update', 'delete'],
+                'actions' => ['create', 'list', 'create-shipping', 'detail', 'update', 'delete', 'create-v2'],
                 'users'=> ['@'],
             ]
         ];
@@ -291,9 +292,13 @@ class PurchaseController extends BaseController
             $params_data['is_pre_order'] = $params['is_pre_order'];
         }
 
+		if (isset($params['warehouse_id'])) {
+            $params_data['warehouse_id'] = $params['warehouse_id'];
+        }
+
         if (isset($params['admin_id'])) {
             $whsmodel = new \Model\WarehouseStaffsModel();
-            $wh_staff = $whsmodel->getData(['admin_id' => $params['admin_id']]);
+            /*$wh_staff = $whsmodel->getData(['admin_id' => $params['admin_id']]);
             $wh_groups = [];
             if (is_array($wh_staff) && count($wh_staff) > 0) {
                 foreach ($wh_staff as $i => $whs) {
@@ -313,7 +318,7 @@ class PurchaseController extends BaseController
             }
             if (count($suplier_id) > 0) {
                 $params_data['supplier_id'] = $suplier_id;
-            }
+            }*/
         }
 
         $result_data = $po_model->getData($params_data);
@@ -780,4 +785,138 @@ class PurchaseController extends BaseController
 
         return $result;
     }
+
+	public function create_v2($request, $response, $args)
+    {
+        $isAllowed = $this->isAllowed($request, $response);
+
+        if (!$isAllowed['allow']) {
+            $result = [
+                'success' => 0,
+                'message' => $isAllowed['message'],
+            ];
+            return $response->withJson($result, 201);
+        }
+
+        $result = ['success' => 0];
+        $params = $request->getParams();
+
+        if (isset($params['admin_id']) && isset($params['items'])) {
+			$model = new \Model\PurchaseOrdersModel();
+            $po_number = \Pos\Controllers\PurchasesController::get_po_number();
+            $model->po_number = $po_number['serie_nr'];
+            $model->po_serie = $po_number['serie'];
+            $model->po_nr = $po_number['nr'];
+            $model->price_netto = 0;
+            if (isset($params['supplier_id']))
+                $model->supplier_id = $params['supplier_id'];
+            $model->date_order = date("Y-m-d H:i:s");
+            if (isset($params['due_date'])) {
+                $model->due_date = $params['due_date'];
+            }
+            if (isset($params['shipment_id']))
+                $model->shipment_id = $params['shipment_id'];
+            if (isset($params['wh_group_id']))
+                $model->wh_group_id = $params['wh_group_id'];
+			if (isset($params['warehouse_id']))
+                $model->warehouse_id = $params['warehouse_id'];
+            if (isset($params['is_pre_order']) && $params['is_pre_order'] > 0) {
+                $model->is_pre_order = $params['is_pre_order'];
+                $model->status = \Model\PurchaseOrdersModel::STATUS_PENDING;
+            } else {
+                $model->status = \Model\PurchaseOrdersModel::STATUS_ON_PROCESS;
+            }
+
+			if ($params['force_complete']) {
+				$model->status = \Model\PurchaseOrdersModel::STATUS_COMPLETED;
+				$model->completed_at = date("Y-m-d H:i:s");
+            	$model->completed_by = (isset($params['admin_id'])) ? $params['admin_id'] : 1;
+				$model->received_at = date("Y-m-d H:i:s");
+            	$model->received_by = (isset($params['admin_id'])) ? $params['admin_id'] : 1;
+			}
+
+            if (isset($params['notes']))
+                $model->notes = $params['notes'];
+
+			$params2 = $params;
+			unset($params2['api-key']);
+			$model->configs = json_encode($params2);
+            $model->created_at = date("Y-m-d H:i:s");
+            $model->created_by = (isset($params['admin_id'])) ? $params['admin_id'] : 1;
+            $save = \Model\PurchaseOrdersModel::model()->save(@$model);
+            if ($save) {
+                $tot_price = 0;
+                foreach ($params['items'] as $i => $item) {
+                    $product = \Model\ProductsModel::model()->findByPk($item['barcode']);
+					$product_id = $product->id;
+                    $imodel[$product_id] = new \Model\PurchaseOrderItemsModel();
+                    $imodel[$product_id]->po_id = $model->id;
+                    $imodel[$product_id]->product_id = $product->id;
+                    $imodel[$product_id]->title = $product->title;
+                    $imodel[$product_id]->quantity = $item['quantity'];
+                    $imodel[$product_id]->available_qty = $item['quantity'];
+                    $imodel[$product_id]->unit = $product->unit;
+                    if (isset($item['unit_price']))
+                        $imodel[$product_id]->price = (int)$item['unit_price'];
+                    else
+                        $imodel[$product_id]->price = $product->current_cost;
+                    $imodel[$product_id]->created_at = date("Y-m-d H:i:s");
+                    $imodel[$product_id]->created_by = $model->created_by;
+
+                    if ($product->id > 0 && $item['quantity'] > 0) {
+                        $save2 = \Model\PurchaseOrderItemsModel::model()->save($imodel[$product_id]);
+                        if ($save2) {
+                            $tot_price = $tot_price + ($imodel[$product_id]->price * $item['quantity']);
+							if ($params['force_complete']) {
+								// update stock
+		                        $stock_params = ['product_id' => $product_id, 'warehouse_id' => $model->warehouse_id];
+		                        $stock = \Model\ProductStocksModel::model()->findByAttributes($stock_params);
+		                        $update_stock = false;
+		                        if ($stock instanceof \RedBeanPHP\OODBBean) {
+		                            $stock->quantity = $stock->quantity + $quantity;
+		                            $stock->updated_at = date("Y-m-d H:i:s");
+		                            $stock->updated_by = $model->created_by;
+		                            $update_stock = \Model\ProductStocksModel::model()->update($stock);
+		                        }
+		                        if ($update_stock) {
+		                            // also update current price
+		                            $pmodel = new \Model\ProductsModel();
+		                            $current_cost = $pmodel->getCurrentCost($product_id);
+		                            $product->current_cost = $current_cost;
+		                            $product->updated_at = date("Y-m-d H:i:s");
+		                            $product->updated_by = $model->created_by;
+		                            $update_product = \Model\ProductsModel::model()->update($product);
+		                        }
+							}
+                        }
+                    }
+                }
+
+                // updating price of po data
+                if ($tot_price > 0) {
+                    $pomodel = \Model\PurchaseOrdersModel::model()->findByPk($model->id);
+                    $pomodel->price_netto = $tot_price;
+					$pomodel->updated_at = date("Y-m-d H:i:s");
+            		$pomodel->updated_at = (isset($params['admin_id'])) ? $params['admin_id'] : 1;
+                    $update = \Model\PurchaseOrdersModel::model()->update($pomodel);
+
+                    $result = [
+                        "success" => 1,
+                        "id" => $model->id,
+                        'message' => 'Data berhasi disimpan.',
+                        "issue_number" => $model->po_number
+                    ];
+                } else {
+                    $result = ["success" => 0, "message" => "Tidak ada item yang dapat disimpan."];
+                }
+            } else {
+                $result = [
+                    "success" => 0,
+                    "message" => \Model\PurchaseOrdersModel::model()->getErrors(false, false, false)
+                ];
+            }
+		}
+
+		return $response->withJson($result, 201);
+	}
 }

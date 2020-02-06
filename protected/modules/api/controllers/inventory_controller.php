@@ -17,13 +17,14 @@ class InventoryController extends BaseController
         $app->map(['POST'], '/create', [$this, 'create']);
         $app->map(['GET'], '/list', [$this, 'get_list']);
         $app->map(['GET'], '/detail', [$this, 'get_detail']);
+        $app->map(['POST'], '/create-v2', [$this, 'create_v2']);
     }
 
     public function accessRules()
     {
         return [
             ['allow',
-                'actions' => ['create', 'list', 'detail'],
+                'actions' => ['create', 'list', 'detail', 'create-v2'],
                 'users'=> ['@'],
             ]
         ];
@@ -356,4 +357,139 @@ class InventoryController extends BaseController
 
         return $response->withJson($result, 201);
     }
+
+	public function create_v2($request, $response, $args)
+    {
+        $isAllowed = $this->isAllowed($request, $response);
+
+        if (!$isAllowed['allow']) {
+            $result = [
+                'success' => 0,
+                'message' => $isAllowed['message'],
+            ];
+            return $response->withJson($result, 201);
+        }
+
+        $result = ['success' => 0];
+        $params = $request->getParams();
+        if (isset($params['admin_id']) && isset($params['items'])) {
+			$model = new \Model\InventoryIssuesModel();
+            $ii_number = \Pos\Controllers\InventoriesController::get_ii_number();
+            $model->ii_number = $ii_number['serie_nr'];
+            $model->ii_serie = $ii_number['serie'];
+            $model->ii_nr = $ii_number['nr'];
+            if (isset($params['warehouse_id']))
+                $model->warehouse_id = $params['warehouse_id'];
+            $model->status = \Model\InventoryIssuesModel::STATUS_PENDING;
+            if (isset($params['notes']))
+                $model->notes = $params['notes'];
+            if (isset($params['effective_date'])) {
+                $model->effective_date = date("Y-m-d H:i:s", strtotime($params['effective_date']));
+                $model->created_at = $model->effective_date;
+            } else {
+                $model->effective_date = date("Y-m-d H:i:s");
+                $model->created_at = date("Y-m-d H:i:s");
+            }
+            $model->created_by = (isset($params['admin_id'])) ? $params['admin_id'] : 1;
+            $save = \Model\InventoryIssuesModel::model()->save(@$model);
+            if ($save) {
+                $tot_price = 0; $stock_updated = 0; $desc = [];
+                foreach ($params['items'] as $i => $item) {
+					$product = \Model\ProductsModel::model()->findByPk($item['barcode']);
+					$product_id = $product->id;
+					$quantity = $item['quantity'];
+                    $imodel[$product_id] = new \Model\InventoryIssueItemsModel();
+                    $imodel[$product_id]->ii_id = $model->id;
+                    $imodel[$product_id]->product_id = $product_id;
+                    $imodel[$product_id]->title = $product->title;
+                    $imodel[$product_id]->quantity = $quantity;
+                    $imodel[$product_id]->unit = $product->unit;
+                    $imodel[$product_id]->price = $product->current_cost;
+                    $imodel[$product_id]->created_at = $model->created_at;
+                    $imodel[$product_id]->created_by = $model->created_by;
+
+                    if ($product_id > 0 && $imodel[$product_id]->quantity > 0) {
+                        $save2 = \Model\InventoryIssueItemsModel::model()->save($imodel[$product_id]);
+                        if ($save2) {
+                            $tot_price = $tot_price + ($imodel[$product_id]->price * $quantity);
+                            // update stock
+                            $stock_params = ['product_id' => $product_id, 'warehouse_id' => $model->warehouse_id];
+                            $stock = \Model\ProductStocksModel::model()->findByAttributes($stock_params);
+                            $update_stock = false;
+                            if ($stock instanceof \RedBeanPHP\OODBBean) {
+                                $stock->quantity = $stock->quantity - $quantity;
+                                $stock->updated_at = date("Y-m-d H:i:s");
+                                $stock->updated_by = $model->created_by;
+                                $update_stock = \Model\ProductStocksModel::model()->update($stock);
+                            }
+                            if ($update_stock) {
+                                // also update current price
+                                $pmodel = new \Model\ProductsModel();
+                                $current_cost = $pmodel->getCurrentCost($product_id);
+                                $product->current_cost = $current_cost;
+                                $product->updated_at = date("Y-m-d H:i:s");
+                                $product->updated_by = $model->created_by;
+                                $update_product = \Model\ProductsModel::model()->update($product);
+                                $stock_updated = $stock_updated + 1;
+                            }
+							$desc[] = $product->title .' : -'. $quantity;
+                        }
+                    }
+                }
+
+                // updating price of po data
+                if ($tot_price > 0) {
+                    $result = [
+                        "success" => 1,
+                        "id" => $model->id,
+                        'message' => 'Data berhasil disimpan.',
+                        "issue_number" => $model->ii_number
+                    ];
+                    // update status
+                    if ($stock_updated > 0) {
+                        $ii_model = \Model\InventoryIssuesModel::model()->findByPk($model->id);
+                        if ($ii_model instanceof \RedBeanPHP\OODBBean) {
+                            $ii_model->status = \Model\InventoryIssuesModel::STATUS_COMPLETED;
+                            $ii_model->updated_at = date("Y-m-d H:i:s");
+                            $update_status = \Model\InventoryIssuesModel::model()->update($ii_model);
+                        }
+                    }
+					// add logs
+					try {
+						$act_model = new \Model\ActivitiesModel();
+						$act_model->title = 'Stok Keluar (Non Penjualan) '. $model->ii_number;
+						$act_model->rel_id = $model->id;
+						$act_model->type = \Model\ActivitiesModel::TYPE_INVENTORY_ISSUE;
+						if (is_array($desc)) {
+								$act_model->description = implode(", ", $desc);
+								if (!empty($params['admin_id'])) {
+									$ad_model = \Model\AdminModel::model()->findByPk($params['admin_id']);
+									if ($ad_model instanceof \RedBeanPHP\OODBBean) {
+										$act_model->description .= '. Submited By '. $ad_model->name;
+									}
+								}
+						}
+						if (isset($params['warehouse_id'])) {
+							$act_model->warehouse_id = $params['warehouse_id'];
+						}
+						$act_model->created_at = date("Y-m-d H:i:s");
+						$act_model->created_by = (isset($params['admin_id'])) ? $params['admin_id'] : 1;
+						$save_act = \Model\ActivitiesModel::model()->save($act_model);
+					} catch (\Exception $e) {
+						$result['message'] = $e->getMessage();
+					}
+                } else {
+                    $result = ["success" => 0, "message" => "Tidak ada item yang dapat disimpan."];
+                }
+            } else {
+                $result = [
+                    "success" => 0,
+                    "message" => \Model\InventoryIssuesModel::model()->getErrors(false, false, false)
+                ];
+            }
+		}
+
+		return $response->withJson($result, 201);
+	}
+
 }

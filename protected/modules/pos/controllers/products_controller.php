@@ -160,7 +160,7 @@ class ProductsController extends BaseController
             }
 
             $uploadfile = null;
-            if (isset($_FILES['Products']['name']['image'])) {
+            if (isset($_FILES['Products']['name']['image']) && !empty($_FILES['Products']['name']['image'])) {
                 $path_info = pathinfo($_FILES['Products']['name']['image']);
                 if (!in_array($path_info['extension'], ['jpg','JPG','jpeg','JPEG','png','PNG'])) {
                     echo json_encode(['status'=>'failed','message'=>'Allowed file type are jpg, png']); exit;
@@ -180,6 +180,12 @@ class ProductsController extends BaseController
                 $model->unit = $_POST['Products']['unit'];
             $model->description = $_POST['Products']['description'];
             $model->active = $_POST['Products']['active'];
+            if (!empty($_POST['Products']['avoid_stock'])) {
+                $config['avoid_stock'] = '1';
+            } else {
+                unset($config['avoid_stock']);
+            }
+            $model->config = json_encode($config);
             $model->updated_at = date("Y-m-d H:i:s");
             $model->updated_by = $this->_user->id;
             $update = \Model\ProductsModel::model()->update($model);

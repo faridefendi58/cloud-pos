@@ -33,6 +33,8 @@ class WarehousesController extends BaseController
         $app->map(['POST'], '/product-prices/[{id}]', [$this, 'price_prices']);
         $app->map(['POST'], '/product-stock/[{id}]', [$this, 'product_stock']);
         $app->map(['POST'], '/product-fees/[{id}]', [$this, 'price_fees']);
+        $app->map(['POST'], '/related/[{id}]', [$this, 'related']);
+        $app->map(['POST'], '/assign-user/[{id}]', [$this, 'get_assign_user']);
     }
 
     public function accessRules()
@@ -869,9 +871,9 @@ class WarehousesController extends BaseController
                         } else { //should be more than equal
                             // has next data
                             if (array_key_exists($_qid+1, $_POST['WarehouseProducts'][$product_id]['_qty'])) {
-                                $_POST['WarehouseProducts'][$product_id]['quantity_max'][$_qid] = (int)$_POST['WarehouseProducts'][$product_id]['_qty'][$_qid+1];
+                                $_POST['WarehouseProducts'][$product_id]['quantity_max'][$_qid] = (int)$_POST['WarehouseProducts'][$product_id]['_qty'][$_qid+1] - 1;
                             } else {
-                                $_POST['WarehouseProducts'][$product_id]['quantity_max'][$_qid] = 1000;
+                                $_POST['WarehouseProducts'][$product_id]['quantity_max'][$_qid] = 10000;
                             }
                             $_POST['WarehouseProducts'][$product_id]['quantity'][$_qid] = (int)$_qty;
                         }
@@ -932,5 +934,95 @@ class WarehousesController extends BaseController
                     'message' => 'Data gagal disimpan',
                 ], 201);
         }
+    }
+
+    public function related($request, $response, $args)
+    {
+        $isAllowed = $this->isAllowed($request, $response);
+        if ($isAllowed instanceof \Slim\Http\Response)
+            return $isAllowed;
+
+        if (!$isAllowed) {
+            return $this->notAllowedAction();
+        }
+
+        $params = $request->getParams();
+        $results = ['status' => 'failed'];
+        if (isset($args['id']) && isset($params['id'])) {
+            $model = \Model\WarehouseTransferRelationsModel::model()->findByAttributes(['warehouse_id' => $args['id'], 'warehouse_rel_id' => $params['id'], 'rel_type' => $params['rel_type']]);
+            if ($model instanceof \RedBeanPHP\OODBBean) {
+                if ($params['is_added'] <= 0) {
+                    $del = \Model\WarehouseTransferRelationsModel::model()->delete($model);
+                    $results['status'] = 'success';
+                    $results['message'] = 'Data telah berhasil dihapus.';
+                } else {
+                    $results['status'] = 'success';
+                    $results['message'] = 'Data telah ada di database.';
+                }
+            } else {
+                if ($params['is_added'] > 0) {
+                    $model2 = new \Model\WarehouseTransferRelationsModel();
+                    $model2->warehouse_id = $args['id'];
+                    $model2->warehouse_rel_id = $params['id'];
+                    $model2->rel_type = $params['rel_type'];
+                    $model2->created_at = date('c');
+                    $model2->created_by = $this->_user->id;
+                    $save = \Model\WarehouseTransferRelationsModel::model()->save($model2);
+                    if ($save) {
+                        $results['status'] = 'success';
+                        $results['message'] = 'Data telah berhasil disimpan.';
+                    } else {
+                        $results['message'] = 'Data gagal disimpan.';
+                    }
+                }
+            }
+        }
+
+        return $response->withJson($results, 201);
+    }
+
+    public function get_assign_user($request, $response, $args)
+    {
+        $isAllowed = $this->isAllowed($request, $response);
+        if ($isAllowed instanceof \Slim\Http\Response)
+            return $isAllowed;
+
+        if (!$isAllowed) {
+            return $this->notAllowedAction();
+        }
+
+        $params = $request->getParams();
+        $results = ['status' => 'failed'];
+        if (isset($args['id']) && isset($params['id'])) {
+            $model = \Model\WarehouseStaffsModel::model()->findByAttributes(['admin_id' => $args['id'], 'warehouse_id' => $params['id']]);
+            if ($model instanceof \RedBeanPHP\OODBBean) {
+                if ($params['is_added'] <= 0) {
+                    $del = \Model\WarehouseStaffsModel::model()->delete($model);
+                    $results['status'] = 'success';
+                    $results['message'] = 'Data telah berhasil dihapus.';
+                } else {
+                    $results['status'] = 'success';
+                    $results['message'] = 'Data telah ada di database.';
+                }
+            } else {
+                if ($params['is_added'] > 0) {
+                    $model2 = new \Model\WarehouseStaffsModel();
+                    $model2->admin_id = $args['id'];
+                    $model2->warehouse_id = $params['id'];
+                    $model2->role_id = $model2->getCurrentRole(['id' => $args['id']]);
+                    $model2->created_at = date('c');
+                    $model2->created_by = $this->_user->id;
+                    $save = \Model\WarehouseStaffsModel::model()->save($model2);
+                    if ($save) {
+                        $results['status'] = 'success';
+                        $results['message'] = 'Data telah berhasil disimpan.';
+                    } else {
+                        $results['message'] = 'Data gagal disimpan.';
+                    }
+                }
+            }
+        }
+
+        return $response->withJson($results, 201);
     }
 }

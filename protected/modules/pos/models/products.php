@@ -126,4 +126,25 @@ class ProductsModel extends \Model\BaseModel
 
         return $row['max'];
     }
+
+    public function getAvoidStockProducts() {
+        $delimeter = '"avoid_stock":"1"';
+        $sql = 'SELECT t.id  
+            FROM {tablePrefix}ext_product t 
+            WHERE t.config LIKE "%avoid_stock%"';
+
+        $params = [];
+
+        $sql = str_replace(['{tablePrefix}'], [$this->_tbl_prefix], $sql);
+
+        $rows = R::getAll( $sql, $params );
+        $items = [];
+        if (is_array($rows) && count($rows) > 0) {
+            foreach ($rows as $row) {
+                array_push($items, $row['id']);
+            }
+        }
+
+        return $items;
+    }
 }

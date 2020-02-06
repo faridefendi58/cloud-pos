@@ -17,6 +17,7 @@ class WarehouseController extends BaseController
         $app->map(['POST'], '/create', [$this, 'create']);
         $app->map(['POST'], '/update', [$this, 'update']);
         $app->map(['POST'], '/delete', [$this, 'delete']);
+        $app->map(['GET'], '/list-transfer', [$this, 'get_list_transfer']);
     }
 
     public function accessRules()
@@ -222,6 +223,37 @@ class WarehouseController extends BaseController
                     $result['message'] = 'Data gagal dihapus';
                 }
             }
+        }
+
+        return $response->withJson($result, 201);
+    }
+
+	public function get_list_transfer($request, $response, $args)
+    {
+        $isAllowed = $this->isAllowed($request, $response);
+
+        if (!$isAllowed['allow']) {
+            $result = [
+                'success' => 0,
+                'message' => $isAllowed['message'],
+            ];
+            return $response->withJson($result, 201);
+        }
+
+        $result = [];
+        $params = $request->getParams();
+        $whmodel = new \Model\WarehousesModel();
+        $items = $whmodel->getData();
+        if (is_array($items)){
+            $result['success'] = 1;
+            foreach ($items as $i => $item) {
+				array_push($result['data'], ['id' => $item['id'], 'title' => $item['title']]);
+			}
+        } else {
+            $result = [
+                'success' => 0,
+                'message' => "Data warehouse tidak ditemukan.",
+            ];
         }
 
         return $response->withJson($result, 201);
