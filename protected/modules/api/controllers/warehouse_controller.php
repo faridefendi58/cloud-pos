@@ -242,13 +242,17 @@ class WarehouseController extends BaseController
 
         $result = [];
         $params = $request->getParams();
-        $whmodel = new \Model\WarehousesModel();
-        $items = $whmodel->getData();
+        $whmodel = new \Model\WarehouseTransferRelationsModel();
+
+        if (isset($params['rel_type'])) {
+            $items = $whmodel->getAllRelatedWarehouses(['warehouse_id' => $params['warehouse_id'], 'rel_type' => $params['rel_type']]);
+        } else {
+            $items = $whmodel->getAllRelatedWarehouses(['warehouse_id' => $params['warehouse_id']]);
+        }
+
         if (is_array($items)){
             $result['success'] = 1;
-            foreach ($items as $i => $item) {
-				array_push($result['data'], ['id' => $item['id'], 'title' => $item['title']]);
-			}
+            $result['data'] = $items;
         } else {
             $result = [
                 'success' => 0,

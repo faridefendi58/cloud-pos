@@ -9,6 +9,8 @@ class ActivitiesModel extends \Model\BaseModel
     const TYPE_INVENTORY_ISSUE = 'inventory_issue';
     const TYPE_TRANSFER_RECEIPT = 'transfer_receipt';
     const TYPE_INVENTORY_RECEIPT = 'inventory_receipt';
+    const TYPE_STOCK_IN = 'stock_in';
+    const TYPE_STOCK_OUT = 'stock_out';
 
     public static function model($className = __CLASS__)
     {
@@ -91,12 +93,32 @@ class ActivitiesModel extends \Model\BaseModel
 				$sql .= ' AND t.id =:id';
 				$params['id'] = $data['id'];
 			}
+
+            if (isset($data['status'])) {
+                $sql .= ' AND t.status =:status';
+                $params['status'] = $data['status'];
+            }
         }
 
         $sql = str_replace(['{tablePrefix}'], [$this->_tbl_prefix], $sql);
 
         $row = R::getRow( $sql, $params );
+        if (!empty($row) && array_key_exists('configs', $row)) {
+            $row['configs'] = json_decode($row['configs'], true);
+        }
 
         return $row;
+    }
+
+    public function getLatestGroupId() {
+        $sql = 'SELECT MAX(t.group_id) AS max_group_id
+            FROM {tablePrefix}ext_activities t  
+            WHERE 1';
+
+        $sql = str_replace(['{tablePrefix}'], [$this->_tbl_prefix], $sql);
+
+        $row = R::getRow( $sql );
+
+        return $row['max_group_id'];
     }
 }

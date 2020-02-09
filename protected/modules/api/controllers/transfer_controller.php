@@ -21,6 +21,9 @@ class TransferController extends BaseController
         $app->map(['POST', 'GET'], '/create-receipt', [$this, 'create_receipt']);
         $app->map(['GET'], '/history', [$this, 'get_history']);
         $app->map(['GET'], '/history-detail', [$this, 'get_history_detail']);
+        $app->map(['POST', 'GET'], '/incoming', [$this, 'get_incoming_transfer']);
+        $app->map(['POST', 'GET'], '/outgoing', [$this, 'get_outgoing_transfer']);
+        $app->map(['POST', 'GET'], '/in-out-update', [$this, 'get_in_out_update']);
     }
 
     public function accessRules()
@@ -493,35 +496,20 @@ class TransferController extends BaseController
                 'rel_id' => $model->id
             ];
 
-            /*if ($model->wh_group_id > 0) {
-                $whg_model = \Model\WarehouseGroupsModel::model()->findByPk($model->wh_group_id);
-                if ($whg_model instanceof \RedBeanPHP\OODBBean && !empty($whg_model->pic)) {
-                    $params2['recipients'] = array_keys(json_decode($whg_model->pic, true));
-                    $po_model = new \Model\TransferIssuesModel();
-                    $po_detail = $po_model->getDetail($model->id);
-                    $params2['message'] = "Ada Perpindahan Stok ".$po_detail['ti_number']." untuk WH area ". $whg_model->title." ";
-                    $params2['message'] .= "yang dipesan oleh ".$po_detail['created_by_name'];
-                    if (!empty($po_detail['due_date'])) {
-                        $params2['message'] .= " untuk tanggal ". date("d F Y", strtotime($po_detail['due_date'])).".";
-                    }
-
-                    $params2['issue_number'] = $po_detail['ti_number'];
-                    $params2['rel_activity'] = 'TransferActivity';
-                    //send to wh pic
-                    $this->_sendNotification($params2);
-                }
-            }*/
-
             //remove git stock if transfered from git
-            if ($model->warehouse_from == 0 || empty($model->warehouse_from)) {
+            /*if ($model->warehouse_from == 0 || empty($model->warehouse_from)) {
                 try {
                     $substract_stock = true;
                     $dr_model = new \Model\DeliveryReceiptItemsModel();
-                    foreach ($transfer_items as $product_id => $quantity) {
-                        $substract_stock &= $dr_model->subtracting_stok($product_id, $quantity);
+                    if (count($params['items']) > 0) {
+                        foreach ($params['items'] as $i => $item) {
+                            $quantity = $item['quantity'];
+                            $product_id = $item['barcode'];
+                            $substract_stock &= $dr_model->subtracting_stok($product_id, $quantity);
+                        }
                     }
                 } catch (Exception $e) {}
-            }
+            }*/
         }
 
         return $response->withJson($result, 201);
@@ -814,9 +802,453 @@ class TransferController extends BaseController
 			} elseif ($result_data['type'] == \Model\ActivitiesModel::TYPE_TRANSFER_RECEIPT) {
 				$mdl = new \Model\TransferReceiptsModel();
 				$result['data'] = $mdl->getDetail($result_data['rel_id']);
-			}
+			} elseif ($result_data['type'] == \Model\ActivitiesModel::TYPE_STOCK_IN || $result_data['type'] == \Model\ActivitiesModel::TYPE_STOCK_OUT) {
+			    $statuss = [-2 => 'CANCELED', -1 => 'NEED-CHECK', 0 => 'PENDING', 1 => 'COMPLETE'];
+                $issue_number = 'IN-';
+			    if ($result_data['type'] == \Model\ActivitiesModel::TYPE_STOCK_IN) {
+                    $issue_number = 'IN-'. $statuss[$result_data['status']];
+                } elseif ($result_data['type'] == \Model\ActivitiesModel::TYPE_STOCK_OUT) {
+                    $issue_number = 'OUT-'. $statuss[$result_data['status']];
+                }
+			    $result_data['issue_number'] = $issue_number;
+                $result['data'] = $result_data;
+            }
         }
 
         return $response->withJson($result, 201);
 	}
+
+    /**
+     * Incoming good from another warehouse
+     * @param $request
+     * @param $response
+     * @param $args
+     * @return mixed
+     */
+    public function get_incoming_transfer($request, $response, $args)
+    {
+        $isAllowed = $this->isAllowed($request, $response);
+
+        if (!$isAllowed['allow']) {
+            $result = [
+                'success' => 0,
+                'message' => $isAllowed['message'],
+            ];
+            return $response->withJson($result, 201);
+        }
+
+        $result = ['success' => 0];
+        $params = $request->getParams();
+        if (isset($params['admin_id']) && isset($params['items'])) {
+            $act_model = new \Model\ActivitiesModel();
+            $latest_group_id = $act_model->getLatestGroupId();
+            //$result['data'] = $params;
+            try {
+                $act_model->title = 'Stok Masuk IN-PENDING';
+                $act_model->type = \Model\ActivitiesModel::TYPE_STOCK_IN;
+                if (is_array($params['items'])) {
+                    $descs = [];
+                    foreach ($params['items'] as $i => $item) {
+                        if (array_key_exists('title', $item)) {
+                            $descs[] = $item['title'] . ' : ' . $item['quantity'];
+                        } else {
+                            $p_model = \Model\ProductsModel::model()->findByPk($item['barcode']);
+                            if ($p_model instanceof \RedBeanPHP\OODBBean) {
+                                $params['items'][$i]['title'] = $p_model->title;
+                                $descs[] = $p_model->title . ' : ' . $item['quantity'];
+                            }
+                        }
+                    }
+                    $act_model->description = implode("\n", $descs);
+                    if (!empty($params['admin_id'])) {
+                        $ad_model = \Model\AdminModel::model()->findByPk($params['admin_id']);
+                        if ($ad_model instanceof \RedBeanPHP\OODBBean) {
+                            $act_model->description .= "\nSubmited By ". $ad_model->name;
+                        }
+                    }
+                }
+                if (isset($params['warehouse_to'])) {
+                    $act_model->warehouse_id = $params['warehouse_to'];
+                }
+                $act_model->group_id = $latest_group_id + 1;
+                if (array_key_exists('api-key', $params)) {
+                    unset($params['api-key']);
+                }
+                $act_model->configs = json_encode($params);
+                $act_model->created_at = date("Y-m-d H:i:s");
+                $act_model->created_by = (isset($params['admin_id'])) ? $params['admin_id'] : 1;
+                $save_act = \Model\ActivitiesModel::model()->save(@$act_model);
+                if ($save_act) {
+                    $act_model2 = new \Model\ActivitiesModel();
+                    $act_model2->title = 'Stok Keluar OUT-PENDING';
+                    $act_model2->type = \Model\ActivitiesModel::TYPE_STOCK_OUT;
+                    if (isset($params['warehouse_from'])) {
+                        $act_model2->warehouse_id = $params['warehouse_from'];
+                    }
+                    $act_model2->group_id = $act_model->group_id;
+                    $descs = [];
+                    foreach ($params['items'] as $i => $item) {
+                        if (array_key_exists('title', $item)) {
+                            $descs[] = $item['title'] . ' : -' . $item['quantity'];
+                        } else {
+                            $p_model = \Model\ProductsModel::model()->findByPk($item['barcode']);
+                            if ($p_model instanceof \RedBeanPHP\OODBBean) {
+                                $params['items'][$i]['title'] = $p_model->title;
+                                $descs[] = $p_model->title . ' : -' . $item['quantity'];
+                            }
+                        }
+                    }
+                    $act_model2->description = implode("\n", $descs);
+                    if (!empty($params['admin_id'])) {
+                        $ad_model = \Model\AdminModel::model()->findByPk($params['admin_id']);
+                        if ($ad_model instanceof \RedBeanPHP\OODBBean) {
+                            $act_model2->description .= "\nSubmited By ". $ad_model->name;
+                        }
+                    }
+                    $act_model2->configs = $act_model->configs;
+                    $act_model2->created_at = date("Y-m-d H:i:s");
+                    $act_model2->created_by = $act_model->created_by;
+                    if ($act_model2->warehouse_id > 0) {
+                        $save_act2 = \Model\ActivitiesModel::model()->save($act_model2);
+                    }
+                    $result['success'] = 1;
+                    $result['message'] = $act_model->title. ' telah berhasil disimpan';
+                    $result['id'] = $act_model->id;
+                    $result['issue_number'] = 'IN-PENDING';
+                }
+            } catch (\Exception $e) {
+                $result['message'] = $e->getMessage();
+            }
+        }
+
+        return $response->withJson($result, 201);
+    }
+
+    /**
+     * Outgoing good from another warehouse
+     * @param $request
+     * @param $response
+     * @param $args
+     * @return mixed
+     */
+    public function get_outgoing_transfer($request, $response, $args)
+    {
+        $isAllowed = $this->isAllowed($request, $response);
+
+        if (!$isAllowed['allow']) {
+            $result = [
+                'success' => 0,
+                'message' => $isAllowed['message'],
+            ];
+            return $response->withJson($result, 201);
+        }
+
+        $result = ['success' => 0];
+        $params = $request->getParams();
+        if (isset($params['admin_id']) && isset($params['items'])) {
+            $act_model = new \Model\ActivitiesModel();
+            $latest_group_id = $act_model->getLatestGroupId();
+            try {
+                $act_model->title = 'Stok Keluar OUT-PENDING';
+                $act_model->type = \Model\ActivitiesModel::TYPE_STOCK_OUT;
+                if (is_array($params['items'])) {
+                    $descs = [];
+                    foreach ($params['items'] as $i => $item) {
+                        if (array_key_exists('title', $item)) {
+                            $descs[] = $item['title'] . ' : -' . $item['quantity'];
+                        } else {
+                            $p_model = \Model\ProductsModel::model()->findByPk($item['barcode']);
+                            if ($p_model instanceof \RedBeanPHP\OODBBean) {
+                                $params['items'][$i]['title'] = $p_model->title;
+                                $descs[] = $p_model->title . ' : -' . $item['quantity'];
+                            }
+                        }
+                    }
+                    $act_model->description = implode("\n", $descs);
+                    if (!empty($params['admin_id'])) {
+                        $ad_model = \Model\AdminModel::model()->findByPk($params['admin_id']);
+                        if ($ad_model instanceof \RedBeanPHP\OODBBean) {
+                            $act_model->description .= "\nSubmited By ". $ad_model->name;
+                        }
+                    }
+                }
+                if (isset($params['warehouse_from'])) {
+                    $act_model->warehouse_id = $params['warehouse_from'];
+                }
+                $act_model->group_id = $latest_group_id + 1;
+                if (array_key_exists('api-key', $params)) {
+                    unset($params['api-key']);
+                }
+                $act_model->configs = json_encode($params);
+                $act_model->created_at = date("Y-m-d H:i:s");
+                $act_model->created_by = (isset($params['admin_id'])) ? $params['admin_id'] : 1;
+                $save_act = \Model\ActivitiesModel::model()->save(@$act_model);
+                if ($save_act) {
+                    $act_model2 = new \Model\ActivitiesModel();
+                    $act_model2->title = 'Stok Masuk IN-PENDING';
+                    $act_model2->type = \Model\ActivitiesModel::TYPE_STOCK_IN;
+                    if (isset($params['warehouse_to'])) {
+                        $act_model2->warehouse_id = $params['warehouse_to'];
+                    }
+                    $act_model2->group_id = $act_model->group_id;
+                    $descs = [];
+                    foreach ($params['items'] as $i => $item) {
+                        if (array_key_exists('title', $item)) {
+                            $descs[] = $item['title'] . ' : ' . $item['quantity'];
+                        } else {
+                            $p_model = \Model\ProductsModel::model()->findByPk($item['barcode']);
+                            if ($p_model instanceof \RedBeanPHP\OODBBean) {
+                                $params['items'][$i]['title'] = $p_model->title;
+                                $descs[] = $p_model->title . ' : ' . $item['quantity'];
+                            }
+                        }
+                    }
+                    $act_model2->description = implode("\n", $descs);
+                    if (!empty($params['admin_id'])) {
+                        $ad_model = \Model\AdminModel::model()->findByPk($params['admin_id']);
+                        if ($ad_model instanceof \RedBeanPHP\OODBBean) {
+                            $act_model2->description .= "\nSubmited By ". $ad_model->name;
+                        }
+                    }
+                    $act_model2->configs = $act_model->configs;
+                    $act_model2->created_at = date("Y-m-d H:i:s");
+                    $act_model2->created_by = $act_model->created_by;
+                    if ($act_model2->warehouse_id > 0) {
+                        $save_act2 = \Model\ActivitiesModel::model()->save($act_model2);
+                    }
+                    $result['success'] = 1;
+                    $result['message'] = $act_model->title. ' telah berhasil disimpan';
+                    $result['id'] = $act_model->id;
+                    $result['issue_number'] = 'OUT-PENDING';
+                }
+            } catch (\Exception $e) {
+                $result['message'] = $e->getMessage();
+            }
+        }
+
+        return $response->withJson($result, 201);
+    }
+
+    public function get_in_out_update($request, $response, $args)
+    {
+        $isAllowed = $this->isAllowed($request, $response);
+
+        if (!$isAllowed['allow']) {
+            $result = [
+                'success' => 0,
+                'message' => $isAllowed['message'],
+            ];
+            return $response->withJson($result, 201);
+        }
+
+        $result = ['success' => 0];
+        $params = $request->getParams();
+        if (isset($params['admin_id']) && isset($params['id'])) {
+            $model = \Model\ActivitiesModel::model()->findByPk($params['id']);
+            if ($model instanceof \RedBeanPHP\OODBBean) {
+                $configs = json_decode($model->configs, true);
+                if (is_array($configs)) {
+                    if (isset($params['warehouse_from'])) {
+                        $configs['warehouse_from'] = $params['warehouse_from'];
+                    }
+
+                    if (isset($params['warehouse_to'])) {
+                        $configs['warehouse_to'] = $params['warehouse_to'];
+                    }
+
+                    $descs = [];
+                    if (isset($params['items']) && is_array(($params['items']))) {
+                        foreach ($params['items'] as $i => $item) {
+                            if (array_key_exists('title', $item)) {
+                                $descs[] = $item['title'] . ' : ' . $item['quantity'];
+                            } else {
+                                $p_model = \Model\ProductsModel::model()->findByPk($item['barcode']);
+                                if ($p_model instanceof \RedBeanPHP\OODBBean) {
+                                    $params['items'][$i]['title'] = $p_model->title;
+                                    $descs[] = $p_model->title . ' : ' . $item['quantity'];
+                                }
+                            }
+                        }
+                        $configs['items'] = $params['items'];
+                    }
+
+                    $model->configs = json_encode($configs);
+                }
+
+                if (isset($params['status'])) {
+                    $model->status = $params['status'];
+                }
+
+                $model->updated_at = date("Y-m-d H:i:s");
+                $model->updated_by = $params['admin_id'];
+                $update = \Model\ActivitiesModel::model()->update(@$model);
+                if ($update) {
+                    $result['success'] = 1;
+                    $result['message'] = 'Data telah berhasil disimpan';
+                    if ($model->status == 1) { //finised
+                        try {
+                            $this->create_real_issue($model, $params['admin_id']);
+                        } catch (\Exception $e){$result['errors'] = $e->getMessage();}
+                    }
+                }
+            }
+        }
+
+        return $response->withJson($result, 201);
+    }
+
+    /*
+     * $model = ActivitiesModel
+     */
+    private function create_real_issue($model, $admin_id) {
+        if (!empty($model->configs)) {
+            $configs = json_decode($model->configs, true);
+            $in_model = null;
+            if ($model->type == \Model\ActivitiesModel::TYPE_STOCK_OUT) {
+                // find the stock in
+                $in_model = \Model\ActivitiesModel::model()->findByAttributes(['group_id' => $model->group_id, 'status' => \Model\ActivitiesModel::TYPE_STOCK_IN]);
+            } else {
+                $in_model = $model;
+                $model = \Model\ActivitiesModel::model()->findByAttributes(['group_id' => $model->group_id, 'status' => \Model\ActivitiesModel::TYPE_STOCK_OUT]);
+            }
+            $ti_model = new \Model\TransferIssuesModel();
+            $ti_number = \Pos\Controllers\TransfersController::get_ti_number();
+            $ti_model->ti_number = $ti_number['serie_nr'];
+            $ti_model->ti_serie = $ti_number['serie'];
+            $ti_model->ti_nr = $ti_number['nr'];
+            $ti_model->base_price = 0;
+            $ti_model->warehouse_from = $configs['warehouse_from'];
+            if (isset($configs['warehouse_to']))
+                $ti_model->warehouse_to = $configs['warehouse_to'];
+            $ti_model->date_transfer = date("Y-m-d H:i:s");
+            $ti_model->status = \Model\TransferIssuesModel::STATUS_COMPLETED;
+            if (isset($configs['notes']))
+                $ti_model->notes = $configs['notes'];
+            $ti_model->created_at = date("Y-m-d H:i:s");
+            $ti_model->created_by = $admin_id;
+            $save = \Model\TransferIssuesModel::model()->save(@$ti_model);
+            if ($save) {
+                $tot_price = 0;
+                foreach ($configs['items'] as $i => $item) {
+                    $product = \Model\ProductsModel::model()->findByPk($item['barcode']);
+                    $product_id = $product->id;
+                    $quantity = $item['quantity'];
+                    $imodel[$product_id] = new \Model\TransferIssueItemsModel();
+                    $imodel[$product_id]->ti_id = $ti_model->id;
+                    $imodel[$product_id]->product_id = $product_id;
+                    $imodel[$product_id]->title = $product->title;
+                    $imodel[$product_id]->quantity = $quantity;
+                    $imodel[$product_id]->available_qty = $quantity;
+                    $imodel[$product_id]->unit = $product->unit;
+                    $imodel[$product_id]->price = $product->current_cost;
+                    $imodel[$product_id]->created_at = date("Y-m-d H:i:s");
+                    $imodel[$product_id]->created_by = $ti_model->created_by;
+
+                    if ($product_id > 0 && $imodel[$product_id]->quantity > 0) {
+                        $save2 = \Model\TransferIssueItemsModel::model()->save($imodel[$product_id]);
+                        if ($save2) {
+                            $tot_price = $tot_price + ($product->current_cost * $quantity);
+                        }
+                    }
+                }
+
+                // updating price of po data
+                if ($tot_price > 0) {
+                    $pomodel = \Model\TransferIssuesModel::model()->findByPk($ti_model->id);
+                    $pomodel->base_price = $tot_price;
+                    $update = \Model\TransferIssuesModel::model()->update($pomodel);
+                }
+
+                if ($in_model instanceof \RedBeanPHP\OODBBean) {
+                    $this->create_real_receipt($ti_model->id, $in_model);
+                }
+            }
+        }
+
+        return false;
+    }
+
+    private function create_real_receipt($ti_id, $act_model) {
+        $rmodel = \Model\TransferReceiptsModel::model()->findByAttributes(['ti_id' => $ti_id]);
+        if (!$rmodel instanceof \RedBeanPHP\OODBBean) {
+            $model = new \Model\TransferReceiptsModel();
+            $tr_number = \Pos\Controllers\TransfersController::get_tr_number();
+            $model->tr_number = $tr_number['serie_nr'];
+            $model->tr_serie = $tr_number['serie'];
+            $model->tr_nr = $tr_number['nr'];
+            $model->ti_id = $ti_id;
+            $model->warehouse_id = $act_model->warehouse_id;
+            $model->effective_date = date("Y-m-d H:i:s");
+            $model->created_at = date("Y-m-d H:i:s");
+            $model->created_by = $act_model->created_by;
+            $save = \Model\TransferReceiptsModel::model()->save(@$model);
+            if ($save) {
+                $data = json_decode($act_model->configs, true);
+                if (isset($data['items']) && is_array($data['items'])) {
+                    $tot_quantity = 0; $quantity_max = 0;
+                    foreach ($data['items'] as $i => $item ) {
+                        $product_id = $item['barcode'];
+                        $quantity = $item['quantity'];
+                        $ti_item = \Model\TransferIssueItemsModel::model()->findByAttributes(['product_id' => $product_id, 'ti_id' => $ti_id]);
+                        if ($ti_item instanceof \RedBeanPHP\OODBBean) {
+                            $primodel[$product_id] = new \Model\TransferReceiptItemsModel();
+                            $primodel[$product_id]->tr_id = $model->id;
+                            $primodel[$product_id]->ti_item_id = $ti_item->id;
+                            $primodel[$product_id]->product_id = $product_id;
+                            if (array_key_exists('title', $item)) {
+                                $primodel[$product_id]->title = $item['title'];
+                            } else {
+                                $product[$product_id] = \Model\ProductsModel::model()->findByPk($product_id);
+                                $primodel[$product_id]->title = $product[$product_id]->title;
+                            }
+                            $primodel[$product_id]->quantity = $quantity;
+                            $primodel[$product_id]->quantity_max = $ti_item->quantity;
+                            $primodel[$product_id]->unit = $ti_item->unit;
+                            $primodel[$product_id]->price = $ti_item->price;
+                            $primodel[$product_id]->created_at = date("Y-m-d H:i:s");
+                            $primodel[$product_id]->created_by = $model->created_by;
+
+                            $save2 = \Model\TransferReceiptItemsModel::model()->save($primodel[$product_id]);
+                            if ($save2) {
+                                $tot_quantity = $tot_quantity + $quantity;
+                                $quantity_max = $quantity_max + $ti_item->quantity;
+                                // update available_qty
+                                if ($ti_item->available_qty > 0) {
+                                    $ti_item->available_qty = $ti_item->available_qty - $quantity;
+                                    $ti_item->updated_at = date("Y-m-d H:i:s");
+                                    $ti_item->updated_by = $model->created_by;
+                                    $update_ti_item = \Model\TransferIssueItemsModel::model()->update($ti_item);
+                                }
+                            }
+                        }
+                    }
+                }
+                $timodel = \Model\TransferIssuesModel::model()->findByPk($data['ti_id']);
+                if ($timodel->status !== \Model\TransferIssuesModel::STATUS_COMPLETED && $tot_quantity == $quantity_max) {
+                    $timodel->status = \Model\TransferIssuesModel::STATUS_COMPLETED;
+                    $timodel->updated_at = date("Y-m-d H:i:s");
+                    $timodel->updated_by = $model->created_by;
+                    $timodel->completed_at = date("Y-m-d H:i:s");
+                    $timodel->completed_by = $model->created_by;
+
+                    $update_status = \Model\TransferIssuesModel::model()->update($timodel);
+                }
+
+                // update history
+                $act_model->status = 1;
+                $act_model->updated_at = date("Y-m-d H:i:s");
+                $act_model->updated_by = $model->created_by;
+                $update_status_act = \Model\ActivitiesModel::model()->update($act_model);
+
+                if ($tot_quantity > 0) {
+                    // directly add to wh stock
+                    try {
+                        $add_to_stock = \Pos\Controllers\TransfersController::_add_to_stock(['tr_id' => $model->id, 'admin_id' => $model->created_by]);
+                    } catch (\Exception $e) {
+                        var_dump($e->getMessage());
+                    }
+                }
+            }
+        }
+    }
 }
