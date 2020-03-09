@@ -54,6 +54,11 @@ class NotificationsModel extends \Model\BaseModel
                 $sql .= ' AND r.status =:status';
                 $params['status'] = $data['status'];
             }
+
+            if (isset($data['warehouse_id'])) {
+                $sql .= ' AND r.warehouse_id =:warehouse_id';
+                $params['warehouse_id'] = $data['warehouse_id'];
+            }
         }
 
         $sql .= ' GROUP BY t.id ORDER BY t.id DESC';

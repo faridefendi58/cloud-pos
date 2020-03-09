@@ -856,10 +856,17 @@ class PurchaseController extends BaseController
                     $imodel[$product_id]->quantity = $item['quantity'];
                     $imodel[$product_id]->available_qty = $item['quantity'];
                     $imodel[$product_id]->unit = $product->unit;
-                    if (isset($item['unit_price']))
+                    if (isset($item['unit_price'])) {
+						$item['price'] = $item['unit_price'];
                         $imodel[$product_id]->price = (int)$item['unit_price'];
-                    else
-                        $imodel[$product_id]->price = $product->current_cost;
+                    } else {
+						if (isset($item['price'])) {
+	                        $imodel[$product_id]->price = (int)$item['price'];
+						} else {
+	                        $imodel[$product_id]->price = $product->current_cost;
+						}
+					}
+					$unit_price = $imodel[$product_id]->price;
                     $imodel[$product_id]->created_at = date("Y-m-d H:i:s");
                     $imodel[$product_id]->created_by = $model->created_by;
 
@@ -870,23 +877,36 @@ class PurchaseController extends BaseController
 							if ($params['force_complete']) {
 								// update stock
 		                        $stock_params = ['product_id' => $product_id, 'warehouse_id' => $model->warehouse_id];
-		                        $stock = \Model\ProductStocksModel::model()->findByAttributes($stock_params);
-		                        $update_stock = false;
-		                        if ($stock instanceof \RedBeanPHP\OODBBean) {
-		                            $stock->quantity = $stock->quantity + $quantity;
-		                            $stock->updated_at = date("Y-m-d H:i:s");
-		                            $stock->updated_by = $model->created_by;
-		                            $update_stock = \Model\ProductStocksModel::model()->update($stock);
-		                        }
-		                        if ($update_stock) {
-		                            // also update current price
-		                            $pmodel = new \Model\ProductsModel();
-		                            $current_cost = $pmodel->getCurrentCost($product_id);
-		                            $product->current_cost = $current_cost;
-		                            $product->updated_at = date("Y-m-d H:i:s");
-		                            $product->updated_by = $model->created_by;
-		                            $update_product = \Model\ProductsModel::model()->update($product);
-		                        }
+		                        $stock = new \Model\ProductStocksModel();
+                                $old_quantity = $stock->getStock($stock_params);
+                                $stock->product_id = $product_id;
+                                $stock->warehouse_id = $model->warehouse_id;
+                                $stock->quantity = $item['quantity'];
+                                $stock->rel_type = 'purchase_order';
+                                $stock->rel_id = $model->id;
+                                $stock->notes = 'Added from Purchase Order #'. $model->po_number;
+                                $stock->created_at = date("Y-m-d H:i:s");
+                                $stock->created_by = $params['admin_id'];
+                                $add_to_stock = \Model\ProductStocksModel::model()->save($stock);
+
+								// save current cost
+                                $wh_product = \Model\WarehouseProductsModel::model()->findByAttributes($stock_params);
+                                if ($wh_product instanceof \RedBeanPHP\OODBBean) {
+                                    $current_cost = $wh_product->current_cost;
+                                    if ($item['price'] > 0 && $current_cost > 0) {
+                                        $tot_quantity = $old_quantity + $item['quantity'];
+                                        if ($tot_quantity <= 0) {
+                                            $tot_quantity = 1;
+                                        }
+                                        $current_cost = (($item['price']*$item['quantity']) + ($current_cost*$old_quantity))/$tot_quantity;
+                                    } elseif ($current_cost == 0 && $item['price'] > 0) {
+                                        $current_cost = $item['price'];
+                                    }
+                                    $wh_product->current_cost = round($current_cost, 2);
+                                    $wh_product->updated_at = date("Y-m-d H:i:s");
+                                    $wh_product->updated_by = $params['admin_id'];
+                                    $update_cost = \Model\WarehouseProductsModel::model()->update($wh_product);
+                                }
 							}
                         }
                     }
@@ -900,10 +920,49 @@ class PurchaseController extends BaseController
             		$pomodel->updated_at = (isset($params['admin_id'])) ? $params['admin_id'] : 1;
                     $update = \Model\PurchaseOrdersModel::model()->update($pomodel);
 
+					$act_model2 = new \Model\ActivitiesModel();
+					$latest_group_id = $act_model2->getLatestGroupId();
+                    $act_model2->title = 'Stok Masuk '. $model->po_number;
+                    $act_model2->type = \Model\ActivitiesModel::TYPE_PURCHASE_ORDER;
+                    if (isset($params['warehouse_id'])) {
+                        $act_model2->warehouse_id = $params['warehouse_id'];
+                    }
+                    $act_model2->group_id = $latest_group_id + 1;
+					$act_model2->group_master = 1;
+                    $descs = [];
+                    foreach ($params['items'] as $i => $item) {
+                        if (array_key_exists('title', $item)) {
+                            $descs[] = $item['title'] . ' : ' . $item['quantity'];
+                        } else {
+                            $p_model = \Model\ProductsModel::model()->findByPk($item['barcode']);
+                            if ($p_model instanceof \RedBeanPHP\OODBBean) {
+                                $params['items'][$i]['title'] = $p_model->title;
+                                $descs[] = $p_model->title . ' : ' . $item['quantity'];
+                            }
+                        }
+                    }
+                    $act_model2->description = implode("\n", $descs);
+                    if (!empty($params['admin_id'])) {
+                        $ad_model = \Model\AdminModel::model()->findByPk($params['admin_id']);
+                        if ($ad_model instanceof \RedBeanPHP\OODBBean) {
+                            $act_model2->description .= "\nSubmited By ". $ad_model->name;
+                        }
+                    }
+                    $act_model2->configs = $model->configs;
+                    $act_model2->status = 1;
+					$act_model2->rel_id = $model->id;
+                    $act_model2->created_at = date("Y-m-d H:i:s");
+                    $act_model2->created_by = $params['admin_id'];
+                    $act_model2->finished_at = date("Y-m-d H:i:s");
+                    $act_model2->finished_by = $params['admin_id'];
+                    if ($act_model2->warehouse_id > 0) {
+                        $save_act2 = \Model\ActivitiesModel::model()->save($act_model2);
+                    }
+
                     $result = [
                         "success" => 1,
                         "id" => $model->id,
-                        'message' => 'Data berhasi disimpan.',
+                        'message' => 'Data berhasil disimpan.',
                         "issue_number" => $model->po_number
                     ];
                 } else {

@@ -722,23 +722,37 @@ class TransfersController extends BaseController
             foreach ($receipt_items as $item_id => $item_data) {
                 // add to stok
                 $stock_params = ['product_id' => $item_data['product_id'], 'warehouse_id' => $timodel->warehouse_to];
-                $stock = \Model\ProductStocksModel::model()->findByAttributes($stock_params);
-                $update_stock = false;
-                if ($stock instanceof \RedBeanPHP\OODBBean) {
-                    $stock->quantity = $stock->quantity + $item_data->quantity;
-                    $stock->updated_at = date("Y-m-d H:i:s");
-                    $stock->updated_by = (isset($data['admin_id']))? $data['admin_id'] : $this->_user->id;
-                    $update_stock = \Model\ProductStocksModel::model()->update($stock);
-                } else {
-                    $new_stock = new \Model\ProductStocksModel();
-                    $new_stock->product_id = $item_data['product_id'];
-                    $new_stock->warehouse_id = $model->warehouse_id; //$timodel->warehouse_to;
-                    $new_stock->quantity = $item_data->quantity;
-                    $new_stock->created_at = date("Y-m-d H:i:s");
-                    $new_stock->created_by = (isset($data['admin_id']))? $data['admin_id'] : $this->_user->id;
-                    $update_stock = \Model\ProductStocksModel::model()->save($new_stock);
-                }
+                $new_stock = new \Model\ProductStocksModel();
+                $old_quantity = $new_stock->getStock($stock_params);
+                $new_stock->product_id = $item_data['product_id'];
+                $new_stock->warehouse_id = $timodel->warehouse_to;
+                $new_stock->quantity = $item_data->quantity;
+                $new_stock->rel_type = 'transfer_receipt';
+                $new_stock->rel_id = $data['tr_id'];
+                $new_stock->notes = 'Added from Transfer Receipt #'. $model->tr_number;
+                $new_stock->created_at = date("Y-m-d H:i:s");
+                $new_stock->created_by = (isset($data['admin_id']))? $data['admin_id'] : $this->_user->id;
+                $update_stock = \Model\ProductStocksModel::model()->save($new_stock);
                 if ($update_stock) {
+                    // save current cost
+                    $wh_product = \Model\WarehouseProductsModel::model()->findByAttributes($stock_params);
+                    if ($wh_product instanceof \RedBeanPHP\OODBBean) {
+                        $current_cost = $wh_product->current_cost;
+                        if ($item_data['price'] > 0 && $current_cost > 0) {
+                            $tot_quantity = $old_quantity + $item_data['quantity'];
+                            if ($tot_quantity <= 0) {
+                                $tot_quantity = 1;
+                            }
+                            $current_cost = (($item_data['price']*$item_data['quantity']) + ($current_cost*$old_quantity))/$tot_quantity;
+                        } elseif ($current_cost == 0 && $item_data['price'] > 0) {
+                            $current_cost = $item_data['price'];
+                        }
+                        $wh_product->current_cost = round($current_cost, 2);
+                        $wh_product->updated_at = date("Y-m-d H:i:s");
+                        $wh_product->updated_by = (isset($data['admin_id']))? $data['admin_id'] : $this->_user->id;
+                        $update_cost = \Model\WarehouseProductsModel::model()->update($wh_product);
+                    }
+
                     // make a history
                     $item_data->added_in_stock = 1;
                     $item_data->added_value = $item_data->quantity;
@@ -746,16 +760,6 @@ class TransfersController extends BaseController
                     $item_data->updated_at = date("Y-m-d H:i:s");
                     $item_data->updated_by = (isset($data['admin_id']))? $data['admin_id'] : $this->_user->id;
                     $update = \Model\TransferReceiptItemsModel::model()->update($item_data);
-                    if ($update) {
-                        // also update current price
-                        $pmodel = new \Model\ProductsModel();
-                        $current_cost = $pmodel->getCurrentCost($item_data['product_id']);
-                        $product = \Model\ProductsModel::model()->findByPk($item_data['product_id']);
-                        $product->current_cost = $current_cost;
-                        $product->updated_at = date("Y-m-d H:i:s");
-                        $product->updated_by = (isset($data['admin_id']))? $data['admin_id'] : $this->_user->id;
-                        $update_product = \Model\ProductsModel::model()->update($product);
-                    }
                 }
             }
             // also update the receipt status
@@ -845,7 +849,7 @@ class TransfersController extends BaseController
         return false;
     }
 
-    protected function _substract_stock($data)
+    public function _substract_stock($data)
     {
         if (!isset($data['ti_id']))
             return false;
@@ -855,22 +859,32 @@ class TransfersController extends BaseController
         if (is_array($transfer_items)) {
             foreach ($transfer_items as $item_id => $item_data) {
                 // add to stok
+                /*$update_stock = false;
                 $stock_params = ['product_id' => $item_data['product_id'], 'warehouse_id' => $model->warehouse_from];
                 $stock = \Model\ProductStocksModel::model()->findByAttributes($stock_params);
-                $update_stock = false;
                 if ($stock instanceof \RedBeanPHP\OODBBean) {
                     $stock->quantity = $stock->quantity - $item_data->quantity;
                     $stock->updated_at = date("Y-m-d H:i:s");
-                    $stock->updated_by = $this->_user->id;
+                    $stock->updated_by = (isset($data['admin_id']))? $data['admin_id'] : $this->_user->id;
                     $update_stock = \Model\ProductStocksModel::model()->update($stock);
-                }
+                }*/
+                $new_stock = new \Model\ProductStocksModel();
+                $new_stock->product_id = $item_data['product_id'];
+                $new_stock->warehouse_id = $model->warehouse_from;
+                $new_stock->quantity = -1 * $item_data->quantity;
+                $new_stock->rel_type = 'transfer_issue';
+                $new_stock->rel_id = $data['ti_id'];
+                $new_stock->notes = 'Removed from Transfer Issue #'. $model->ti_number;
+                $new_stock->created_at = date("Y-m-d H:i:s");
+                $new_stock->created_by = (isset($data['admin_id']))? $data['admin_id'] : $this->_user->id;
+                $update_stock = \Model\ProductStocksModel::model()->save($new_stock);
                 if ($update_stock) {
                     // make a history
                     $item_data->substract_stock = 1;
                     $item_data->substract_value = $item_data->quantity;
                     $item_data->substracted_at = date("Y-m-d H:i:s");
                     $item_data->updated_at = date("Y-m-d H:i:s");
-                    $item_data->updated_by = $this->_user->id;
+                    $item_data->updated_by = (isset($data['admin_id']))? $data['admin_id'] : $this->_user->id;
                     $update = \Model\TransferIssueItemsModel::model()->update($item_data);
                 }
             }
@@ -879,7 +893,7 @@ class TransfersController extends BaseController
                 $model->status = \Model\TransferIssuesModel::STATUS_ON_PROCESS;
                 $model->processed_at = date("Y-m-d H:i:s");
                 $model->updated_at = date("Y-m-d H:i:s");
-                $model->updated_by = $this->_user->id;
+                $model->updated_by = (isset($data['admin_id']))? $data['admin_id'] : $this->_user->id;
                 $update_issue = \Model\TransferIssuesModel::model()->update($model);
             }
 

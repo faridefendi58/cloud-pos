@@ -48,7 +48,11 @@ class NotificationController extends BaseController
         if (!isset($params['status']))
             $params['status'] = \Model\NotificationRecipientsModel::STATUS_UNREAD;
 
-        $items = $pmodel->getData(['admin_id'=>$params['admin_id'],'status'=>$params['status']]);
+        $prms = ['admin_id'=>$params['admin_id'],'status'=>$params['status']];
+        if (isset($params['warehouse_id'])) {
+            $prms['warehouse_id'] = $params['warehouse_id'];
+        }
+        $items = $pmodel->getData($prms);
         if (is_array($items)){
             $result['success'] = 1;
             $items2 = [];
@@ -97,7 +101,11 @@ class NotificationController extends BaseController
         $params = $request->getParams();
         $result = [ 'success' => 0 ];
         if (isset($params['notification_id']) && isset($params['admin_id'])) {
-            $model = \Model\NotificationRecipientsModel::model()->findByAttributes(['notification_id'=>$params['notification_id'], 'admin_id'=>$params['admin_id']]);
+            $prms = ['notification_id'=>$params['notification_id'], 'admin_id'=>$params['admin_id']];
+            if (isset($params['warehouse_id'])) {
+                $prms['warehouse_id'] = $params['warehouse_id'];
+            }
+            $model = \Model\NotificationRecipientsModel::model()->findByAttributes($prms);
             if ($model instanceof \RedBeanPHP\OODBBean) {
                 $model->status = \Model\NotificationRecipientsModel::STATUS_READ;
                 $model->updated_at = date("Y-m-d H:i:s");
@@ -137,6 +145,9 @@ class NotificationController extends BaseController
                 'status' => \Model\NotificationRecipientsModel::STATUS_UNREAD,
                 'admin_id' => $params['admin_id']
             ];
+            if (isset($params['warehouse_id'])) {
+                $qry_params['warehouse_id'] = $params['warehouse_id'];
+            }
             $count = \Model\NotificationRecipientsModel::model()->count($qry_params);
             if ($count > 0) {
                 $result['success'] = 1;

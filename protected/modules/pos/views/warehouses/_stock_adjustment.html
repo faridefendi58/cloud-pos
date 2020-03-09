@@ -39,6 +39,7 @@
                 <th class="text-center">No</th>
                 <th class="text-center">Nama Produk</th>
                 <th class="text-center">Jumlah Stok</th>
+                <th class="text-center">Current Cost</th>
             </tr>
             </thead>
             {% for i, price_data in price_datas %}
@@ -47,6 +48,7 @@
                 <td class="text-center">{{ i+1 }}</td>
                 <td>{{ price_data.product_name }}</td>
                 <td class="text-center">{{ stock | default(0) }}  {{ price_data.product_unit }}</td>
+                <td class="text-center">{{ price_data.current_cost | money_format | default(0) }}</td>
             </tr>
             {% endfor %}
             </tbody>

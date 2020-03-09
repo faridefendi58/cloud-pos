@@ -74,13 +74,19 @@ class ApiBaseController
         if (isset($data['message']) && isset($data['recipients'])) {
             $model = new \Model\NotificationsModel();
             $model->message = $data['message'];
-            if (isset($data['rel_id']) && isset($data['rel_type'])) {
+            if (isset($data['rel_id'])) {
                 $model->rel_id = $data['rel_id'];
+            }
+
+            if (isset($data['rel_type'])) {
                 $model->rel_type = $data['rel_type'];
             }
 
-            if (isset($data['issue_number']) && isset($data['rel_activity'])) {
+            if (isset($data['issue_number'])) {
                 $model->issue_number = $data['issue_number'];
+            }
+
+            if (isset($data['rel_activity'])) {
                 $model->rel_activity = $data['rel_activity'];
             }
 
@@ -93,6 +99,9 @@ class ApiBaseController
                 foreach ($data['recipients'] as $i => $admin_id) {
                     $model2 = new \Model\NotificationRecipientsModel();
                     $model2->admin_id = $admin_id;
+                    if (isset($data['warehouse_id'])) {
+                        $model2->warehouse_id = $data['warehouse_id'];
+                    }
                     $model2->notification_id = $model->id;
                     $model2->created_at = date("Y-m-d H:i:s");
                     $save2 = \Model\NotificationRecipientsModel::model()->save($model2);
@@ -116,4 +125,75 @@ class ApiBaseController
 
         return $number;
     }
+
+	public function pushFireBaseMessage($json_data = []) {
+		$data = json_encode($json_data);
+		//FCM API end-point
+		//$url = 'https://fcm.googleapis.com/fcm/send';
+		$url = 'https://android.googleapis.com/gcm/send';
+		//api_key in Firebase Console -> Project Settings -> CLOUD MESSAGING -> Server key
+		//$server_key = 'AIzaSyCBv_nCGtT4w0jENGNpXougrj5Hbd16ISE'; 
+		$server_key = 'AAAA_g89EIo:APA91bGqxFshCeWVZHKpZnqeqaA7h9XwyONXAlf90uu4FpYOi29PvZP2E470ZdgIBB7cCcSjyi5M5f2RaOTw4Yjdbl-ByxYT-go3lXa7DB6ApGBNIgeKACbZfNF16U86LcGSn1GX3QWb';
+		//$this->_container->get('settings')['params']['fcm_server_key'];
+		//header with content_type api key
+		$headers = array(
+			'Content-Type:application/json',
+			'Authorization:key='.$server_key
+		);
+		//CURL request to route notification to FCM connection server (provided by Google)
+		$ch = curl_init();
+		curl_setopt($ch, CURLOPT_URL, $url);
+		curl_setopt($ch, CURLOPT_POST, true);
+		curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+		curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+		curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
+		curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+		curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
+		$result = curl_exec($ch);
+		if ($result === FALSE) {
+			die('Oops! FCM Send Error: ' . curl_error($ch));
+		}
+		curl_close($ch);
+
+		return true;
+	}
+
+	public function pushFireBaseMessage2($device_id, $message) {
+
+$fields = [
+    'registration_ids' 	=> [$device_id],
+    "data" => [
+        'message' 	=> $message,
+		'title'		=> 'This is a title. title',
+		'subtitle'	=> 'This is a subtitle. subtitle',
+		'tickerText'	=> 'Ticker text here...Ticker text here...Ticker text here',
+		'vibrate'	=> 1,
+		'sound'		=> 1,
+    ]
+];
+
+		$api_key = 'AAAA_g89EIo:APA91bGqxFshCeWVZHKpZnqeqaA7h9XwyONXAlf90uu4FpYOi29PvZP2E470ZdgIBB7cCcSjyi5M5f2RaOTw4Yjdbl-ByxYT-go3lXa7DB6ApGBNIgeKACbZfNF16U86LcGSn1GX3QWb';
+		//header includes Content type and api key
+		$headers = array(
+		    'Content-Type:application/json',
+		    'Authorization:key='.$api_key
+		);
+		            
+		$ch = curl_init();
+		curl_setopt($ch, CURLOPT_URL, 'https://android.googleapis.com/gcm/send');
+		curl_setopt($ch, CURLOPT_POST, true);
+		curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+		curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+		curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
+		curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+		curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($fields));
+
+
+		$result = curl_exec($ch);
+		if ($result === FALSE) {
+		    die('FCM Send Error: ' . curl_error($ch));
+		}
+		curl_close($ch);
+		return $result;
+	}
 }

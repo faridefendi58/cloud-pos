@@ -9,6 +9,7 @@ class ActivitiesModel extends \Model\BaseModel
     const TYPE_INVENTORY_ISSUE = 'inventory_issue';
     const TYPE_TRANSFER_RECEIPT = 'transfer_receipt';
     const TYPE_INVENTORY_RECEIPT = 'inventory_receipt';
+    const TYPE_PURCHASE_ORDER = 'purchase_order';
     const TYPE_STOCK_IN = 'stock_in';
     const TYPE_STOCK_OUT = 'stock_out';
 
@@ -54,6 +55,27 @@ class ActivitiesModel extends \Model\BaseModel
 				$sql .= ' AND t.warehouse_id =:warehouse_id';
 				$params['warehouse_id'] = $data['warehouse_id'];
 			}
+
+			if (isset($data['status'])) {
+				$sql .= ' AND t.status =:status';
+				$params['status'] = $data['status'];
+			}
+
+			if (isset($data['type']) && $data['type'] != '-') {
+				if (!is_array($data['type'])) {
+					$sql .= ' AND t.type =:type';
+					$params['type'] = $data['type'];
+				} else {
+					$stats = [];
+					foreach($data['type'] as $s => $stat) {
+						$stats[] = '"'. $stat .'"';
+					}
+					if (count($stats) > 0) {
+						$types = implode(", ", $stats);
+						$sql .= ' AND t.type IN ('. $types .')';
+					}
+				}
+			}
         }
 
         $sql .= ' ORDER BY t.created_at DESC';
@@ -71,9 +93,12 @@ class ActivitiesModel extends \Model\BaseModel
 
 	public function getItem($data = null)
     {
-        $sql = 'SELECT t.*, a.name AS created_by_name
+        $sql = 'SELECT t.*, a.name AS created_by_name, ab.name AS finished_by_name, ac.name AS updated_by_name, ad.name AS checked_by_name
             FROM {tablePrefix}ext_activities t 
             LEFT JOIN {tablePrefix}admin a ON a.id = t.created_by 
+            LEFT JOIN {tablePrefix}admin ab ON ab.id = t.finished_by 
+            LEFT JOIN {tablePrefix}admin ac ON ac.id = t.updated_by 
+            LEFT JOIN {tablePrefix}admin ad ON ad.id = t.checked_by 
             WHERE 1';
 
         $params = [];
@@ -105,6 +130,20 @@ class ActivitiesModel extends \Model\BaseModel
         $row = R::getRow( $sql, $params );
         if (!empty($row) && array_key_exists('configs', $row)) {
             $row['configs'] = json_decode($row['configs'], true);
+			if (array_key_exists('warehouse_from', $row['configs'])) {
+				$wh_model = \Model\WarehousesModel::model()->findByPk($row['configs']['warehouse_from']);
+				if ($wh_model instanceof \RedBeanPHP\OODBBean) {
+					$row['warehouse_from'] = $wh_model->id;
+					$row['warehouse_from_name'] = $wh_model->title;
+				}
+			}
+			if (array_key_exists('warehouse_to', $row['configs'])) {
+				$wh_model = \Model\WarehousesModel::model()->findByPk($row['configs']['warehouse_to']);
+				if ($wh_model instanceof \RedBeanPHP\OODBBean) {
+					$row['warehouse_to'] = $wh_model->id;
+					$row['warehouse_to_name'] = $wh_model->title;
+				}
+			}
         }
 
         return $row;

@@ -76,4 +76,28 @@ class WarehouseProductsModel extends \Model\BaseModel
 
         return $items;
     }
+
+    public function getCurrentCost($data = array())
+    {
+        $sql = 'SELECT t.current_cost       
+            FROM {tablePrefix}ext_warehouse_product t 
+            WHERE 1';
+
+        $params = [];
+        if (isset($data['warehouse_id'])) {
+            $sql .= ' AND t.warehouse_id =:warehouse_id';
+            $params['warehouse_id'] = $data['warehouse_id'];
+        }
+
+        if (isset($data['product_id'])) {
+            $sql .= ' AND t.product_id =:product_id';
+            $params['product_id'] = $data['product_id'];
+        }
+
+        $sql = str_replace(['{tablePrefix}'], [$this->_tbl_prefix], $sql);
+
+        $row = R::getRow( $sql, $params );
+
+        return $row['current_cost'];
+    }
 }
