@@ -884,7 +884,6 @@ class PurchaseController extends BaseController
                                 $stock->quantity = $item['quantity'];
                                 $stock->rel_type = 'purchase_order';
                                 $stock->rel_id = $model->id;
-                                $stock->notes = 'Added from Purchase Order #'. $model->po_number;
                                 $stock->created_at = date("Y-m-d H:i:s");
                                 $stock->created_by = $params['admin_id'];
                                 $add_to_stock = \Model\ProductStocksModel::model()->save($stock);

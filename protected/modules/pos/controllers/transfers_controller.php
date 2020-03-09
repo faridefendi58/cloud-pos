@@ -729,7 +729,6 @@ class TransfersController extends BaseController
                 $new_stock->quantity = $item_data->quantity;
                 $new_stock->rel_type = 'transfer_receipt';
                 $new_stock->rel_id = $data['tr_id'];
-                $new_stock->notes = 'Added from Transfer Receipt #'. $model->tr_number;
                 $new_stock->created_at = date("Y-m-d H:i:s");
                 $new_stock->created_by = (isset($data['admin_id']))? $data['admin_id'] : $this->_user->id;
                 $update_stock = \Model\ProductStocksModel::model()->save($new_stock);
