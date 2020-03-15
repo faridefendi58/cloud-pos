@@ -949,7 +949,15 @@ class WarehousesController extends BaseController
         $params = $request->getParams();
         $results = ['status' => 'failed'];
         if (isset($args['id']) && isset($params['id'])) {
-            $model = \Model\WarehouseTransferRelationsModel::model()->findByAttributes(['warehouse_id' => $args['id'], 'warehouse_rel_id' => $params['id'], 'rel_type' => $params['rel_type']]);
+            if (!isset($params['supplier_id'])) {
+                if (isset($params['non_transaction_type'])) {
+                    $model = \Model\WarehouseTransferRelationsModel::model()->findByAttributes(['warehouse_id' => $args['id'], 'non_transaction_type' => $params['id'], 'rel_type' => $params['rel_type']]);
+                } else {
+                    $model = \Model\WarehouseTransferRelationsModel::model()->findByAttributes(['warehouse_id' => $args['id'], 'warehouse_rel_id' => $params['id'], 'rel_type' => $params['rel_type']]);
+                }
+            } else {
+                $model = \Model\WarehouseTransferRelationsModel::model()->findByAttributes(['warehouse_id' => $args['id'], 'supplier_id' => $params['supplier_id'], 'rel_type' => $params['rel_type']]);
+            }
             if ($model instanceof \RedBeanPHP\OODBBean) {
                 if ($params['is_added'] <= 0) {
                     $del = \Model\WarehouseTransferRelationsModel::model()->delete($model);
@@ -963,7 +971,15 @@ class WarehousesController extends BaseController
                 if ($params['is_added'] > 0) {
                     $model2 = new \Model\WarehouseTransferRelationsModel();
                     $model2->warehouse_id = $args['id'];
-                    $model2->warehouse_rel_id = $params['id'];
+                    if (!isset($params['supplier_id'])) {
+                        if (isset($params['non_transaction_type'])) {
+                            $model2->non_transaction_type = $params['id'];
+                        } else {
+                            $model2->warehouse_rel_id = $params['id'];
+                        }
+                    } else {
+                        $model2->supplier_id = $params['supplier_id'];
+                    }
                     $model2->rel_type = $params['rel_type'];
                     $model2->created_at = date('c');
                     $model2->created_by = $this->_user->id;

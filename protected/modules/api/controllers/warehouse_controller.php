@@ -244,15 +244,27 @@ class WarehouseController extends BaseController
         $params = $request->getParams();
         $whmodel = new \Model\WarehouseTransferRelationsModel();
 
+        $prms = ['warehouse_id' => $params['warehouse_id']];
+        $items2 = $whmodel->getAllRelatedSuppliers($prms);
+        $items3 = $whmodel->getAllRelatedNonTrans($prms);
         if (isset($params['rel_type'])) {
-            $items = $whmodel->getAllRelatedWarehouses(['warehouse_id' => $params['warehouse_id'], 'rel_type' => $params['rel_type']]);
-        } else {
-            $items = $whmodel->getAllRelatedWarehouses(['warehouse_id' => $params['warehouse_id']]);
+            $prms['rel_type'] = $params['rel_type'];
+
         }
+        $items = $whmodel->getAllRelatedWarehouses($prms);
 
         if (is_array($items)){
             $result['success'] = 1;
             $result['data'] = $items;
+            $result['supplier'] = $items2;
+            $result['non_transaction'] = $items3;
+			$ext_pos = $this->_container->get('settings')['params']['ext_pos'];
+			if (!empty($ext_pos)) {
+				$ext_pos = json_decode($ext_pos, true);
+				if (is_array($ext_pos) && array_key_exists('non_transaction_type', $ext_pos)) {
+					$result['non_transaction_types'] = $ext_pos['non_transaction_type'];
+				}
+			}
         } else {
             $result = [
                 'success' => 0,

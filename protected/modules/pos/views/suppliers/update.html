@@ -29,6 +29,9 @@ Kelola Supplier - {{ App.params.site_name }}
                                 <li class="active">
                                     <a data-toggle="tab" href="#update">Ubah Data</a>
                                 </li>
+                                <li>
+                                    <a data-toggle="tab" href="#price">Patokan Harga</a>
+                                </li>
                             </ul>
                             <div class="tab-content" id="tabs_content_a">
                                 <div id="detail" class="tab-pane fade">
@@ -36,6 +39,9 @@ Kelola Supplier - {{ App.params.site_name }}
                                 </div>
                                 <div id="update" class="tab-pane fade in active">
                                     {% include 'suppliers/_form.html' with {'model':model} %}
+                                </div>
+                                <div id="price" class="tab-pane fade">
+                                    {% include 'suppliers/_price.html' with {'model':model} %}
                                 </div>
                             </div>
                         </div>

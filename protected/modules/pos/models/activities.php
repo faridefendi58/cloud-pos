@@ -135,6 +135,7 @@ class ActivitiesModel extends \Model\BaseModel
 				if ($wh_model instanceof \RedBeanPHP\OODBBean) {
 					$row['warehouse_from'] = $wh_model->id;
 					$row['warehouse_from_name'] = $wh_model->title;
+					$row['warehouse_from_code'] = $wh_model->code;
 				}
 			}
 			if (array_key_exists('warehouse_to', $row['configs'])) {
@@ -142,6 +143,7 @@ class ActivitiesModel extends \Model\BaseModel
 				if ($wh_model instanceof \RedBeanPHP\OODBBean) {
 					$row['warehouse_to'] = $wh_model->id;
 					$row['warehouse_to_name'] = $wh_model->title;
+					$row['warehouse_to_code'] = $wh_model->code;
 				}
 			}
         }

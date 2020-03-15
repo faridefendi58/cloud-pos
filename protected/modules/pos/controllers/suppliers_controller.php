@@ -19,6 +19,7 @@ class SuppliersController extends BaseController
         $app->map(['POST'], '/create', [$this, 'create']);
         $app->map(['GET', 'POST'], '/update/[{id}]', [$this, 'update']);
         $app->map(['POST'], '/delete/[{id}]', [$this, 'delete']);
+        $app->map(['POST'], '/product-prices/[{id}]', [$this, 'product_prices']);
     }
 
     public function accessRules()
@@ -37,7 +38,7 @@ class SuppliersController extends BaseController
                 'expression' => $this->hasAccess('pos/suppliers/create'),
             ],
             ['allow',
-                'actions' => ['update'],
+                'actions' => ['update', 'product-prices'],
                 'expression' => $this->hasAccess('pos/suppliers/update'),
             ],
             ['allow',
@@ -176,5 +177,58 @@ class SuppliersController extends BaseController
                     'message' => 'Data berhasil dihapus.',
                 ], 201);
         }
+    }
+
+    public function product_prices($request, $response, $args)
+    {
+        $isAllowed = $this->isAllowed($request, $response, $args);
+        if ($isAllowed instanceof \Slim\Http\Response)
+            return $isAllowed;
+
+        if(!$isAllowed){
+            return $this->notAllowedAction();
+        }
+
+        if (!isset($args['id'])) {
+            return false;
+        }
+
+        $result = ['success' => 'failed'];
+        $model = \Model\SuppliersModel::model()->findByPk($args['id']);
+        if ($model instanceof \RedBeanPHP\OODBBean) {
+            if (isset($_POST['Suppliers'])) {
+                $configs = [];
+                if (!empty($model->configs)) {
+                    $configs = json_decode($model->configs, true);
+                }
+
+                if (count($_POST['Suppliers']['product_id']) > 0) {
+                    foreach ($_POST['Suppliers']['product_id'] as $i => $product_id) {
+                        $configs['products'][$product_id] = [
+                            'id' => $product_id,
+                            'title' => $_POST['Suppliers'][$product_id]['title'],
+                            'price' => (int)$_POST['Suppliers'][$product_id]['price']
+                        ];
+                    }
+                }
+
+                if (isset($_POST['Suppliers']['use_default_price'])) {
+                    $configs['use_default_price'] = 1;
+                } else {
+                    $configs['use_default_price'] = 0;
+                }
+
+                $model->configs = json_encode($configs);
+                $model->updated_at = date('c');
+                $model->updated_by = $this->_user->id;
+                $update = \Model\SuppliersModel::model()->update($model);
+                if ($update) {
+                    $result['status'] = 'success';
+                    $result['message'] = 'Data berhasil disimpan';
+                }
+            }
+        }
+
+        return $response->withJson($result, 201);
     }
 }

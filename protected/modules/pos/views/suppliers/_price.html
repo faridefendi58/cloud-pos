@@ -1,0 +1,87 @@
+{% set products = App.call.model("\\Model\\ProductsModel", 'getData', {"active":1}) %}
+<form method="post" id="product-form" class="mt20" action="{{ 'pos/suppliers/product-prices' | link }}/{{ model.id }}">
+    <div class="alert alert-success" style="display: none;"></div>
+    {% set configs = model.configs | json_decode %}
+    {% for i, product in products %}
+    {% set price_data = configs.products[product.id] %}
+    <div class="col-md-12">
+        <div class="form-group">
+            <label class="checkbox-inline">
+                <input type="hidden" name="Suppliers[{{ product.id }}][title]" value="{{ product.title }}">
+                <input type="checkbox" name="Suppliers[product_id][]"
+                       value="{{ product.id }}" onclick="showPriceBox(this);" {% if price_data %}checked{% endif %}> <b>{{ product.title | upper }}</b>
+            </label>
+        </div>
+    </div>
+    <div class="col-md-12" id="price-container-{{ product.id }}" {% if not price_data %}style="display: none"{% endif %}>
+        <div class="row padding10 price-item">
+            <div class="col-md-3">
+                <div class="form-group">
+                    <label for="unit">Harga <span class="required">*</span></label>
+                    <input type="text" id="unit" name="Suppliers[{{ product.id }}][price]"
+                           placeholder="format angka. misal 50000." class="form-control" value="{{ price_data.price }}">
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+
+    <div class="col-md-12">
+        <hr/>
+        <div class="form-group">
+            <label class="checkbox-inline">
+                <input type="checkbox" name="Suppliers[use_default_price]"
+                       {% if configs.use_default_price and configs.use_default_price > 0 %}checked{% endif %}> <b>Aktifkan Harga Patokan Untuk Default Harga Beli</b>
+            </label>
+        </div>
+        <hr/>
+    </div>
+
+    <div class="col-md-12">
+        <div class="form-group">
+            <input type="hidden" name="Suppliers[supplier_id]" value="{{ model.id }}">
+            <input type="submit" value="Simpan" class="btn btn-info">
+        </div>
+    </div>
+</form>
+
+<style>
+    .row + .row {margin-top: 0px;}
+</style>
+<script type="text/javascript">
+    function showPriceBox(dt) {
+        if ($(dt).is(':checked')) {
+            $("#price-container-"+ $(dt).val()).show();
+        } else {
+            $("#price-container-"+ $(dt).val()).hide();
+        }
+    }
+    $(function () {
+        $('#product-form').submit(function () {
+            var url = $(this).attr('action');
+            $.ajax({
+                'beforeSend': function() { $('.loader').show(); },
+                'complete': function() { $('.loader').hide(); },
+                'url': url,
+                'type':'post',
+                'data': $('#product-form').serialize(),
+                'success': function(data) {
+                    console.log(data);
+                    if (data.status == 'success') {
+                        var alert_success = $('#product-form').find('.alert-success');
+                        alert_success.html(data.message);
+                        alert_success.show();
+                        setTimeout(function () {
+                            window.location.reload(true);
+                        }, 5000);
+                    }
+                },
+                error: function(XMLHttpRequest, textStatus, errorThrown) {
+                    console.log("Status: " + textStatus + " Message: "+errorThrown);
+                }
+            });
+
+            return false;
+        });
+    });
+</script>

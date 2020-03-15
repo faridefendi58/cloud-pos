@@ -802,12 +802,12 @@ class TransferController extends BaseController
 			if ($result_data['type'] == \Model\ActivitiesModel::TYPE_TRANSFER_ISSUE) {
                 // missing data
                 if ((array_key_exists('is_update_qty', $result_data['configs']) || !empty($result_data['checked_by'])) && $result_data['status'] == 1) {
-                    $suffix = '(OUT)';
+                    $suffix = '(OUT '. $result_data['warehouse_to_code'] .')';
                     $r_models = \Model\ActivitiesModel::model()->findAllByAttributes(['group_id' => $result_data['group_id']]);
                     $new_items = [];
                     foreach($r_models as $model2) {
                         if ($model2->id != $result_data['id']) {
-                            $suffix2 = '(IN)';
+                            $suffix2 = '(IN '. $result_data['warehouse_from_code'] .')';
                             $_configs = json_decode($model2->configs, true);
                             foreach ($_configs['items'] as $j => $_item) {
                                 $_item2 = $_item;
@@ -819,7 +819,7 @@ class TransferController extends BaseController
                                 $qty2 = $_item['quantity'];
                                 if ($qty1 <> $qty2) {
                                     $_item2['title'] = $_item2['title'].' (Miss)';
-                                    $_item2['quantity'] = $qty1 - $qty2;
+                                    $_item2['quantity'] = $qty2 - $qty1;
                                     $new_items[] = $_item2;
                                 }
                             }
@@ -855,12 +855,12 @@ class TransferController extends BaseController
 			} elseif ($result_data['type'] == \Model\ActivitiesModel::TYPE_TRANSFER_RECEIPT) {
                 // missing data
                 if ((array_key_exists('is_update_qty', $result_data['configs']) || !empty($result_data['checked_by'])) && $result_data['status'] == 1) {
-                    $suffix = '(IN)';
+                    $suffix = '(IN '. $result_data['warehouse_from_code'] .')';
                     $r_models = \Model\ActivitiesModel::model()->findAllByAttributes(['group_id' => $result_data['group_id']]);
                     $new_items = [];
                     foreach($r_models as $model2) {
                         if ($model2->id != $result_data['id']) {
-                            $suffix2 = '(OUT)';
+                            $suffix2 = '(OUT '. $result_data['warehouse_to_code'] .')';
                             $_configs = json_decode($model2->configs, true);
                             foreach ($_configs['items'] as $j => $_item) {
                                 $_item2 = $_item;
@@ -872,7 +872,7 @@ class TransferController extends BaseController
                                 $qty2 = $_item['quantity'];
                                 if ($qty1 <> $qty2) {
                                     $_item2['title'] = $_item2['title'].' (Miss)';
-                                    $_item2['quantity'] = $qty1 - $qty2;
+                                    $_item2['quantity'] = $qty2 - $qty1;
                                     $new_items[] = $_item2;
                                 }
                             }
@@ -909,17 +909,17 @@ class TransferController extends BaseController
                 }
 
 				if ($result_data['status'] == -1) {
-					$suffix = '(IN)';
+					$suffix = '(IN '. $result_data['warehouse_from_code'] .')';
 					if ($result_data['type'] == \Model\ActivitiesModel::TYPE_STOCK_OUT) {
-						$suffix = '(OUT)';
+						$suffix = '(OUT '. $result_data['warehouse_to_code'] .')';
 					}
 					$r_models = \Model\ActivitiesModel::model()->findAllByAttributes(['group_id' => $result_data['group_id']]);
 					$new_items = []; $missings = [];
 					foreach($r_models as $model2) {
 						if ($model2->id != $result_data['id']) {
-							$suffix2 = '(OUT)';
+							$suffix2 = '(OUT '. $result_data['warehouse_to_code'] .')';
 							if ($model2->type == \Model\ActivitiesModel::TYPE_STOCK_IN) {
-								$suffix2 = '(IN)';
+								$suffix2 = '(IN '. $result_data['warehouse_from_code'] .')';
 							}
 							$_configs = json_decode($model2->configs, true);
 							foreach ($_configs['items'] as $j => $_item) {
@@ -932,7 +932,7 @@ class TransferController extends BaseController
 								$qty2 = $_item['quantity'];
 								if ($qty1 <> $qty2) {
 									$_item2['title'] = $_item2['title'].' (Miss)';
-									$_item2['quantity'] = $qty1 - $qty2;
+									$_item2['quantity'] = $qty2 - $qty1;
 									$new_items[] = $_item2;
 								}
 							}
@@ -1245,6 +1245,7 @@ class TransferController extends BaseController
             $amodel = \Model\AdminModel::model()->findByPk($params['admin_id']);
             $model = \Model\ActivitiesModel::model()->findByPk($params['id']);
             if ($model instanceof \RedBeanPHP\OODBBean) {
+				$old_status = $model->status;
                 $configs = json_decode($model->configs, true);
                 if (is_array($configs)) {
 					if (array_key_exists('is_update_qty', $configs) && !isset($params['force_confirm'])) {
@@ -1329,7 +1330,7 @@ class TransferController extends BaseController
                     if ($model->status == 1) { //finised
                         try {
 							$checked_by_manager = false;
-							if (isset($params['force_confirm'])) {
+							if (isset($params['force_confirm']) && ($old_status == -1)) {
 								$checked_by_manager = true;
 							}
                             $this->create_real_issue($model, $params['admin_id'], $checked_by_manager);

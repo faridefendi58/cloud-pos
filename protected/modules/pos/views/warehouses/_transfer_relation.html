@@ -24,6 +24,30 @@
         </select>
     </div>
 </div>
+<div class="clearfix mt20"></div>
+<div class="row">
+    {% set suppliers = App.call.model("\\Model\\SuppliersModel", 'getData', {'status':1}) %}
+    <div class="col-md-6">
+        {% set related_suppliers = App.call.model("\\Model\\WarehouseTransferRelationsModel", 'getRelatedSuppliers', {'warehouse_id':model.id, 'rel_type':'in'}) %}
+        <label class="control-label mb20">Perbolehkan Stok Masuk Dari Supplier :</label>
+        <select name="2col_callbacks2" id="2col_callbacks3" multiple class="form-control">
+            {% for i, sp in suppliers %}
+            <option value="{{ sp.id }}" {% if sp.name in related_suppliers %}selected="selected"{% endif %}>{{ sp.name }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    {% set ext_pos = App.params.ext_pos | json_decode %}
+    {% set non_transaction_types = ext_pos.non_transaction_type %}
+    <div class="col-md-6">
+        {% set related_non_trans = App.call.model("\\Model\\WarehouseTransferRelationsModel", 'getRelatedNonTrans', {'warehouse_id':model.id, 'rel_type':'out'}) %}
+        <label class="control-label mb20">Perbolehkan Stok Keluar (Non Transaksi) :</label>
+        <select name="2col_callbacks2" id="2col_callbacks4" multiple class="form-control">
+            {% for t_type, type_name in non_transaction_types %}
+            <option value="{{ t_type }}" {% if t_type in related_non_trans %}selected="selected"{% endif %}>{{ type_name }}</option>
+            {% endfor %}
+        </select>
+    </div>
+</div>
 <script src="{{ 'lib/multi-select/js/jquery.multi-select.js' | admin_asset_url }}"></script>
 <script type="text/javascript">
     $(function () {
@@ -47,6 +71,26 @@
                 }
             });
         }
+        if($('#2col_callbacks3').length) {
+            $('#2col_callbacks3').multiSelect({
+                afterSelect: function(values){
+                    updateSupplierRelationship(values[0], 1, 'in');
+                },
+                afterDeselect: function(values){
+                    updateSupplierRelationship(values[0], 0, 'in');
+                }
+            });
+        }
+        if($('#2col_callbacks4').length) {
+            $('#2col_callbacks4').multiSelect({
+                afterSelect: function(values){
+                    updateNonTransRelationship(values[0], 1, 'out');
+                },
+                afterDeselect: function(values){
+                    updateNonTransRelationship(values[0], 0, 'out');
+                }
+            });
+        }
     });
 
     function updateRelationship(id, is_added, rel_type) {
@@ -55,6 +99,38 @@
             'url': "{{ 'pos/warehouses/related' | link }}/"+ warehouse_id,
             'type':'post',
             'data': {'id':id, 'is_added':is_added, 'rel_type':rel_type},
+            'success': function(data) {
+                console.log(data);
+                if (data.status == 'success') {
+
+                }
+            }
+        });
+        return false;
+    }
+
+    function updateSupplierRelationship(id, is_added, rel_type) {
+        var warehouse_id = "{{ model.id }}";
+        $.ajax({
+            'url': "{{ 'pos/warehouses/related' | link }}/"+ warehouse_id,
+            'type':'post',
+            'data': {'id':id, 'is_added':is_added, 'rel_type':rel_type, 'supplier_id':id},
+            'success': function(data) {
+                console.log(data);
+                if (data.status == 'success') {
+
+                }
+            }
+        });
+        return false;
+    }
+
+    function updateNonTransRelationship(id, is_added, rel_type) {
+        var warehouse_id = "{{ model.id }}";
+        $.ajax({
+            'url': "{{ 'pos/warehouses/related' | link }}/"+ warehouse_id,
+            'type':'post',
+            'data': {'id':id, 'is_added':is_added, 'rel_type':rel_type, 'non_transaction_type':id},
             'success': function(data) {
                 console.log(data);
                 if (data.status == 'success') {
