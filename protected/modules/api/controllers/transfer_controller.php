@@ -802,12 +802,12 @@ class TransferController extends BaseController
 			if ($result_data['type'] == \Model\ActivitiesModel::TYPE_TRANSFER_ISSUE) {
                 // missing data
                 if ((array_key_exists('is_update_qty', $result_data['configs']) || !empty($result_data['checked_by'])) && $result_data['status'] == 1) {
-                    $suffix = '(OUT '. $result_data['warehouse_to_code'] .')';
+                    $suffix = '(OUT '. $result_data['warehouse_from_code'] .')';
                     $r_models = \Model\ActivitiesModel::model()->findAllByAttributes(['group_id' => $result_data['group_id']]);
                     $new_items = [];
                     foreach($r_models as $model2) {
                         if ($model2->id != $result_data['id']) {
-                            $suffix2 = '(IN '. $result_data['warehouse_from_code'] .')';
+                            $suffix2 = '(IN '. $result_data['warehouse_to_code'] .')';
                             $_configs = json_decode($model2->configs, true);
                             foreach ($_configs['items'] as $j => $_item) {
                                 $_item2 = $_item;
@@ -819,7 +819,11 @@ class TransferController extends BaseController
                                 $qty2 = $_item['quantity'];
                                 if ($qty1 <> $qty2) {
                                     $_item2['title'] = $_item2['title'].' (Miss)';
-                                    $_item2['quantity'] = $qty2 - $qty1;
+									$missed = $qty2 - $qty1;
+									if ($missed > 0) {
+										$missed = -1 * $missed;
+									}
+                                    $_item2['quantity'] = $missed;
                                     $new_items[] = $_item2;
                                 }
                             }
@@ -855,12 +859,12 @@ class TransferController extends BaseController
 			} elseif ($result_data['type'] == \Model\ActivitiesModel::TYPE_TRANSFER_RECEIPT) {
                 // missing data
                 if ((array_key_exists('is_update_qty', $result_data['configs']) || !empty($result_data['checked_by'])) && $result_data['status'] == 1) {
-                    $suffix = '(IN '. $result_data['warehouse_from_code'] .')';
+                    $suffix = '(IN '. $result_data['warehouse_to_code'] .')';
                     $r_models = \Model\ActivitiesModel::model()->findAllByAttributes(['group_id' => $result_data['group_id']]);
                     $new_items = [];
                     foreach($r_models as $model2) {
                         if ($model2->id != $result_data['id']) {
-                            $suffix2 = '(OUT '. $result_data['warehouse_to_code'] .')';
+                            $suffix2 = '(OUT '. $result_data['warehouse_from_code'] .')';
                             $_configs = json_decode($model2->configs, true);
                             foreach ($_configs['items'] as $j => $_item) {
                                 $_item2 = $_item;
@@ -872,7 +876,11 @@ class TransferController extends BaseController
                                 $qty2 = $_item['quantity'];
                                 if ($qty1 <> $qty2) {
                                     $_item2['title'] = $_item2['title'].' (Miss)';
-                                    $_item2['quantity'] = $qty2 - $qty1;
+									$missed = $qty2 - $qty1;
+									if ($missed > 0) {
+										$missed = -1 * $missed;
+									}
+                                    $_item2['quantity'] = $missed;
                                     $new_items[] = $_item2;
                                 }
                             }
@@ -909,17 +917,17 @@ class TransferController extends BaseController
                 }
 
 				if ($result_data['status'] == -1) {
-					$suffix = '(IN '. $result_data['warehouse_from_code'] .')';
+					$suffix = '(IN '. $result_data['warehouse_to_code'] .')';
 					if ($result_data['type'] == \Model\ActivitiesModel::TYPE_STOCK_OUT) {
-						$suffix = '(OUT '. $result_data['warehouse_to_code'] .')';
+						$suffix = '(OUT '. $result_data['warehouse_from_code'] .')';
 					}
 					$r_models = \Model\ActivitiesModel::model()->findAllByAttributes(['group_id' => $result_data['group_id']]);
 					$new_items = []; $missings = [];
 					foreach($r_models as $model2) {
 						if ($model2->id != $result_data['id']) {
-							$suffix2 = '(OUT '. $result_data['warehouse_to_code'] .')';
+							$suffix2 = '(OUT '. $result_data['warehouse_from_code'] .')';
 							if ($model2->type == \Model\ActivitiesModel::TYPE_STOCK_IN) {
-								$suffix2 = '(IN '. $result_data['warehouse_from_code'] .')';
+								$suffix2 = '(IN '. $result_data['warehouse_to_code'] .')';
 							}
 							$_configs = json_decode($model2->configs, true);
 							foreach ($_configs['items'] as $j => $_item) {
@@ -932,7 +940,11 @@ class TransferController extends BaseController
 								$qty2 = $_item['quantity'];
 								if ($qty1 <> $qty2) {
 									$_item2['title'] = $_item2['title'].' (Miss)';
-									$_item2['quantity'] = $qty2 - $qty1;
+									$missed_qty = $qty2 - $qty1;
+									if ($missed_qty > 0) {
+										$missed_qty = -1*$missed_qty;
+									}
+									$_item2['quantity'] = $missed_qty;
 									$new_items[] = $_item2;
 								}
 							}
@@ -1055,26 +1067,27 @@ class TransferController extends BaseController
                     $act_model2->created_at = date("Y-m-d H:i:s");
                     $act_model2->created_by = $act_model->created_by;
                     if ($act_model2->warehouse_id > 0) {
-                        $save_act2 = \Model\ActivitiesModel::model()->save($act_model2);
+                        $save_act2 = \Model\ActivitiesModel::model()->save(@$act_model2);
                         if ($save_act2) {
                             // also send notification
                             $notif_params = [];
                             $notif_params['recipients'] = [];
-                            $whs_models = \Model\WarehouseStaffsModel::model()->findAllByAttributes(['warehouse_id' => $act_model2->warehouse_id]);
+                            //$whs_models = \Model\WarehouseStaffsModel::model()->findAllByAttributes(['warehouse_id' => $act_model2->warehouse_id]);
+							$_whs_model = new \Model\WarehouseStaffsModel();
+							$whs_models = $_whs_model->getStockVerifiers(['warehouse_id' => $act_model2->warehouse_id]);
                             foreach ($whs_models as $whs_model) {
-                                //if ($whs_model->admin_id != $act_model->created_by) {
-                                    array_push($notif_params['recipients'], $whs_model->admin_id);
-                                //}
+								array_push($notif_params['recipients'], $whs_model['admin_id']);
                             }
 
                             if (count($notif_params['recipients']) > 0) {
                                 $wh_mod = \Model\WarehousesModel::model()->findByPk($act_model2->warehouse_id);
                                 $notif_params['message'] = "Verifikasi stok keluar dari " . $wh_mod->title . ". ";
                                 $notif_params['message'] .= "Dengan data : " . $act_model2->description;
-                                $notif_params['rel_type'] = \Model\NotificationsModel::TYPE_TRANSFER_ISSUE;
+                                $notif_params['rel_type'] = \Model\NotificationsModel::TYPE_STOCK_OUT;
+                                $notif_params['rel_id'] = $act_model2->id;
 
                                 $notif_params['issue_number'] = "OUT-PENDING";
-                                $notif_params['rel_activity'] = 'PurchaseHistoryActivity';
+                                $notif_params['rel_activity'] = 'PurchaseDetailActivity';
                                 $notif_params['warehouse_id'] = $act_model2->warehouse_id;
                                 $this->_sendNotification($notif_params);
                             }
@@ -1189,26 +1202,27 @@ class TransferController extends BaseController
                     $act_model2->created_at = date("Y-m-d H:i:s");
                     $act_model2->created_by = $act_model->created_by;
                     if ($act_model2->warehouse_id > 0) {
-                        $save_act2 = \Model\ActivitiesModel::model()->save($act_model2);
+                        $save_act2 = \Model\ActivitiesModel::model()->save(@$act_model2);
                         if ($save_act2) {
                             // also send notification
                             $notif_params = [];
                             $notif_params['recipients'] = [];
-                            $whs_models = \Model\WarehouseStaffsModel::model()->findAllByAttributes(['warehouse_id' => $act_model2->warehouse_id]);
+                            //$whs_models = \Model\WarehouseStaffsModel::model()->findAllByAttributes(['warehouse_id' => $act_model2->warehouse_id]);
+							$_whs_model = new \Model\WarehouseStaffsModel();
+							$whs_models = $_whs_model->getStockVerifiers(['warehouse_id' => $act_model2->warehouse_id]);
                             foreach ($whs_models as $whs_model) {
-                                //if ($whs_model->admin_id != $act_model->created_by) {
-                                    array_push($notif_params['recipients'], $whs_model->admin_id);
-                                //}
+                                array_push($notif_params['recipients'], $whs_model['admin_id']);
                             }
 
                             if (count($notif_params['recipients']) > 0) {
                                 $wh_mod = \Model\WarehousesModel::model()->findByPk($params['warehouse_from']);
                                 $notif_params['message'] = "Verifikasi stok masuk dari " . $wh_mod->title . ". ";
                                 $notif_params['message'] .= "Dengan data : " . $act_model2->description;
-                                $notif_params['rel_type'] = \Model\NotificationsModel::TYPE_TRANSFER_ISSUE;
+                                $notif_params['rel_type'] = \Model\NotificationsModel::TYPE_STOCK_IN;
+                                $notif_params['rel_id'] = $act_model2->id;
 
                                 $notif_params['issue_number'] = "IN-PENDING";
-                                $notif_params['rel_activity'] = 'PurchaseHistoryActivity';
+                                $notif_params['rel_activity'] = 'PurchaseDetailActivity';
                                 $notif_params['warehouse_id'] = $act_model2->warehouse_id;
                                 $this->_sendNotification($notif_params);
                             }
@@ -1245,11 +1259,18 @@ class TransferController extends BaseController
             $amodel = \Model\AdminModel::model()->findByPk($params['admin_id']);
             $model = \Model\ActivitiesModel::model()->findByPk($params['id']);
             if ($model instanceof \RedBeanPHP\OODBBean) {
+                $missed_items = $this->getMissedTransferItems($model->group_id);
+                $need_auto_adjust = false;
+                if (array_key_exists('surplus', $missed_items) && !array_key_exists('defisit', $missed_items)) {
+                    $need_auto_adjust = true;
+                }
 				$old_status = $model->status;
                 $configs = json_decode($model->configs, true);
                 if (is_array($configs)) {
 					if (array_key_exists('is_update_qty', $configs) && !isset($params['force_confirm'])) {
-						$params['status'] = -1;
+					    if (!$need_auto_adjust) {
+                            $params['status'] = -1;
+                        }
 					}
                     if (isset($params['warehouse_from'])) {
                         $configs['warehouse_from'] = $params['warehouse_from'];
@@ -1329,6 +1350,94 @@ class TransferController extends BaseController
                     $result['message'] = 'Data telah berhasil disimpan';
                     if ($model->status == 1) { //finised
                         try {
+                            // start auto update qty if surplus
+                            if ($need_auto_adjust) {
+                                if ($model->type == \Model\ActivitiesModel::TYPE_STOCK_IN) {
+                                    $st_out_model = \Model\ActivitiesModel::model()->findByAttributes(['group_id' => $model->group_id, 'type' => \Model\ActivitiesModel::TYPE_STOCK_OUT]);
+                                    if ($st_out_model instanceof \RedBeanPHP\OODBBean) {
+                                        $_cfgs = json_decode($st_out_model->configs, true);
+                                        $wh_to_code = ''; $wh_from_code = '';
+                                        if (!empty($_cfgs['warehouse_to'])) {
+                                            $wh_to_model = \Model\WarehousesModel::model()->findByPk($_cfgs['warehouse_to']);
+                                            $wh_to_code = $wh_to_model->code;
+                                            $wh_from_model = \Model\WarehousesModel::model()->findByPk($_cfgs['warehouse_from']);
+                                            $wh_from_code = $wh_from_model->code;
+                                        }
+                                        $_items = $_cfgs['items']; $do_update = 0; $adjust_note = '';
+                                        foreach ($_items as $_i => $_item) {
+                                            if (array_key_exists($_item['barcode'], $missed_items['need_adjust'])) {
+                                                $adjust_val = $missed_items['need_adjust'][$_item['barcode']];
+                                                if ($adjust_val > 0) {
+                                                    $_items[$_i]['quantity_wrong'] = $_item['quantity'];
+                                                    $_items[$_i]['quantity'] = $adjust_val;
+                                                    // add system auto correction
+                                                    $adjust_note .= "\nSystem : OUT ". $wh_from_code ." ". $_item['quantity'] ." ". $_item['name'] ." Auto adjust ". $adjust_val ." ". $_item['name'];
+                                                    $adjust_note .= "\nOUT ". $wh_from_code ." ". $adjust_val ." ". $_item['name'];
+                                                    $adjust_note .= "\nIN ". $wh_to_code ." ". $adjust_val ." ". $_item['name'];
+													$_cfgs['notes'] .= $adjust_note;
+                                                    $do_update = $do_update + 1;
+                                                }
+                                            }
+                                        }
+                                        if ($do_update > 0) {
+                                            $_cfgs['items'] = $_items;
+                                            $st_out_model->configs = json_encode($_cfgs);
+                                            $update = \Model\ActivitiesModel::model()->update(@$st_out_model);
+											if ($update) {
+												//update also stock in
+												if (!empty($adjust_note)) {
+													$in_configs = json_decode($model->configs, true);
+													$in_configs['notes'] .= $adjust_note;
+													$model->configs = json_encode($in_configs);
+													$update2 = \Model\ActivitiesModel::model()->update($model);
+												}
+											}
+                                        }
+                                    }
+                                } elseif ($model->type == \Model\ActivitiesModel::TYPE_STOCK_OUT) {
+                                    $_cfgs = json_decode($model->configs, true);
+                                    $wh_to_code = ''; $wh_from_code = '';
+                                    if (!empty($_cfgs['warehouse_to'])) {
+                                        $wh_to_model = \Model\WarehousesModel::model()->findByPk($_cfgs['warehouse_to']);
+                                        $wh_to_code = $wh_to_model->code;
+                                        $wh_from_model = \Model\WarehousesModel::model()->findByPk($_cfgs['warehouse_from']);
+                                        $wh_from_code = $wh_from_model->code;
+                                    }
+                                    $_items = $_cfgs['items']; $do_update = 0; $adjust_note = '';
+                                    foreach ($_items as $_i => $_item) {
+                                        if (array_key_exists($_item['barcode'], $missed_items['need_adjust'])) {
+                                            $adjust_val = $missed_items['need_adjust'][$_item['barcode']];
+                                            if ($adjust_val > 0) {
+                                                $_items[$_i]['quantity_wrong'] = $_item['quantity'];
+                                                $_items[$_i]['quantity'] = $adjust_val;
+                                                // add system auto correction
+                                                $adjust_note .= "\nSystem : OUT ". $wh_from_code ." ". $_item['quantity'] ." ". $_item['name'] ." Auto adjust ". $adjust_val ." ". $_item['name'];
+                                                $adjust_note .= "\nOUT ". $wh_from_code ." ". $adjust_val ." ". $_item['name'];
+                                                $adjust_note .= "\nIN ". $wh_to_code ." ". $adjust_val ." ". $_item['name'];
+												$_cfgs['notes'] .= $adjust_note;
+                                                $do_update = $do_update + 1;
+                                            }
+                                        }
+                                    }
+                                    if ($do_update > 0) {
+                                        $_cfgs['items'] = $_items;
+                                        $model->configs = json_encode($_cfgs);
+                                        $update = \Model\ActivitiesModel::model()->update(@$model);
+										//update also stock in
+										if (!empty($adjust_note)) {
+											$st_in_model = \Model\ActivitiesModel::model()->findByAttributes(['group_id' => $model->group_id, 'type' => \Model\ActivitiesModel::TYPE_STOCK_IN]);
+			                                if ($st_in_model instanceof \RedBeanPHP\OODBBean) {
+												$in_configs = json_decode($st_in_model->configs, true);
+												$in_configs['notes'] .= $adjust_note;
+												$st_in_model->configs = json_encode($in_configs);
+												$update2 = \Model\ActivitiesModel::model()->update($st_in_model);
+											}
+										}
+                                    }
+                                }
+                            }
+                            // end of auto update
+
 							$checked_by_manager = false;
 							if (isset($params['force_confirm']) && ($old_status == -1)) {
 								$checked_by_manager = true;
@@ -1349,10 +1458,11 @@ class TransferController extends BaseController
                             if (count($notif_params['recipients']) > 0) {
                                 $notif_params['message'] = "Verifikasi Sengketa Stok Transfer";
                                 $notif_params['message'] .= "Dengan data : " . $model->description;
-                                $notif_params['rel_type'] = \Model\NotificationsModel::TYPE_TRANSFER_ISSUE;
+                                $notif_params['rel_type'] = \Model\NotificationsModel::TYPE_STOCK_OUT;
+                                $notif_params['rel_id'] = $model->id;
 
                                 $notif_params['issue_number'] = "OUT-NEEDCHECK";
-                                $notif_params['rel_activity'] = 'PurchaseHistoryActivity';
+                                $notif_params['rel_activity'] = 'PurchaseDetailActivity';
                                 $notif_params['warehouse_id'] = $model->warehouse_id;
                                 $this->_sendNotification($notif_params);
                             }
@@ -1403,10 +1513,11 @@ class TransferController extends BaseController
                                                 if (count($notif_params['recipients']) > 0) {
                                                     $notif_params['message'] = "Verifikasi Sengketa Stok Transfer";
                                                     $notif_params['message'] .= "Dengan data : " . $rel_model->description;
-                                                    $notif_params['rel_type'] = \Model\NotificationsModel::TYPE_TRANSFER_ISSUE;
+                                                    $notif_params['rel_type'] = \Model\NotificationsModel::TYPE_STOCK_IN;
+                                                    $notif_params['rel_id'] = $rel_model->id;
 
                                                     $notif_params['issue_number'] = "IN-NEEDCHECK";
-                                                    $notif_params['rel_activity'] = 'PurchaseHistoryActivity';
+                                                    $notif_params['rel_activity'] = 'PurchaseDetailActivity';
                                                     $this->_sendNotification($notif_params);
                                                 }
                                             } catch (\Exception $e){}
@@ -1668,5 +1779,48 @@ class TransferController extends BaseController
 		}
 
         return $response->withJson($result, 201);
+    }
+
+    /**
+     * @param $group_id
+     * @return array
+     * ex result : array(2) {
+     * ["surplus"]=> array(4) { ["barcode"]=> int(12) ["stock_in"]=> string(2) "11" ["stock_out"]=> string(2) "10" ["selisih"]=> int(1) }
+     * ["defisit"]=> array(4) { ["barcode"]=> int(1) ["stock_in"]=> string(2) "19" ["stock_out"]=> string(2) "20" ["selisih"]=> int(-1) }
+     * }
+     */
+    private function getMissedTransferItems($group_id) {
+        $models = \Model\ActivitiesModel::model()->findAllByAttributes(['group_id' => $group_id]);
+        $missed_items = [];
+        foreach ($models as $model) {
+            $configs = json_decode($model->configs, true);
+            if (array_key_exists('items', $configs)) {
+                $items = $configs['items'];
+                foreach ($items as $i => $item) {
+                    $missed_items[$item['barcode']][$model->type] = $item['quantity'];
+                }
+            }
+        }
+
+        $missed_data = [];
+        if (count($missed_items) > 0) {
+            $type_in = \Model\ActivitiesModel::TYPE_STOCK_IN;
+            $type_out = \Model\ActivitiesModel::TYPE_STOCK_OUT;
+            foreach ($missed_items as $barcode => $missed_item) {
+                if (array_key_exists($type_in, $missed_item)
+                    && array_key_exists($type_out, $missed_item)
+                    && ($missed_item[$type_in] != $missed_item[$type_out])) {
+                    $selisih = $missed_item[$type_in] - $missed_item[$type_out];
+                    if ($missed_item[$type_in] > $missed_item[$type_out]) {
+                        $missed_data['surplus'][$barcode] = ['barcode' => $barcode, $type_in => $missed_item[$type_in], $type_out => $missed_item[$type_out], 'selisih' => $selisih];
+                        $missed_data['need_adjust'][$barcode] = $missed_item[$type_in];
+                    } elseif ($missed_item[$type_in] < $missed_item[$type_out]) {
+                        $missed_data['defisit'][$barcode] = ['barcode' => $barcode, $type_in => $missed_item[$type_in], $type_out => $missed_item[$type_out], 'selisih' => $selisih];
+                    }
+                }
+            }
+        }
+
+        return $missed_data;
     }
 }

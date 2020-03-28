@@ -64,6 +64,9 @@ $app->group('/pos', function () use ($user) {
     $this->group('/customers', function() use ($user) {
         new Pos\Controllers\CustomersController($this, $user);
     });
+    $this->group('/fcms', function() use ($user) {
+        new Pos\Controllers\FcmsController($this, $user);
+    });
 });
 
 ?>

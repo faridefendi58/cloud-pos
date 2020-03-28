@@ -44,14 +44,23 @@ class NotificationController extends BaseController
         $result = [];
         $params = $request->getParams();
         $pmodel = new \Model\NotificationsModel();
+        $prms = ['admin_id'=>$params['admin_id']];
+        if (isset($params['status'])) {
+            $prms['status'] = $params['status'];
+		}
 
-        if (!isset($params['status']))
-            $params['status'] = \Model\NotificationRecipientsModel::STATUS_UNREAD;
-
-        $prms = ['admin_id'=>$params['admin_id'],'status'=>$params['status']];
         if (isset($params['warehouse_id'])) {
             $prms['warehouse_id'] = $params['warehouse_id'];
         }
+
+		if (isset($params['date_start']) && isset($params['date_end'])) {
+            $prms['date_start'] = $params['date_start'];
+            $prms['date_end'] = $params['date_end'];
+		}
+
+		if (isset($params['limit'])) {
+            $prms['limit'] = $params['limit'];
+		}
         $items = $pmodel->getData($prms);
         if (is_array($items)){
             $result['success'] = 1;
@@ -149,6 +158,11 @@ class NotificationController extends BaseController
                 $qry_params['warehouse_id'] = $params['warehouse_id'];
             }
             $count = \Model\NotificationRecipientsModel::model()->count($qry_params);
+			$n_model = new \Model\NotificationRecipientsModel();
+			$last_noticed_id = $n_model->getLastNoticeId($qry_params);
+            $count_each_wh = $n_model->countEachWH(['admin_id' => $params['admin_id'], 'status' => \Model\NotificationRecipientsModel::STATUS_UNREAD]);
+			$result['count_each_wh'] = $count_each_wh;
+            $result['last_noticed_id'] = (int) $last_noticed_id;
             if ($count > 0) {
                 $result['success'] = 1;
                 $result['message'] = "Ada ". $count ." notifikasi baru yang belum dibaca.";

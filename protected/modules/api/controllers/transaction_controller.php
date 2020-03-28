@@ -148,6 +148,7 @@ class TransactionController extends BaseController
             if (!empty($params['warehouse_id'])) {
                 $model2->warehouse_id = $params['warehouse_id'];
             }
+
             if (!empty($params['shipping']) && array_key_exists("pickup_date", $params['shipping'][0]) && !empty($params['shipping'][0]['pickup_date'])) {
                 if (strtotime($params['shipping'][0]['pickup_date']) > 0) {
                     $model2->delivered_plan_at = date("Y-m-d H:i:s", strtotime($params['shipping'][0]['pickup_date']));
@@ -179,10 +180,21 @@ class TransactionController extends BaseController
                     $model3->quantity = $data['qty'];
                     $model3->price = $data['unit_price'];
                     $model3->discount = $data['discount'];
-                    if (isset($data['cost_price'])) {
-                        $model3->cost_price = $data['cost_price'];
+                    if (!empty($params['warehouse_id'])) {
+                        $model3->warehouse_id = $params['warehouse_id'];
+                    }
+
+                    // use cost price from server
+                    if (!empty($model3->warehouse_id)) {
+                        $wh_prod_model = new \Model\WarehouseProductsModel();
+                        $current_cost = $wh_prod_model->getCurrentCost(['warehouse_id' => $model3->warehouse_id, 'product_id' => $model3->product_id]);
+                        $model3->cost_price = $current_cost;
                     } else {
-                        $model3->cost_price = $data['unit_price'];
+                        if (isset($data['cost_price'])) {
+                            $model3->cost_price = $data['cost_price'];
+                        } else {
+                            $model3->cost_price = $data['unit_price'];
+                        }
                     }
 
                     if ($params['promocode']) {
@@ -191,9 +203,7 @@ class TransactionController extends BaseController
                     $model3->currency_id = $model2->currency_id;
                     $model3->change_value = $model2->change_value;
                     $model3->type = (!empty($params['payment_type'])) ? $params['payment_type'] : 1;
-                    if (!empty($params['warehouse_id'])) {
-                        $model3->warehouse_id = $params['warehouse_id'];
-                    }
+
                     $model3->status = 1;
                     $model3->created_at = date("Y-m-d H:i:s");
                     $model3->created_by = (isset($params['admin_id'])) ? $params['admin_id'] : 1;
@@ -206,6 +216,7 @@ class TransactionController extends BaseController
                         $model4->title = $model3->title;
                         $model4->quantity = $model3->quantity;
                         $model4->price = $model3->price;
+                        $model4->cost_price = $model3->cost_price;
                         $model4->created_at = date("Y-m-d H:i:s");
                         $model4->created_by = (isset($params['admin_id'])) ? $params['admin_id'] : 1;
                         $save3 = \Model\InvoiceItemsModel::model()->save(@$model4);

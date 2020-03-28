@@ -65,6 +65,7 @@ Rincian Transaksi Penjualan - {{ App.params.site_name }}
                                         <th>Quantity</th>
                                         <th>Unit Price</th>
                                         <th>Discount</th>
+                                        <th>Harga Dasar</th>
                                     </tr>
                                     </thead>
                                     <tbody>
@@ -76,6 +77,7 @@ Rincian Transaksi Penjualan - {{ App.params.site_name }}
                                         <td style="text-align: center;">{{ item.qty }}</td>
                                         <td style="text-align: right;">{{ item.unit_price | money_format }}</td>
                                         <td style="text-align: right;">{{ item.discount | money_format }}</td>
+                                        <td style="text-align: right;">{{ item.base_price | money_format }}</td>
                                     </tr>
                                     {% set tot_discount = tot_discount + item.discount %}
                                     {% else %}

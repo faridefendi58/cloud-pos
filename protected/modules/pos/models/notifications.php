@@ -8,6 +8,8 @@ class NotificationsModel extends \Model\BaseModel
     const TYPE_PURCHASE_ORDER = 'purchase_order';
     const TYPE_TRANSFER_ISSUE = 'transfer_issue';
     const TYPE_INVENTORY_ISSUE = 'inventory_issue';
+	const TYPE_STOCK_IN = 'stock_in';
+    const TYPE_STOCK_OUT = 'stock_out';
 
     public static function model($className=__CLASS__)
     {
@@ -36,7 +38,7 @@ class NotificationsModel extends \Model\BaseModel
      */
     public function getData($data = array())
     {
-        $sql = 'SELECT t.*    
+        $sql = 'SELECT t.*, r.status    
             FROM {tablePrefix}ext_notification t';
 
         if (isset($data['admin_id'])) {
@@ -59,9 +61,19 @@ class NotificationsModel extends \Model\BaseModel
                 $sql .= ' AND r.warehouse_id =:warehouse_id';
                 $params['warehouse_id'] = $data['warehouse_id'];
             }
+
+			if (isset($data['date_start']) && isset($data['date_end'])) {
+                $sql .= ' AND DATE_FORMAT(t.created_at, "%Y-%m-%d") BETWEEN :date_start AND :date_end';
+                $params['date_start'] = $data['date_start'];
+                $params['date_end'] = $data['date_end'];
+            }
         }
 
         $sql .= ' GROUP BY t.id ORDER BY t.id DESC';
+
+		if (isset($data['limit'])) {
+			$sql .= ' LIMIT '. $data['limit'];
+		}
 
         $sql = str_replace(['{tablePrefix}'], [$this->_tbl_prefix], $sql);
 

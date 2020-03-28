@@ -126,7 +126,35 @@ class WarehouseStaffsModel extends \Model\BaseModel
             $params['admin_id'] = $data['admin_id'];
         }
 
-        $sql .= ' AND a.group_id IN ("1", "6")';
+        $sql .= ' AND a.group_id = 6';
+        $sql .= ' ORDER BY t.id DESC';
+
+        $sql = str_replace(['{tablePrefix}'], [$this->_tbl_prefix], $sql);
+
+        $rows = R::getAll( $sql, $params );
+
+        return $rows;
+    }
+
+	public function getStockVerifiers($data = array())
+    {
+        $sql = 'SELECT t.*, a.group_id      
+            FROM {tablePrefix}ext_warehouse_staff t 
+            LEFT JOIN {tablePrefix}admin a ON a.id = t.admin_id   
+            WHERE 1';
+
+        $params = [];
+        if (isset($data['warehouse_id'])) {
+            $sql .= ' AND t.warehouse_id =:warehouse_id';
+            $params['warehouse_id'] = $data['warehouse_id'];
+        }
+
+        if (isset($data['admin_id'])) {
+            $sql .= ' AND t.admin_id =:admin_id';
+            $params['admin_id'] = $data['admin_id'];
+        }
+
+        $sql .= ' AND a.group_id IN ("2", "3", "5")';
         $sql .= ' ORDER BY t.id DESC';
 
         $sql = str_replace(['{tablePrefix}'], [$this->_tbl_prefix], $sql);
