@@ -111,8 +111,8 @@ class TransactionController extends BaseController
             } else {
                 $model2->status = \Model\InvoicesModel::STATUS_PAID;
             }
-            $model2->serie = $model2->getInvoiceNumber($model2->status, 'serie');
-            $model2->nr = $model2->getInvoiceNumber($model2->status, 'nr');
+            $model2->serie = $model2->getWHInvoiceNumber($params['warehouse_id'], $model2->status, 'serie');
+            $model2->nr = $model2->getWHInvoiceNumber($params['warehouse_id'], $model2->status, 'nr');
             if ($model2->status == \Model\InvoicesModel::STATUS_PAID) {
                 $model2->paid_at = date(c);
                 $model2->paid_by = (isset($params['admin_id'])) ? $params['admin_id'] : 1;
@@ -401,8 +401,8 @@ class TransactionController extends BaseController
             $i_model = new \Model\InvoicesModel();
             if ($model->status != \Model\InvoicesModel::STATUS_PAID) {
                 $model->status = \Model\InvoicesModel::STATUS_PAID;
-                $model->serie = $i_model->getInvoiceNumber($model->status, 'serie');
-                $model->nr = $i_model->getInvoiceNumber($model->status, 'nr');
+                $model->serie = $i_model->getWHInvoiceNumber($model->warehouse_id, $model->status, 'serie');
+                $model->nr = $i_model->getWHInvoiceNumber($model->warehouse_id, $model->status, 'nr');
                 $model->paid_at = date("Y-m-d H:i:s");
                 $model->paid_by = (isset($params['admin_id'])) ? $params['admin_id'] : 1;
             }
@@ -571,8 +571,8 @@ class TransactionController extends BaseController
             $i_model = new \Model\InvoicesModel();
             if ($model->status != \Model\InvoicesModel::STATUS_PAID) {
                 $model->status = \Model\InvoicesModel::STATUS_PAID;
-                $model->serie = $i_model->getInvoiceNumber($model->status, 'serie');
-                $model->nr = $i_model->getInvoiceNumber($model->status, 'nr');
+                $model->serie = $i_model->getWHInvoiceNumber($model->warehouse_id, $model->status, 'serie');
+                $model->nr = $i_model->getWHInvoiceNumber($model->warehouse_id, $model->status, 'nr');
                 $model->paid_at = date("Y-m-d H:i:s");
                 $model->paid_by = (isset($params['admin_id'])) ? $params['admin_id'] : 1;
             }
@@ -629,8 +629,8 @@ class TransactionController extends BaseController
                     }
                 }
             }
-            $model2->serie = $model2->getInvoiceNumber($model2->status, 'serie');
-            $model2->nr = $model2->getInvoiceNumber($model2->status, 'nr');
+            $model2->serie = $model2->getWHInvoiceNumber($model->warehouse_id, $model2->status, 'serie');
+            $model2->nr = $model2->getWHInvoiceNumber($model->warehouse_id, $model2->status, 'nr');
             if ($model2->status == \Model\InvoicesModel::STATUS_REFUND) {
                 $model2->refunded_at = date(c);
                 $model2->refunded_by = (isset($params['admin_id'])) ? $params['admin_id'] : 1;

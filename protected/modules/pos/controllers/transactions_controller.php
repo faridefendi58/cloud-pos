@@ -78,7 +78,7 @@ class TransactionsController extends BaseController
         if(!$isAllowed){
             return $this->notAllowedAction();
         }
-        
+
         $model = new \Model\InvoicesModel();
         $invoices = $model->getData();
 
@@ -569,8 +569,8 @@ class TransactionsController extends BaseController
                 $model2->warehouse_id = 1;
             }
 
-            $model2->serie = $model2->getInvoiceNumber($model2->status, 'serie');
-            $model2->nr = $model2->getInvoiceNumber($model2->status, 'nr');
+            $model2->serie = $model2->getWHInvoiceNumber($model2->warehouse_id, $model2->status, 'serie');
+            $model2->nr = $model2->getWHInvoiceNumber($model2->warehouse_id, $model2->status, 'nr');
             if ($model2->status == \Model\InvoicesModel::STATUS_PAID)
                 $model2->paid_at = date(c);
             $model2->config = json_encode(

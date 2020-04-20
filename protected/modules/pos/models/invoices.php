@@ -70,6 +70,49 @@ class InvoicesModel extends \Model\BaseModel
             return $next_nr;
     }
 
+    public function getWHInvoiceNumber($warehouse_id, $status, $type)
+    {
+        $sql1 = 'SELECT t.code 
+            FROM {tablePrefix}ext_warehouse t 
+            WHERE t.id =:warehouse_id';
+
+        $params = [ 'warehouse_id' => $warehouse_id ];
+
+        $sql1 = str_replace(['{tablePrefix}'], [$this->_tbl_prefix], $sql1);
+
+        $row1 = R::getRow( $sql1, $params );
+        $wh_code = '';
+        if (!empty($row1['code'])) {
+            $wh_code = $row1['code'];
+        }
+
+        $sql = 'SELECT MAX(t.nr) AS max_nr 
+            FROM {tablePrefix}ext_invoice t 
+            WHERE t.status =:status AND t.warehouse_id =:warehouse_id';
+
+        $params = [ 'status' => $status, 'warehouse_id' => $warehouse_id ];
+
+        $sql = str_replace(['{tablePrefix}'], [$this->_tbl_prefix], $sql);
+
+        $row = R::getRow( $sql, $params );
+
+        $pmodel = new \Model\OptionsModel();
+        $ext_pos = $pmodel->getOption('ext_pos');
+        if ($status == self::STATUS_PAID) {
+            $serie = 'PAID-'. $wh_code .'-'. date("y").'-';
+        } elseif ($status == self::STATUS_UNPAID) {
+            $serie = 'UNPAID-'. $wh_code .'-'. date("y").'-';
+        } else {
+            $serie = 'REFUND-'. $wh_code .'-'. date("y").'-';
+        }
+
+        $next_nr = $row['max_nr'] +1;
+        if($type == 'serie')
+            return $serie;
+        else
+            return $next_nr;
+    }
+
     public function getInvoiceFormatedNumber($data = array())
     {
         if(in_array('id', array_keys($data)) && $data['id'] == 0)
