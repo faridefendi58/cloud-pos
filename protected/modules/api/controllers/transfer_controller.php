@@ -1311,6 +1311,10 @@ class TransferController extends BaseController
                 if (array_key_exists('surplus', $missed_items) && !array_key_exists('defisit', $missed_items)) {
                     $need_auto_adjust = true;
                 }
+                // avoid auto adjust if has selisih more than 20
+                if (array_key_exists('avoid_auto_adjust', $missed_items) && $missed_items['avoid_auto_adjust']) {
+                    $need_auto_adjust = false;
+                }
 				$old_status = $model->status;
                 $configs = json_decode($model->configs, true);
                 if (is_array($configs)) {
@@ -2093,7 +2097,8 @@ class TransferController extends BaseController
             }
         }
 
-        $missed_data = [];
+        $missed_data = []; $has_max_missed =  0;
+        $max_missed = 20; // maximum missed item for auto adjust
         if (count($missed_items) > 0) {
             $type_in = \Model\ActivitiesModel::TYPE_STOCK_IN;
             $type_out = \Model\ActivitiesModel::TYPE_STOCK_OUT;
@@ -2108,8 +2113,16 @@ class TransferController extends BaseController
                     } elseif ($missed_item[$type_in] < $missed_item[$type_out]) {
                         $missed_data['defisit'][$barcode] = ['barcode' => $barcode, $type_in => $missed_item[$type_in], $type_out => $missed_item[$type_out], 'selisih' => $selisih];
                     }
+                    if ($selisih > $max_missed) {
+                        $has_max_missed = $has_max_missed + 1;
+                    }
                 }
             }
+        }
+
+        $missed_data['avoid_auto_adjust'] = false;
+        if ($has_max_missed > 0) {
+            $missed_data['avoid_auto_adjust'] = true;
         }
 
         return $missed_data;
