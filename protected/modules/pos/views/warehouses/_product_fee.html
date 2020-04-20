@@ -58,7 +58,7 @@
                         <i class="fa fa-trash-o fa-2x"></i>
                     </a>
                     {% if no == prices | length %}
-                    <a href="javascript:void(0);" onclick="addItem(this, false);" attr-id="{{ product.id }}"><i class="fa fa-plus fa-2x"></i></a>
+                    <a href="javascript:void(0);" onclick="addItem2(this, false);" attr-id="{{ product.id }}"><i class="fa fa-plus fa-2x"></i></a>
                     {% endif %}
                 </div>
             </div>
@@ -92,7 +92,7 @@
         }
         return false;
     }
-    function addItem(dt, hide) {
+    function addItem2(dt, hide) {
         var id = $(dt).attr("attr-id");
         $.ajax({
             'url': '{{ "pos/warehouses/price-item" | link }}/'+id,

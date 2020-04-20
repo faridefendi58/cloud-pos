@@ -92,4 +92,32 @@ class WarehousesModel extends \Model\BaseModel
 
         return $row;
     }
+
+    public function getListWH($data = null)
+    {
+        $sql = 'SELECT t.id, t.title    
+            FROM {tablePrefix}ext_warehouse t 
+            WHERE 1';
+
+        $params = [];
+        if (is_array($data)) {
+            if (isset($data['status'])) {
+                $sql .= ' AND t.active =:status';
+                $params['status'] = $data['status'];
+            }
+        }
+
+        $sql .= ' ORDER BY t.id ASC';
+
+        $sql = str_replace(['{tablePrefix}'], [$this->_tbl_prefix], $sql);
+
+        $rows = R::getAll( $sql, $params );
+
+        $items = [];
+        foreach ($rows as $i => $row) {
+            $items[$row['id']] = $row['title'];
+        }
+
+        return $items;
+    }
 }

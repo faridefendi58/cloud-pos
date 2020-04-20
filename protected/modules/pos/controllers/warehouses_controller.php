@@ -3,6 +3,7 @@
 namespace Pos\Controllers;
 
 use Components\BaseController as BaseController;
+use Model\WarehousesModel;
 
 class WarehousesController extends BaseController
 {
@@ -686,7 +687,22 @@ class WarehousesController extends BaseController
 
         $save_counter = 0;
         if (isset($_POST['WarehouseProducts']) && count($_POST['WarehouseProducts']['product_id'])>0) {
+            $wh_mod = new WarehousesModel();
+            $list_wh = $wh_mod->getListWH(['status' => 1]);
             foreach ($_POST['WarehouseProducts']['product_id'] as $idx => $product_id) {
+                $wh_ids = [];
+                if (!empty($_POST['WarehouseProducts'][$product_id]['copy_to_whs'])) {
+                    $wh_names = explode(",", $_POST['WarehouseProducts'][$product_id]['copy_to_whs']);
+                    if (is_array($wh_names) && count($wh_names) > 0) {
+                        foreach ($wh_names as $wh_name) {
+                            $wh_id = array_search($wh_name, $list_wh);
+                            if ($wh_id > 0) {
+                                $wh_ids[$wh_id] = $wh_name;
+                            }
+                        }
+                    }
+                }
+
                 if (is_array($_POST['WarehouseProducts'][$product_id]['_qty'])) {
                     foreach ($_POST['WarehouseProducts'][$product_id]['_qty'] as $_qid => $_qval) {
                         $_qty = (int)$_POST['WarehouseProducts'][$product_id]['_qty'][$_qid];
@@ -762,6 +778,29 @@ class WarehousesController extends BaseController
                     $simpan = \Model\WarehouseProductsModel::model()->save(@$model);
                     if ($simpan) {
                         $save_counter = $save_counter + 1;
+                    }
+                }
+
+                // if copy to another wh
+                if (count($wh_ids) > 0) {
+                    foreach ($wh_ids as $_warehouse_id => $wh_name) {
+                        $model = \Model\WarehouseProductsModel::model()->findByAttributes(['product_id' => $product_id, 'warehouse_id' => $_warehouse_id]);
+                        if ($model instanceof \RedBeanPHP\OODBBean) {
+                            $model->priority = $_POST['WarehouseProducts'][$product_id]['priority'];
+                            $model->configs = json_encode($items);
+                            $model->updated_at = date("Y-m-d H:i:s");
+                            $model->updated_by = $this->_user->id;
+                            $simpan = \Model\WarehouseProductsModel::model()->update(@$model);
+                        } else {
+                            $model = new \Model\WarehouseProductsModel();
+                            $model->warehouse_id = $_warehouse_id;
+                            $model->product_id = $product_id;
+                            $model->priority = $_POST['WarehouseProducts'][$product_id]['priority'];
+                            $model->configs = json_encode($items);
+                            $model->created_at = date("Y-m-d H:i:s");
+                            $model->created_by = $this->_user->id;
+                            $simpan = \Model\WarehouseProductsModel::model()->save(@$model);
+                        }
                     }
                 }
             }

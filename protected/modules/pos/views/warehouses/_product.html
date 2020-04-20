@@ -1,3 +1,12 @@
+<link rel="stylesheet" href="{{ 'lib/select2/select2.css' | admin_asset_url }}">
+{% set whs = App.call.model("\\Model\\WarehousesModel", 'getData', {"status":1}) %}
+<ul id="wh-list" style="display: none;">
+{% for iw, wh in whs  %}
+    {% if wh.id != model.id %}
+    <li id="{{ wh.id }}">{{ wh.title }}</li>
+    {% endif %}
+{% endfor %}
+</ul>
 {% set products = App.call.model("\\Model\\ProductsModel", 'getData', {"active":1}) %}
 <form method="post" id="product-form" class="mt20" action="{{ 'pos/warehouses/product-prices' | link }}/{{ model.id }}">
     <div class="alert alert-success" style="display: none;"></div>
@@ -10,6 +19,13 @@
                 <input type="checkbox" name="WarehouseProducts[product_id][]"
                        value="{{ product.id }}" onclick="showPriceBox(this);" {% if price_data %}checked{% endif %}> <b>{{ product.title | upper }}</b>
             </label>
+        </div>
+        {% if prices %}
+        <a href="javascript:void(0);" onclick="openWhOption(this);" class="pull-right">Copy ke Warehouse lain</a>
+        {% endif %}
+        <div class="form-group padding10 copy-wh" style="display: none;">
+            <label>Copy Harga {{ product.title }} Ke Warehouse Lainnya :</label>
+            <input type="text" class="form-control s2_tokenization" name="WarehouseProducts[{{ product.id }}][copy_to_whs]" value="">
         </div>
     </div>
     <div class="col-md-12" id="price-container-{{ product.id }}" {% if not prices %}style="display: none"{% endif %}>
@@ -81,6 +97,7 @@
 <style>
     .row + .row {margin-top: 0px;}
 </style>
+<script src="{{ 'lib/select2/select2.min.js' | admin_asset_url }}"></script>
 <script type="text/javascript">
     function removePrice(dt, execute) {
         if ($(dt).parent().find('.fa-plus').parent().is(':visible')) {
@@ -143,5 +160,29 @@
 
             return false;
         });
+
+        if($('.s2_tokenization').length) {
+            var whs = new Array();
+            $('#wh-list').find('li').each(function () {
+                whs.push($(this).html());
+            });
+            $('.s2_tokenization').select2({
+                placeholder: "Select...",
+                tags:whs,
+                tokenSeparators: [",", " "]
+            });
+        }
     });
+
+    function openWhOption(dt) {
+        var copy_wh = $(dt).parent().find('.copy-wh');
+        if (copy_wh.is(":visible")) {
+            $(dt).html('Copy ke Warehouse lain');
+            copy_wh.hide();
+            copy_wh.find('.s2_tokenization').select2("val", "");
+        } else {
+            copy_wh.show();
+            $(dt).html('Jangan Copy ke WH lain');
+        }
+    }
 </script>
