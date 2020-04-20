@@ -1,0 +1,303 @@
+{% extends "layout.html" %}
+{% block pagetitle %}
+Transaksi Harian Per Warehouse - {{ App.params.site_name }}
+{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" href="{{ 'lib/bootstrap-daterangepicker/daterangepicker-bs3.css' | admin_asset_url }}">
+<link rel="stylesheet" href="https://cdn.datatables.net/1.10.20/css/jquery.dataTables.min.css">
+
+<div id="main_wrapper">
+    <div class="page_bar clearfix">
+        <div class="row">
+            <div class="col-sm-6">
+                <h1 class="page_title">
+                    {% if not warehouse %}
+                    Transaksi Harian Per Warehouse
+                    {% else %}
+                    Transaksi Harian di WH {{ warehouse.title }}
+                    {% endif %}
+                </h1>
+                <p class="text-muted">Data transaksi harian di warehouse {{ warehouse.title }}</p>
+            </div>
+            <div class="col-sm-3">
+                <select id="warehouse_from" name="Reports[warehouse_id]" class="form-control select2" onchange="selectWH(this)">
+                    <option value="0">- Pilih Warehouse -</option>
+                    {% for i, wh in warehouses %}
+                    <option value="{{ wh.id }}" {% if warehouse and warehouse.id == wh.id %}selected="selected"{% endif %}>{{ wh.title }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-sm-3 text-right">
+                <div id="reportrange" class="btn">
+                    <i class="fa fa-calendar"></i>
+                    {% if params.date_start %}
+                    <span>{{ params.date_start | date("M d, Y") }} - {{ params.date_end | date("M d, Y") }}</span> <b class="caret"></b>
+                    {% else %}
+                    <span>{{ "now" | date("M d, Y") }} - {{ "now" | date("M d, Y") }}</span> <b class="caret"></b>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="page_content">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-lg-12">
+                    <div class="panel panel-default">
+                        <div class="panel-heading">Transaksi Harian</div>
+                        <div class="panel-body" style="overflow-x: scroll;">
+                            <div class="dataTables_wrapper form-inline no-footer table-responsive mt20" role="grid">
+                                <table id="dt_basic" class="table table-bordered dataTable2" style="width:100%">
+                                    <thead>
+                                    <tr>
+                                        <th class="text-center" rowspan="2">No</th>
+                                        <th class="text-center" rowspan="2">Date</th>
+                                        <th class="text-center" rowspan="2">Customer</th>
+                                        {% for p, product in products %}
+                                        <th class="text-center" colspan="5">{{ product.product_name }}</th>
+                                        {% endfor %}
+                                        <th class="text-center" colspan="8">Payment</th>
+                                    </tr>
+                                    <tr>
+                                        {% for p, product in products %}
+                                        <th class="text-center"> >=1 </th>
+                                        <th class="text-center"> >=5 </th>
+                                        <th class="text-center"> >=10 </th>
+                                        <th class="text-center"> >=30 </th>
+                                        <th class="text-center">Price</th>
+                                        {% endfor %}
+                                        <th class="text-center">Tunai</th>
+                                        <th class="text-center">Mandiri</th>
+                                        <th class="text-center">BCA</th>
+                                        <th class="text-center">BRI</th>
+                                        <th class="text-center">Wallet Toped</th>
+                                        <th class="text-center">EDC</th>
+                                        <th class="text-center">GoPay</th>
+                                        <th class="text-center">GrabPay</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    {% set tot_payment_1 = 0 %} {% set tot_payment_2 = 0 %} {% set tot_payment_3 = 0 %} {% set tot_payment_4 = 0 %}
+                                    {% set tot_payment_5 = 0 %} {% set tot_payment_6 = 0 %} {% set tot_payment_7 = 0 %} {% set tot_payment_8 = 0 %}
+                                    {% set no = 1 %}
+                                    {% for trans_date, data in datas %}
+                                    <tr>
+                                        <td class="text-center">{{ no }}</td>
+                                        <td class="text-center" style="min-width: 100px;">{{ trans_date }}</td>
+                                        <td class="text-center" style="min-width: 100px;">{{ data.customer.name | default('-') }}</td>
+                                        {% for p, product in products %}
+                                        <td class="text-center">{% if data.products[product.product_id].min1 %}{{ data.products[product.product_id].min1 }}{% endif %}</td>
+                                        <td class="text-center">{% if data.products[product.product_id].min5 %}{{ data.products[product.product_id].min5 }}{% endif %}</td>
+                                        <td class="text-center">{% if data.products[product.product_id].min10 %}{{ data.products[product.product_id].min10 }}{% endif %}</td>
+                                        <td class="text-center">{% if data.products[product.product_id].min30 %}{{ data.products[product.product_id].min30 }}{% endif %}</td>
+                                        <td class="right">{% if data.products[product.product_id].tot_price %}{{ data.products[product.product_id].tot_price | money_format }}{% endif %}</td>
+                                        {% endfor %}
+                                        <td class="text-right">{% if data.payments[1] %}{{ data.payments[1] | money_format | default('-') }}{% endif %}</td>
+                                        <td class="text-right">{% if data.payments[2] %}{{ data.payments[2] | money_format | default('-') }}{% endif %}</td>
+                                        <td class="text-right">{% if data.payments[3] %}{{ data.payments[3] | money_format | default('-') }}{% endif %}</td>
+                                        <td class="text-right">{% if data.payments[4] %}{{ data.payments[4] | money_format | default('-') }}{% endif %}</td>
+                                        <td class="text-right">{% if data.payments[5] %}{{ data.payments[5] | money_format | default('-') }}{% endif %}</td>
+                                        <td class="text-right">{% if data.payments[6] %}{{ data.payments[6] | money_format | default('-') }}{% endif %}</td>
+                                        <td class="text-right">{% if data.payments[7] %}{{ data.payments[7] | money_format | default('-') }}{% endif %}</td>
+                                        <td class="text-right">{% if data.payments[8] %}{{ data.payments[8] | money_format | default('-') }}{% endif %}</td>
+                                        {% set tot_payment_1 = tot_payment_1 + data.payments[1] %}
+                                        {% set tot_payment_2 = tot_payment_2 + data.payments[2] %}
+                                        {% set tot_payment_3 = tot_payment_3 + data.payments[3] %}
+                                        {% set tot_payment_4 = tot_payment_4 + data.payments[4] %}
+                                        {% set tot_payment_5 = tot_payment_5 + data.payments[5] %}
+                                        {% set tot_payment_6 = tot_payment_6 + data.payments[6] %}
+                                        {% set tot_payment_7 = tot_payment_7 + data.payments[7] %}
+                                        {% set tot_payment_8 = tot_payment_8 + data.payments[8] %}
+                                    </tr>
+                                    {% set no = no + 1 %}
+                                    {% else %}
+                                    {% set tot_col = 11 + (5 * products | length) %}
+                                    <tr class="no-data">
+                                        <td colspan="{{ tot_col }}">No data founds</td>
+                                    </tr>
+                                    {% endfor %}
+                                    </tbody>
+                                    {% if datas %}
+                                    <tfoot>
+                                    <tr class="bg-info" style="font-weight: bold;">
+                                        <td class="text-bold" colspan="3">TOTAL</td>
+                                        {% set tot_prod = 5 * products | length %}
+                                        <td colspan="{{ tot_prod }}"></td>
+                                        <td class="text-right">{{ tot_payment_1 | money_format }}</td>
+                                        <td class="text-right">{{ tot_payment_2 | money_format }}</td>
+                                        <td class="text-right">{{ tot_payment_3 | money_format }}</td>
+                                        <td class="text-right">{{ tot_payment_4 | money_format }}</td>
+                                        <td class="text-right">{{ tot_payment_5 | money_format }}</td>
+                                        <td class="text-right">{{ tot_payment_6 | money_format }}</td>
+                                        <td class="text-right">{{ tot_payment_7 | money_format }}</td>
+                                        <td class="text-right">{{ tot_payment_8 | money_format }}</td>
+                                    </tr>
+                                    </tfoot>
+                                    {% endif %}
+                                </table>
+                            </div>
+                            {#<iframe id="txtArea1" style="display:none"></iframe>
+                            <button id="btnExport" onclick="fnExcelReport();">EXPORT TO EXCEL</button>#}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% include 'partial/right_menu.html' %}
+{% endblock %}
+{% block endbodyjs %}
+<script src="{{ 'lib/bootstrap-daterangepicker/daterangepicker.js' | admin_asset_url }}"></script>
+<script src="{{ 'lib/moment-js/moment.min.js' | admin_asset_url }}"></script>
+{#<script src="{{ 'lib/DataTables/media/js/jquery.dataTables.min.js' | admin_asset_url }}"></script>#}
+<script src="https://cdn.datatables.net/1.10.20/js/jquery.dataTables.min.js"></script>
+
+<script src="https://cdn.datatables.net/buttons/1.6.1/js/dataTables.buttons.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.1.3/jszip.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/pdfmake.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/vfs_fonts.js"></script>
+<script src="https://cdn.datatables.net/buttons/1.6.1/js/buttons.html5.min.js"></script>
+<script type="text/javascript">
+    $(function() {
+        initDateRage();
+        tisa_enhanced_select.init();
+    });
+
+    function initDateRage() {
+        if($('#reportrange').length) {
+            if( $(window).width() < 974 ) {
+                var dropdownPos = 'right';
+            } else {
+                var dropdownPos = 'left';
+            }
+            $('#reportrange').daterangepicker({
+                    opens: dropdownPos,
+                    ranges: {
+                        'Today': [moment(), moment()],
+                        'Yesterday': [moment().subtract('days', 1), moment().subtract('days', 1)]
+                    },
+                    startDate: moment().subtract('days', 1),
+                    endDate: moment(),
+                    buttonClasses: ['btn','btn-sm']
+                },
+                function(start, end) {
+                    $('#reportrange span').html(start.format('MMMM D, YYYY') + ' - ' + end.format('MMMM D, YYYY'));
+                    setDateRange(start, end);
+                }
+            );
+        }
+    }
+    function setDateRange(start, end) {
+        var loc = window.location;
+        var currentURL = loc.protocol + '//' + loc.host + loc.pathname;
+        var wh = gup('wh', loc);
+        if (wh && wh.length > 0) {
+            window.location.href = currentURL+'?wh='+wh+'&start='+start+'&end='+end;
+        } else {
+            window.location.href = currentURL+'?start='+start+'&end='+end;
+        }
+    }
+    function gup( name, url ) {
+        if (!url) url = location.href;
+        name = name.replace(/[\[]/,"\\\[").replace(/[\]]/,"\\\]");
+        var regexS = "[\\?&]"+name+"=([^&#]*)";
+        var regex = new RegExp( regexS );
+        var results = regex.exec( url );
+        return results == null ? null : results[1];
+    }
+    tisa_enhanced_select = {
+        init: function() {
+            if($('.select2').length) {
+                $('.select2').select2({
+                    allowClear: true,
+                    placeholder: "Select..."
+                });
+            }
+        }
+    }
+    function selectWH(dt) {
+        var loc = window.location;
+        var currentURL = loc.protocol + '//' + loc.host + loc.pathname;
+        if ($(dt).val() && parseInt($(dt).val()) > 0) {
+            var start = gup('start', loc);
+            var end = gup('end', loc);
+            if (start && start.length >0 && end && end.length > 0)
+                window.location.href = currentURL+'?wh='+$(dt).val()+'&start='+start+'&end='+end;
+            else
+                window.location.href = currentURL+'?wh='+$(dt).val();
+        }
+        return false;
+    }
+    function fnExcelReport()
+    {
+        var tab_text="<table border='2px'><tr bgcolor='#87AFC6'>";
+        var textRange; var j=0;
+        tab = document.getElementById('dt_basic'); // id of table
+
+        for(j = 0 ; j < tab.rows.length ; j++)
+        {
+            tab_text=tab_text+tab.rows[j].innerHTML+"</tr>";
+            //tab_text=tab_text+"</tr>";
+        }
+
+        tab_text=tab_text+"</table>";
+        tab_text= tab_text.replace(/<A[^>]*>|<\/A>/g, "");//remove if u want links in your table
+        tab_text= tab_text.replace(/<img[^>]*>/gi,""); // remove if u want images in your table
+        tab_text= tab_text.replace(/<input[^>]*>|<\/input>/gi, ""); // reomves input params
+
+        var ua = window.navigator.userAgent;
+        var msie = ua.indexOf("MSIE ");
+
+        if (msie > 0 || !!navigator.userAgent.match(/Trident.*rv\:11\./))      // If Internet Explorer
+        {
+            txtArea1.document.open("txt/html","replace");
+            txtArea1.document.write(tab_text);
+            txtArea1.document.close();
+            txtArea1.focus();
+            sa=txtArea1.document.execCommand("SaveAs",true,"Say Thanks to Sumit.xls");
+        }
+        else                 //other browser not tested on IE 11
+            sa = window.open('data:application/vnd.ms-excel,' + encodeURIComponent(tab_text));
+
+        return (sa);
+    }
+    $(function () {
+       if ($('.dataTable2').length > 0) {
+           var buttonCommon = {
+               exportOptions: {
+                   format: {
+                       body: function ( data, row, column, node ) {
+                           return data.includes(".") ?
+                               data.replace( /[$.]/g, '' ) :
+                               data;
+                       }
+                   }
+               }
+           };
+
+           $('.dataTable2').DataTable( {
+               dom: 'Bfrtip',
+               buttons: [
+                   'copyHtml5',
+                   //'excelHtml5',
+                   $.extend( true, {}, buttonCommon, {
+                       extend: 'excelHtml5'
+                   }),
+                   $.extend( true, {}, buttonCommon, {
+                       extend: 'csvHtml5'
+                   }),
+                   {
+                       extend: 'pdfHtml5',
+                       orientation: 'landscape',
+                       pageSize: 'LEGAL'
+                   }
+               ],
+               pageLength: 100,
+               lengthChange: true
+           } );
+       }
+    });
+</script>
+{% endblock %}

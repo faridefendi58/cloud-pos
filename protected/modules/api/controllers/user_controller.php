@@ -311,9 +311,10 @@ class UserController extends BaseController
                 $roles[$item['warehouse_id']] = [
                     'warehouse_name' => $item['warehouse_name'],
                     'warehouse_group_name' => $item['warehouse_group_name'],
-                    'warehouse_pic' => (!empty($item['warehouse_group_pic']))? json_decode($item['warehouse_group_pic'], true) : null,
+                    //'warehouse_pic' => (!empty($item['warehouse_group_pic']))? json_decode($item['warehouse_group_pic'], true) : null,
+					'role_id' => $item['role_id'],
                     'role_name' => $item['role_name'],
-                    'roles' => (!empty($item['roles']))? json_decode($item['roles'], true) : null,
+                    //'roles' => (!empty($item['roles']))? json_decode($item['roles'], true) : null,
                 ];
             }
 

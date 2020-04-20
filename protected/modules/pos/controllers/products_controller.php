@@ -178,6 +178,7 @@ class ProductsController extends BaseController
             $model->product_category_id = $_POST['Products']['product_category_id'];
             if (!empty($_POST['Products']['unit']))
                 $model->unit = $_POST['Products']['unit'];
+			$model->ordering = $_POST['Products']['ordering'];
             $model->description = $_POST['Products']['description'];
             $model->active = $_POST['Products']['active'];
             if (!empty($_POST['Products']['avoid_stock'])) {
@@ -193,6 +194,17 @@ class ProductsController extends BaseController
                 if (!empty($uploadfile)) {
                     move_uploaded_file($_FILES['Products']['tmp_name']['image'], $uploadfile);
                 }
+
+				// update also the order
+				$wh_products = \Model\WarehouseProductsModel::model()->findAllByAttributes(['product_id' => $model->id]);
+				foreach ($wh_products as $wh_product) {
+					if ($wh_product->priority != $model->ordering) {
+						$wh_product->priority = $model->ordering;
+            			$wh_product->updated_at = date("Y-m-d H:i:s");
+            			$wh_product->updated_by = $this->_user->id;
+						$update_priority = \Model\WarehouseProductsModel::model()->update($wh_product);
+					}
+				}
 
                 return $response->withJson(
                     [

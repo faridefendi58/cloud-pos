@@ -5,8 +5,9 @@
         </label>
         <div class="col-sm-6">
             <select name="PaymentForm[payment_type]" class="form-control">
-                <option value="1">Tunai</option>
-                <option value="2">Kredit</option>
+                {% for channel_code, payment_channel in payment_channels %}
+                <option value="{{ channel_code }}">{{ payment_channel.title }}</option>
+                {% endfor %}
             </select>
         </div>
     </div>

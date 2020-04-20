@@ -57,4 +57,40 @@ class AdminGroupModel extends \Model\BaseModel
 
         return false;
     }
+
+	public function getData($data = array())
+    {
+        $sql = 'SELECT t.*  
+            FROM {tablePrefix}admin_group t 
+            WHERE 1';
+
+        $params = [];
+
+        $sql .= ' ORDER BY t.id DESC';
+
+        $sql = str_replace(['{tablePrefix}'], [$this->_tbl_prefix], $sql);
+
+        $rows = R::getAll( $sql, $params );
+
+        return $rows;
+    }
+
+	public function getItem($data = array())
+    {
+        $sql = 'SELECT t.*  
+            FROM {tablePrefix}admin_group t 
+            WHERE 1';
+
+        $params = [];
+		if (isset($data['id'])) {
+			$sql .= ' AND t.id =:id';
+            $params['id'] = $data['id'];
+		}
+
+        $sql = str_replace(['{tablePrefix}'], [$this->_tbl_prefix], $sql);
+
+        $row = R::getRow( $sql, $params );
+
+        return $row;
+    }
 }

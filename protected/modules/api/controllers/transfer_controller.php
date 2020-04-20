@@ -847,12 +847,30 @@ class TransferController extends BaseController
 						if ($result['data']['related']['type'] == \Model\ActivitiesModel::TYPE_TRANSFER_RECEIPT) {
 							$result['data']['related']['issue_number'] = $rel_result_data['tr_number'];
 							$result['data']['related']['detail'] = $rel_result_data;
+							if (strlen($result['data']['detail']['notes']) < strlen($result['data']['related']['configs']['notes'])) {
+								$result['data']['detail']['notes'] = $result['data']['related']['configs']['notes'];
+								$result['data']['configs']['notes'] = $result['data']['related']['configs']['notes'];
+							}
 						}
 					}
 				}
 			} elseif ($result_data['type'] == \Model\ActivitiesModel::TYPE_INVENTORY_ISSUE) {
 				$mdl = new \Model\InventoryIssuesModel();
 				$detail = $mdl->getDetail($result_data['rel_id']);
+				if (array_key_exists('type', $detail)) {
+					$ext_pos = $this->_container->get('settings')['params']['ext_pos'];
+					if (!empty($ext_pos)) {
+						$ext_pos = json_decode($ext_pos, true);
+						if (is_array($ext_pos) && array_key_exists('non_transaction_type', $ext_pos)) {
+							$types = $ext_pos['non_transaction_type'];
+							if (array_key_exists($detail['type'], $types)) {
+								$detail['type_name'] = $types[$detail['type']];
+							} else {
+								$detail['type_name'] = ucwords(str_replace("_", " ", $detail['type']));
+							}
+						}
+					}
+				}
 				$result['data']['issue_number'] = $detail['ii_number'];
 				$result['data'] = $result_data;
 				$result['data']['detail'] = $detail;
@@ -904,6 +922,10 @@ class TransferController extends BaseController
 						if ($result['data']['related']['type'] == \Model\ActivitiesModel::TYPE_TRANSFER_ISSUE) {
 							$result['data']['related']['issue_number'] = $rel_result_data['ti_number'];
 							$result['data']['related']['detail'] = $rel_result_data;
+							if (strlen($result['data']['detail']['notes']) < strlen($result['data']['related']['configs']['notes'])) {
+								$result['data']['detail']['notes'] = $result['data']['related']['configs']['notes'];
+								$result['data']['configs']['notes'] = $result['data']['related']['configs']['notes'];
+							}
 						}
 					}
 				}
@@ -964,6 +986,18 @@ class TransferController extends BaseController
 				}
 				$result_data['issue_number'] = $detail['po_number'];
 				$result['data'] = $result_data;
+				if (array_key_exists('supplier_id', $detail)) {
+					$sup_model = \Model\SuppliersModel::model()->findByPk($detail['supplier_id']);
+					if ($sup_model instanceof \RedBeanPHP\OODBBean) {
+						$sup_configs = $sup_model->configs;
+						if (!empty($sup_configs)) {
+							$sup_configs = json_decode($sup_configs, true);
+							if (array_key_exists('use_default_price', $sup_configs)) {
+								$detail['use_default_price'] = 1;
+							}
+						}
+					}
+				}
 				$result['data']['detail'] = $detail;
 			}
         }
@@ -1090,6 +1124,12 @@ class TransferController extends BaseController
                                 $notif_params['rel_activity'] = 'PurchaseDetailActivity';
                                 $notif_params['warehouse_id'] = $act_model2->warehouse_id;
                                 $this->_sendNotification($notif_params);
+								//fcm notice
+								$targets = ['fcm_cashier_'. $act_model2->warehouse_id];
+								foreach ($targets as $i => $target) {
+									$fcm_data = ['rel_activity' => 'PurchaseDetailActivity', 'rel_id' => $act_model2->id, 'rel_type' => \Model\NotificationsModel::TYPE_STOCK_OUT, 'warehouse_id' => $act_model2->warehouse_id];
+									$this->sendFCMNotification("Verifikasi Stok Keluar", "Mohon verifikasi stok keluar dari " . $wh_mod->title, $fcm_data, $target);
+								}
                             }
                         }
                     }
@@ -1225,6 +1265,13 @@ class TransferController extends BaseController
                                 $notif_params['rel_activity'] = 'PurchaseDetailActivity';
                                 $notif_params['warehouse_id'] = $act_model2->warehouse_id;
                                 $this->_sendNotification($notif_params);
+
+								//fcm notice
+								$targets = ['fcm_cashier_'. $act_model2->warehouse_id];
+								foreach ($targets as $i => $target) {
+									$fcm_data = ['rel_activity' => 'PurchaseDetailActivity', 'rel_id' => $act_model2->id, 'rel_type' => \Model\NotificationsModel::TYPE_STOCK_IN, 'warehouse_id' => $act_model2->warehouse_id];
+									$this->sendFCMNotification("Verifikasi Stok Masuk", "Mohon verifikasi stok masuk dari " . $wh_mod->title, $fcm_data, $target);
+								}
                             }
                         }
                     }
@@ -1305,7 +1352,10 @@ class TransferController extends BaseController
 					}
 
                     if (isset($params['notes'])) {
-                        $configs['notes'] .= "\n". $amodel->name ." : ". $params['notes'];
+                        $_note = $amodel->name ." : ". $params['notes'];
+                        if (strpos($configs['notes'], $_note) === false) {
+                            $configs['notes'] .= "\n" . $_note;
+                        }
                     }
 
                     $model->configs = json_encode($configs);
@@ -1458,13 +1508,135 @@ class TransferController extends BaseController
                             if (count($notif_params['recipients']) > 0) {
                                 $notif_params['message'] = "Verifikasi Sengketa Stok Transfer";
                                 $notif_params['message'] .= "Dengan data : " . $model->description;
-                                $notif_params['rel_type'] = \Model\NotificationsModel::TYPE_STOCK_OUT;
+                                $notif_params['rel_type'] = ($model->type == \Model\ActivitiesModel::TYPE_STOCK_OUT)? \Model\NotificationsModel::TYPE_STOCK_OUT : \Model\NotificationsModel::TYPE_STOCK_IN;
                                 $notif_params['rel_id'] = $model->id;
 
-                                $notif_params['issue_number'] = "OUT-NEEDCHECK";
+                                $notif_params['issue_number'] = ($model->type == \Model\ActivitiesModel::TYPE_STOCK_OUT)? "OUT-NEEDCHECK" : "IN-NEEDCHECK";
                                 $notif_params['rel_activity'] = 'PurchaseDetailActivity';
                                 $notif_params['warehouse_id'] = $model->warehouse_id;
                                 $this->_sendNotification($notif_params);
+                            }
+
+                            //fcm notice
+                            $wh_model = \Model\WarehousesModel::model()->findByPk($model->id);
+                            $fcm_data = [
+                                'rel_activity' => 'PurchaseDetailActivity',
+                                'rel_id' => $model->id,
+                                'rel_type' => ($model->type == \Model\ActivitiesModel::TYPE_STOCK_OUT)? \Model\NotificationsModel::TYPE_STOCK_OUT : \Model\NotificationsModel::TYPE_STOCK_IN,
+                                'warehouse_id' => $model->warehouse_id
+                            ];
+                            $this->sendFCMNotification("Verifikasi Sengketa Stok", "Mohon verifikasi sengketa stok transfer " . $wh_model->title, $fcm_data, 'fcm_manager_'. $model->warehouse_id);
+
+                            // send notification in both side
+                            if (!isset($params['update_related']) || $params['update_related'] == 0) {
+                                if ($model->type == \Model\ActivitiesModel::TYPE_STOCK_OUT) {
+                                    $in_model = \Model\ActivitiesModel::model()->findByAttributes(['group_id' => $model->group_id, 'type' => \Model\ActivitiesModel::TYPE_STOCK_IN]);
+                                    // update notes
+                                    $_in_configs = json_decode($in_model->configs, true);
+                                    $_out_configs = json_decode($model->configs, true);
+                                    if (strlen($_in_configs['notes']) < strlen($_out_configs['notes'])) {
+                                        $_in_configs['notes'] = $_out_configs['notes'];
+                                        $in_model->configs = json_encode($_in_configs);
+                                        $in_update = \Model\ActivitiesModel::model()->update($in_model);
+                                    }
+
+                                    $whs_models = $wh_mod->getManagers(['warehouse_id' => $in_model->warehouse_id]);
+                                    $notif_params['recipients'] = [];
+                                    foreach ($whs_models as $i => $whs_model) {
+                                        array_push($notif_params['recipients'], $whs_model['admin_id']);
+                                    }
+
+                                    if (count($notif_params['recipients']) > 0) {
+                                        $notif_params['message'] = "Verifikasi Sengketa Stok Transfer";
+                                        $notif_params['message'] .= "Dengan data : " . $in_model->description;
+                                        $notif_params['rel_type'] = \Model\NotificationsModel::TYPE_STOCK_IN;
+                                        $notif_params['rel_id'] = $in_model->id;
+
+                                        $notif_params['issue_number'] = "IN-NEEDCHECK";
+                                        $notif_params['rel_activity'] = 'PurchaseDetailActivity';
+                                        $notif_params['warehouse_id'] = $in_model->warehouse_id;
+                                        $this->_sendNotification($notif_params);
+                                    }
+
+									// send notice jg ke staff terkait adanya sengketa
+									$_whs_model = new \Model\WarehouseStaffsModel();
+									$whs_models = $wh_mod->getStockVerifiers(['warehouse_id' => $in_model->warehouse_id]);
+									$notif_params['recipients'] = [];
+				                    foreach ($whs_models as $whs_model) {
+										array_push($notif_params['recipients'], $whs_model['admin_id']);
+				                    }
+
+				                    if (count($notif_params['recipients']) > 0) {
+				                        $wh_mod = \Model\WarehousesModel::model()->findByPk($in_model->warehouse_id);
+				                        $notif_params['message'] = "Transfer Stok Menunggu Verifikasi Manager";
+				                        $notif_params['rel_type'] = \Model\NotificationsModel::TYPE_STOCK_IN;
+				                        $notif_params['rel_id'] = $in_model->id;
+
+				                        $notif_params['issue_number'] = "IN-NEEDCHECK";
+                                        $notif_params['rel_activity'] = 'PurchaseDetailActivity';
+                                        $notif_params['warehouse_id'] = $in_model->warehouse_id;
+				                        $this->_sendNotification($notif_params);
+										//fcm notice
+										$targets = ['fcm_cashier_'. $in_model->warehouse_id];
+										foreach ($targets as $i => $target) {
+											$fcm_data = ['rel_activity' => 'PurchaseDetailActivity', 'rel_id' => $in_model->id, 'rel_type' => \Model\NotificationsModel::TYPE_STOCK_IN, 'warehouse_id' => $in_model->warehouse_id];
+											$this->sendFCMNotification("Menunggu Verifikasi Manager", "Proses transfer stok masih menunggu verifikasi manager karena terdapat perbedaan data.", $fcm_data, $target);
+										}
+				                    }
+                                } elseif ($model->type == \Model\ActivitiesModel::TYPE_STOCK_IN) {
+                                    $out_model = \Model\ActivitiesModel::model()->findByAttributes(['group_id' => $model->group_id, 'type' => \Model\ActivitiesModel::TYPE_STOCK_OUT]);
+                                    // update notes
+                                    $_out_configs = json_decode($out_model->configs, true);
+                                    $_in_configs = json_decode($model->configs, true);
+                                    if (strlen($_out_configs['notes']) < strlen($_in_configs['notes'])) {
+                                        $_out_configs['notes'] = $_in_configs['notes'];
+                                        $out_model->configs = json_encode($_out_configs);
+                                        $out_update = \Model\ActivitiesModel::model()->update($out_model);
+                                    }
+                                    $whs_models = $wh_mod->getManagers(['warehouse_id' => $out_model->warehouse_id]);
+                                    $notif_params['recipients'] = [];
+                                    foreach ($whs_models as $i => $whs_model) {
+                                        array_push($notif_params['recipients'], $whs_model['admin_id']);
+                                    }
+
+                                    if (count($notif_params['recipients']) > 0) {
+                                        $notif_params['message'] = "Verifikasi Sengketa Stok Transfer";
+                                        $notif_params['message'] .= "Dengan data : " . $out_model->description;
+                                        $notif_params['rel_type'] = \Model\NotificationsModel::TYPE_STOCK_OUT;
+                                        $notif_params['rel_id'] = $out_model->id;
+
+                                        $notif_params['issue_number'] = "OUT-NEEDCHECK";
+                                        $notif_params['rel_activity'] = 'PurchaseDetailActivity';
+                                        $notif_params['warehouse_id'] = $out_model->warehouse_id;
+                                        $this->_sendNotification($notif_params);
+                                    }
+
+									// send notice jg ke staff terkait adanya sengketa
+									$_whs_model = new \Model\WarehouseStaffsModel();
+									$whs_models = $wh_mod->getStockVerifiers(['warehouse_id' => $out_model->warehouse_id]);
+									$notif_params['recipients'] = [];
+				                    foreach ($whs_models as $whs_model) {
+										array_push($notif_params['recipients'], $whs_model['admin_id']);
+				                    }
+
+				                    if (count($notif_params['recipients']) > 0) {
+				                        $wh_mod = \Model\WarehousesModel::model()->findByPk($out_model->warehouse_id);
+				                        $notif_params['message'] = "Transfer Stok Menunggu Verifikasi Manager";
+				                        $notif_params['rel_type'] = \Model\NotificationsModel::TYPE_STOCK_OUT;
+				                        $notif_params['rel_id'] = $out_model->id;
+
+				                        $notif_params['issue_number'] = "IN-NEEDCHECK";
+                                        $notif_params['rel_activity'] = 'PurchaseDetailActivity';
+                                        $notif_params['warehouse_id'] = $out_model->warehouse_id;
+				                        $this->_sendNotification($notif_params);
+										//fcm notice
+										$targets = ['fcm_cashier_'. $out_model->warehouse_id];
+										foreach ($targets as $i => $target) {
+											$fcm_data = ['rel_activity' => 'PurchaseDetailActivity', 'rel_id' => $out_model->id, 'rel_type' => \Model\NotificationsModel::TYPE_STOCK_OUT, 'warehouse_id' => $out_model->warehouse_id];
+											$this->sendFCMNotification("Menunggu Verifikasi Manager", "Proses transfer stok masih menunggu verifikasi manager karena terdapat perbedaan data.", $fcm_data, $target);
+										}
+				                    }
+                                }
                             }
                         } catch (\Exception $e){}
                     }
@@ -1539,7 +1711,7 @@ class TransferController extends BaseController
      */
     private function create_real_issue($model, $admin_id, $checked_by_manager) {
         if (!empty($model->configs)) {
-            $in_model = null;
+            $in_model = null; $avoid_fcm = $model->warehouse_id;
             if ($model->type == \Model\ActivitiesModel::TYPE_STOCK_OUT) {
                 // find the stock in
                 $in_model = \Model\ActivitiesModel::model()->findByAttributes(['group_id' => $model->group_id, 'type' => \Model\ActivitiesModel::TYPE_STOCK_IN]);
@@ -1624,7 +1796,64 @@ class TransferController extends BaseController
                 $update1 = \Model\ActivitiesModel::model()->update(@$model);
                 if ($update1) {
                     try {
+                        $wh_mod = \Model\WarehousesModel::model()->findByPk($configs['warehouse_from']);
+                        $wh_to_mod = \Model\WarehousesModel::model()->findByPk($configs['warehouse_to']);
+
                         $substract_stock = \Pos\Controllers\TransfersController::_substract_stock(['ti_id' => $ti_model->id, 'admin_id' => $admin_id]);
+                        $notif_params = [];
+                        $notif_params['recipients'] = [];
+                        $_whs_model = new \Model\WarehouseStaffsModel();
+                        $whs_models = $_whs_model->getStockVerifiers(['warehouse_id' => $model->warehouse_id]);
+                        foreach ($whs_models as $whs_model) {
+                            array_push($notif_params['recipients'], $whs_model['admin_id']);
+                        }
+
+                        if (count($notif_params['recipients']) > 0) {
+                            $notif_params['message'] = "Stok keluar dari " . $wh_mod->title . " ke ". $wh_to_mod->title ." telah diverifikasi ";
+                            $notif_params['message'] .= "dengan data : " . $model->description;
+                            $notif_params['rel_type'] = \Model\NotificationsModel::TYPE_STOCK_OUT;
+                            $notif_params['rel_id'] = $model->id;
+
+                            $notif_params['issue_number'] = $ti_model->ti_number;
+                            $notif_params['rel_activity'] = 'PurchaseDetailActivity';
+                            $notif_params['warehouse_id'] = $model->warehouse_id;
+                            $this->_sendNotification($notif_params);
+
+                            //fcm notice
+							if ($checked_by_manager || ($model->warehouse_id != $avoid_fcm)) {
+		                        $targets = ['fcm_cashier_'. $model->warehouse_id];
+		                        foreach ($targets as $i => $target) {
+		                            $fcm_data = ['rel_activity' => 'PurchaseDetailActivity', 'rel_id' => $model->id, 'rel_type' => \Model\NotificationsModel::TYPE_STOCK_OUT, 'warehouse_id' => $model->warehouse_id];
+		                            $this->sendFCMNotification("Stok Terverifikasi", $notif_params['message'], $fcm_data, $target);
+		                        }
+							}
+                        }
+
+                        // also send to manager
+                        $notif_params['recipients'] = [];
+                        $whs_models = $_whs_model->getManagers(['warehouse_id' => $model->warehouse_id]);
+                        foreach ($whs_models as $i => $whs_model) {
+                            array_push($notif_params['recipients'], $whs_model['admin_id']);
+                        }
+
+                        if (count($notif_params['recipients']) > 0) {
+                            $notif_params['message'] = "Stok keluar dari " . $wh_mod->title . " ke ". $wh_to_mod->title ." telah diverifikasi ";
+                            $notif_params['message'] .= "dengan data : " . $model->description;
+                            $notif_params['rel_type'] = \Model\NotificationsModel::TYPE_STOCK_OUT;
+                            $notif_params['rel_id'] = $model->id;
+
+                            $notif_params['issue_number'] = $ti_model->ti_number;
+                            $notif_params['rel_activity'] = 'PurchaseDetailActivity';
+                            $notif_params['warehouse_id'] = $model->warehouse_id;
+                            $this->_sendNotification($notif_params);
+
+                            //fcm notice
+                            $targets = ['fcm_manager_'. $model->warehouse_id];
+                            foreach ($targets as $i => $target) {
+                                $fcm_data = ['rel_activity' => 'PurchaseDetailActivity', 'rel_id' => $model->id, 'rel_type' => \Model\NotificationsModel::TYPE_STOCK_OUT, 'warehouse_id' => $model->warehouse_id];
+                                $this->sendFCMNotification("Stok Keluar Terverifikasi Otomatis", $notif_params['message'], $fcm_data, $target);
+                            }
+                        }
                     } catch (\Exception $e) {
                         var_dump($e->getMessage());
                     }
@@ -1633,7 +1862,11 @@ class TransferController extends BaseController
                 if ($in_model instanceof \RedBeanPHP\OODBBean) {
                     $act_model = new \Model\ActivitiesModel();
                     $latest_group_id = $act_model->getLatestGroupId();
-                    $this->create_real_receipt($ti_model->id, $in_model, $latest_group_id, $admin_id, $checked_by_manager);
+					$dont_fcm = false;
+					if (!$checked_by_manager && $in_model->warehouse_id == $avoid_fcm) {
+						$dont_fcm = true;
+					}
+                    $this->create_real_receipt($ti_model->id, $in_model, $latest_group_id, $admin_id, $checked_by_manager, $dont_fcm);
                 }
             }
         }
@@ -1641,7 +1874,7 @@ class TransferController extends BaseController
         return false;
     }
 
-    private function create_real_receipt($ti_id, $act_model, $latest_group_id, $admin_id, $checked_by_manager) {
+    private function create_real_receipt($ti_id, $act_model, $latest_group_id, $admin_id, $checked_by_manager, $dont_fcm) {
         $rmodel = \Model\TransferReceiptsModel::model()->findByAttributes(['ti_id' => $ti_id]);
         if (!$rmodel instanceof \RedBeanPHP\OODBBean) {
             $model = new \Model\TransferReceiptsModel();
@@ -1730,6 +1963,64 @@ class TransferController extends BaseController
                 $act_model->updated_at = date("Y-m-d H:i:s");
                 $act_model->updated_by = $admin_id;
                 $update_status_act = \Model\ActivitiesModel::model()->update($act_model);
+                if ($update_status_act) {
+                    $notif_params = [];
+                    $notif_params['recipients'] = [];
+                    $_whs_model = new \Model\WarehouseStaffsModel();
+                    $whs_models = $_whs_model->getStockVerifiers(['warehouse_id' => $act_model->warehouse_id]);
+                    foreach ($whs_models as $whs_model) {
+                        array_push($notif_params['recipients'], $whs_model['admin_id']);
+                    }
+
+                    if (count($notif_params['recipients']) > 0) {
+                        $wh_mod = \Model\WarehousesModel::model()->findByPk($act_model->warehouse_id);
+                        $notif_params['message'] = "Stok masuk ke " . $wh_mod->title  ." telah terverifikasi ";
+                        $notif_params['message'] .= "dengan data : " . $act_model->description;
+                        $notif_params['rel_type'] = \Model\NotificationsModel::TYPE_STOCK_IN;
+                        $notif_params['rel_id'] = $act_model->id;
+
+                        $notif_params['issue_number'] = $model->tr_number;
+                        $notif_params['rel_activity'] = 'PurchaseDetailActivity';
+                        $notif_params['warehouse_id'] = $act_model->warehouse_id;
+                        $this->_sendNotification($notif_params);
+
+                        //fcm notice
+                        $targets = ['fcm_cashier_'. $act_model->warehouse_id];
+                        foreach ($targets as $i => $target) {
+                            $fcm_data = ['rel_activity' => 'PurchaseDetailActivity', 'rel_id' => $act_model->id, 'rel_type' => \Model\NotificationsModel::TYPE_STOCK_IN, 'warehouse_id' => $act_model->warehouse_id];
+                            $this->sendFCMNotification("Stok Terverifikasi", $notif_params['message'], $fcm_data, $target);
+                        }
+                    }
+
+                    // also send to manager
+                    $notif_params['recipients'] = [];
+                    $whs_models = $_whs_model->getManagers(['warehouse_id' => $act_model->warehouse_id]);
+                    foreach ($whs_models as $i => $whs_model) {
+                        array_push($notif_params['recipients'], $whs_model['admin_id']);
+                    }
+
+                    if (count($notif_params['recipients']) > 0) {
+                        $wh_mod = \Model\WarehousesModel::model()->findByPk($act_model->warehouse_id);
+                        $notif_params['message'] = "Stok masuk ke " . $wh_mod->title  ." telah terverifikasi otomatis ";
+                        $notif_params['message'] .= "dengan data : " . $act_model->description;
+                        $notif_params['rel_type'] = \Model\NotificationsModel::TYPE_STOCK_IN;
+                        $notif_params['rel_id'] = $act_model->id;
+
+                        $notif_params['issue_number'] = $model->tr_number;
+                        $notif_params['rel_activity'] = 'PurchaseDetailActivity';
+                        $notif_params['warehouse_id'] = $act_model->warehouse_id;
+                        $this->_sendNotification($notif_params);
+
+                        //fcm notice
+						if (!$dont_fcm) {
+		                    $targets = ['fcm_cashier_'. $act_model->warehouse_id];
+		                    foreach ($targets as $i => $target) {
+		                        $fcm_data = ['rel_activity' => 'PurchaseDetailActivity', 'rel_id' => $act_model->id, 'rel_type' => \Model\NotificationsModel::TYPE_STOCK_IN, 'warehouse_id' => $act_model->warehouse_id];
+		                        $this->sendFCMNotification("Stok Masuk Terverifikasi Otomatis", $notif_params['message'], $fcm_data, $target);
+		                    }
+						}
+                    }
+                }
 
                 if ($tot_quantity > 0) {
                     // directly add to wh stock

@@ -17,7 +17,7 @@
             <select id="role_id" name="WarehouseStaffs[role_id][]" class="form-control select2-again">
                 <option value="0">-</option>
                 {% for i, role in roles %}
-                <option value="{{ role.id }}">{{ role.title }}</option>
+                <option value="{{ role.id }}">{{ role.name }}</option>
                 {% endfor %}
             </select>
         </div>

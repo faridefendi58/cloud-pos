@@ -514,13 +514,14 @@ class TransactionsController extends BaseController
             if (empty($_SESSION['items_payment'])) {
                 $_SESSION['items_payment'] = [];
                 if ($params['PaymentForm']['payment_type'] == 1) {
-                    $pays = [
-                        'type' => 'cash_receive',
-                        'amount_tendered' => $this->money_unformat($params['PaymentForm']['amount_tendered']),
-                        'change_due' => 0
-                        ];
-                    array_push($_SESSION['items_payment'], $pays);
+
                 }
+                $pays = [
+                    'type' => $params['PaymentForm']['payment_type'],
+                    'amount_tendered' => $this->money_unformat($params['PaymentForm']['amount_tendered']),
+                    'change_due' => 0
+                ];
+                array_push($_SESSION['items_payment'], $pays);
             }
 
             // avoid double execution
@@ -645,13 +646,26 @@ class TransactionsController extends BaseController
                         $errors = \Model\OrdersModel::model()->getErrors(true, true);
                     }
                 }
+                // save payment history
+                foreach ($_SESSION['items_payment'] as $ip => $pymnt) {
+                    $ph_model = new \Model\PaymentHistoryModel();
+                    $pc_model = new \Model\PaymentChannelsModel();
+                    $channel_ids = $pc_model->getChannelIds();
+                    $ph_model->invoice_id = $invoice_id;
+                    $ph_model->channel_id = $channel_ids[$pymnt['type']]['id'];
+                    $ph_model->amount = $pymnt['amount_tendered'];
+                    $ph_model->change_due = $pymnt['change_due'];
+                    $ph_model->created_at = date("Y-m-d H:i:s");
+                    $ph_model->updated_at = date("Y-m-d H:i:s");
+                    $save_ph = \Model\PaymentHistoryModel::model()->save($ph_model);
+                }
                 if ($success) {
                     unset($_SESSION['items_belanja']);
                     unset($_SESSION['items_payment']);
                     unset($_SESSION['customer']);
                     unset($_SESSION['promocode']);
-                    unset($_SESSION['transaction_type']);
-                    unset($_SESSION['warehouse_id']);
+                    //unset($_SESSION['transaction_type']);
+                    //unset($_SESSION['warehouse_id']);
                 }
             }
 
@@ -662,11 +676,15 @@ class TransactionsController extends BaseController
                 ], 201);
         }
 
+        $pc_model = new \Model\PaymentChannelsModel();
+        $payment_channels = $pc_model->getChannelIds();
+
         return $this->_container->module->render(
             $response,
             'transactions/_payment.html',
             [
-                'sub_total' => $this->getSubTotal()
+                'sub_total' => $this->getSubTotal(),
+                'payment_channels' => $payment_channels
             ]);
     }
 

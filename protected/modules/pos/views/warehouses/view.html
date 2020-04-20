@@ -41,7 +41,6 @@ Warehouse - {{ App.params.site_name }}
                                                 <th>Nama Warehouse</th>
                                                 <th>Alamat</th>
                                                 <th>Group/Coverage</th>
-                                                <th>PIC</th>
                                                 <th width="50px">&nbsp;</th>
                                             </tr>
                                             </thead>
@@ -49,26 +48,13 @@ Warehouse - {{ App.params.site_name }}
                                             {% for i, warehouse in warehouses %}
                                             <tr>
                                                 <td><center>{{ i + 1 }}</center></td>
-                                                <td>{{ warehouse.title }}</td>
+                                                <td><a href="{{ 'pos/warehouses/update' | link }}/{{ warehouse.id }}" title="Ubah Warehouse">{{ warehouse.title }}</a></td>
                                                 <td>{{ warehouse.address }}<br/>Phone : {{ warehouse.phone | default('-') }}</td>
                                                 <td>
                                                     {% if warehouse.group_name %}
                                                         <a href="{{ 'pos/warehouses/group/update' | link }}/{{ warehouse.group_id }}" target="_blank">
                                                             {{ warehouse.group_name | default('-') }}
                                                         </a>
-                                                    {% else %}
-                                                    -
-                                                    {% endif %}
-                                                </td>
-                                                <td>
-                                                    {% if warehouse.group_pic %}
-                                                    {% set pics = warehouse.group_pic | json_decode %}
-                                                    {% set idx = 0 %}
-                                                    {% for pid, pic in pics %}
-                                                    {% if idx > 0 %}, {% endif %}
-                                                    <a href="{{ 'pos/users/update' | link }}/{{ pid }}" target="_blank">{{ pic.name }}</a>
-                                                    {% set idx = idx + 1 %}
-                                                    {% endfor %}
                                                     {% else %}
                                                     -
                                                     {% endif %}

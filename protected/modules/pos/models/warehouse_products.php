@@ -100,4 +100,31 @@ class WarehouseProductsModel extends \Model\BaseModel
 
         return $row['current_cost'];
     }
+
+    public function getWhProducts($data = [])
+    {
+        $sql = 'SELECT t.product_id, p.title AS product_name      
+            FROM {tablePrefix}ext_warehouse_product t 
+            LEFT JOIN {tablePrefix}ext_product p ON p.id = t.product_id 
+            WHERE 1';
+
+        $params = [];
+        if (isset($data['warehouse_id'])) {
+            $sql .= ' AND t.warehouse_id =:warehouse_id';
+            $params['warehouse_id'] = $data['warehouse_id'];
+        }
+
+        if (isset($data['product_id'])) {
+            $sql .= ' AND t.product_id =:product_id';
+            $params['product_id'] = $data['product_id'];
+        }
+
+        $sql .= ' GROUP BY t.product_id ORDER BY t.product_id ASC';
+
+        $sql = str_replace(['{tablePrefix}'], [$this->_tbl_prefix], $sql);
+
+        $rows = R::getAll( $sql, $params );
+
+        return $rows;
+    }
 }

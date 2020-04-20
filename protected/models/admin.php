@@ -30,7 +30,7 @@ class AdminModel extends \Model\BaseModel
             ['username', 'length', 'min'=>3, 'max'=>32],
             ['username, email', 'unique'],
             ['password', 'required', 'on'=>'create'],
-            ['password', 'length', 'min'=>8, 'on'=>'create'],
+            ['password', 'length', 'min'=>6, 'on'=>'create'],
             ['email', 'email'],
             ['group_id', 'numerical'],
         ];
@@ -43,7 +43,17 @@ class AdminModel extends \Model\BaseModel
 
     public function getListGroup()
     {
-        return [1=>'Administrator', 2=>'Staff'];
+		$sql = 'SELECT t.id, t.name 
+          FROM tbl_admin_group t 
+          WHERE 1';
+
+        $rows = R::getAll( $sql );
+		$items = [];
+		foreach ($rows as $row) {
+			$items[$row['id']] = $row['name'];
+		}
+
+        return $items;
     }
 
     public function getGroup($group_id)

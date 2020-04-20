@@ -33,11 +33,11 @@ class WarehouseStaffsModel extends \Model\BaseModel
     public function getData($data = array())
     {
         $sql = 'SELECT t.*, a.name AS admin_name, w.title AS warehouse_name, 
-            ab.name AS admin_creator_name, r.title AS role_name, r.roles AS roles, 
+            ab.name AS admin_creator_name, r.name AS role_name, 
             g.id AS wh_group_id, g.title AS warehouse_group_name, g.pic AS warehouse_group_pic     
             FROM {tablePrefix}ext_warehouse_staff t 
             LEFT JOIN {tablePrefix}ext_warehouse w ON w.id = t.warehouse_id 
-            LEFT JOIN {tablePrefix}ext_warehouse_staff_role r ON r.id = t.role_id 
+            LEFT JOIN {tablePrefix}admin_group r ON r.id = t.role_id 
             LEFT JOIN {tablePrefix}ext_warehouse_group g ON g.id = w.group_id  
             LEFT JOIN {tablePrefix}admin a ON a.id = t.admin_id  
             LEFT JOIN {tablePrefix}admin ab ON ab.id = t.created_by   

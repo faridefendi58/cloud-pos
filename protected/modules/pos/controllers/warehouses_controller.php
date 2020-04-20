@@ -391,7 +391,7 @@ class WarehousesController extends BaseController
         }
 
         $wsmodel = new \Model\WarehouseStaffsModel();
-        $staffs = $wsmodel->getData($args['id']);
+        $staffs = $wsmodel->getData(['warehouse_id' => $args['id']]);
 
         $wmodel = \Model\WarehousesModel::model()->findByPk($args['id']);
 
@@ -399,7 +399,8 @@ class WarehousesController extends BaseController
         $admins = $amodel->getData(['status' => \Model\AdminModel::STATUS_ACTIVE]);
 
         $rmodel = new \Model\WarehouseStaffRolesModel();
-        $roles = $rmodel->getData();
+        $agmodel = new \Model\AdminGroupModel();
+        $roles = $agmodel->getData();
         $rules = $rmodel->getRules();
 
         return $this->_container->module->render(
@@ -432,7 +433,8 @@ class WarehousesController extends BaseController
         $amodel = new \Model\AdminModel();
         $admins = $amodel->getData(['status' => \Model\AdminModel::STATUS_ACTIVE]);
         $rmodel = new \Model\WarehouseStaffRolesModel();
-        $roles = $rmodel->getData();
+		$agmodel = new \Model\AdminGroupModel();
+        $roles = $agmodel->getData();
 
         if (isset($_POST['WarehouseStaffs'])) {
             $success = 0;

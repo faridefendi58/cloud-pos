@@ -23,7 +23,7 @@
                     <select id="role_id" name="WarehouseStaffs[role_id][]" class="form-control select2">
                         <option value="0">-</option>
                         {% for i, role in roles %}
-                        <option value="{{ role.id }}" {% if staff.role_id == role.id %}selected="selected"{% endif %}>{{ role.title }}</option>
+                        <option value="{{ role.id }}" {% if staff.role_id == role.id %}selected="selected"{% endif %}>{{ role.name }}</option>
                         {% endfor %}
                     </select>
                 </div>

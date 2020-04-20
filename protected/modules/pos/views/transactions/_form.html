@@ -21,6 +21,7 @@
                 <div class="col-md-8">
                     {% set warehouses = App.call.model("\\Model\\WarehousesModel", 'getData', {'status':1}) %}
                     <select class="form-control" onchange="transaction.setWarehouse(this);" name="warehouse_id" id="warehouse-id">
+                        <option value="">Pilih Warehouse</option>
                         {% for i, warehouse in warehouses %}
                         <option value="{{ warehouse.id }}" {% if warehouse.id == warehouse_id %}selected="selected"{% endif %}>{{ warehouse.title }}</option>
                         {% endfor %}
