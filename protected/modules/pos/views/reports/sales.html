@@ -56,6 +56,7 @@ Transaksi Harian Per Warehouse - {{ App.params.site_name }}
                                         <th class="text-center" colspan="5">{{ product.product_name }}</th>
                                         {% endfor %}
                                         <th class="text-center" colspan="8">Payment</th>
+                                        <th class="text-center" rowspan="2">Fee</th>
                                     </tr>
                                     <tr>
                                         {% for p, product in products %}
@@ -78,6 +79,7 @@ Transaksi Harian Per Warehouse - {{ App.params.site_name }}
                                     <tbody>
                                     {% set tot_payment_1 = 0 %} {% set tot_payment_2 = 0 %} {% set tot_payment_3 = 0 %} {% set tot_payment_4 = 0 %}
                                     {% set tot_payment_5 = 0 %} {% set tot_payment_6 = 0 %} {% set tot_payment_7 = 0 %} {% set tot_payment_8 = 0 %}
+                                    {% set tot_fee = 0 %}
                                     {% for trans_date, data in datas %}
                                     <tr>
                                         <td class="text-center" style="min-width: 100px;">{{ trans_date }}</td>
@@ -104,9 +106,15 @@ Transaksi Harian Per Warehouse - {{ App.params.site_name }}
                                         {% set tot_payment_6 = tot_payment_6 + data.payments[6] %}
                                         {% set tot_payment_7 = tot_payment_7 + data.payments[7] %}
                                         {% set tot_payment_8 = tot_payment_8 + data.payments[8] %}
+                                        <td class="text-right">
+                                            {% if fees[trans_date] %}
+                                            {{ fees[trans_date] | money_format | default('-') }}
+                                            {% set tot_fee = tot_fee + fees[trans_date] %}
+                                            {% endif %}
+                                        </td>
                                     </tr>
                                     {% else %}
-                                    {% set tot_col = 9 + (5 * products | length) %}
+                                    {% set tot_col = 10 + (5 * products | length) %}
                                     <tr class="no-data">
                                         <td colspan="{{ tot_col }}">No data founds</td>
                                     </tr>
@@ -126,6 +134,7 @@ Transaksi Harian Per Warehouse - {{ App.params.site_name }}
                                         <td class="text-right">{{ tot_payment_6 | money_format }}</td>
                                         <td class="text-right">{{ tot_payment_7 | money_format }}</td>
                                         <td class="text-right">{{ tot_payment_8 | money_format }}</td>
+                                        <td class="text-right">{{ tot_fee | money_format }}</td>
                                     </tr>
                                     {% endif %}
                                     </tfoot>

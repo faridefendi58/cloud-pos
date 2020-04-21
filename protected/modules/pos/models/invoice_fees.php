@@ -336,4 +336,38 @@ class InvoiceFeesModel extends \Model\BaseModel
 
         return $rows;
     }
+
+    public function getWHSFeeEachDate($data = []) {
+        $params = [];
+        $sql = 'SELECT (t.fee - t.fee_refund) AS tot_fee, DATE_FORMAT(i.created_at,"%Y-%m-%d") AS invoice_date
+			FROM {tablePrefix}ext_invoice_fee t 
+			LEFT JOIN {tablePrefix}ext_invoice i ON i.id = t.invoice_id
+            WHERE 1';
+
+        if (isset($data['date_start'])) {
+            $sql .= ' AND DATE_FORMAT(i.created_at,"%Y-%m-%d") BETWEEN :date_from AND :date_to';
+            $params['date_from'] = $data['date_start'];
+            if (!isset($data['date_end'])) {
+                $data['date_end'] = date("Y-m-d", strtotime($data['date_to']));
+            }
+            $params['date_to'] = $data['date_end'];
+        }
+
+        if (isset($data['warehouse_id'])) {
+            $sql .= ' AND t.warehouse_id=:warehouse_id';
+            $params['warehouse_id'] = $data['warehouse_id'];
+        }
+
+        $sql .= ' GROUP BY invoice_date ORDER BY invoice_date ASC';
+
+        $sql = str_replace(['{tablePrefix}'], [$this->_tbl_prefix], $sql);
+        $rows = R::getAll( $sql, $params );
+
+        $items = [];
+        foreach ($rows as $row) {
+            $items[$row['invoice_date']] = (int)$row['tot_fee'];
+        }
+
+        return $items;
+    }
 }

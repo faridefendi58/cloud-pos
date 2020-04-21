@@ -55,16 +55,13 @@ Transaksi Harian Per Warehouse - {{ App.params.site_name }}
                                         <th class="text-center" rowspan="2">Date</th>
                                         <th class="text-center" rowspan="2">Customer</th>
                                         {% for p, product in products %}
-                                        <th class="text-center" colspan="5">{{ product.product_name }}</th>
+                                        <th class="text-center" colspan="2">{{ product.product_name }}</th>
                                         {% endfor %}
                                         <th class="text-center" colspan="8">Payment</th>
                                     </tr>
                                     <tr>
                                         {% for p, product in products %}
-                                        <th class="text-center"> >=1 </th>
-                                        <th class="text-center"> >=5 </th>
-                                        <th class="text-center"> >=10 </th>
-                                        <th class="text-center"> >=30 </th>
+                                        <th class="text-center">Qty</th>
                                         <th class="text-center">Price</th>
                                         {% endfor %}
                                         <th class="text-center">Tunai</th>
@@ -84,13 +81,11 @@ Transaksi Harian Per Warehouse - {{ App.params.site_name }}
                                     {% for trans_date, data in datas %}
                                     <tr>
                                         <td class="text-center">{{ no }}</td>
-                                        <td class="text-center" style="min-width: 100px;">{{ trans_date }}</td>
+                                        <td class="text-center" style="min-width: 100px;">{{ trans_date | date('d M Y') }}</td>
                                         <td class="text-center" style="min-width: 100px;">{{ data.customer.name | default('-') }}</td>
                                         {% for p, product in products %}
-                                        <td class="text-center">{% if data.products[product.product_id].min1 %}{{ data.products[product.product_id].min1 }}{% endif %}</td>
-                                        <td class="text-center">{% if data.products[product.product_id].min5 %}{{ data.products[product.product_id].min5 }}{% endif %}</td>
-                                        <td class="text-center">{% if data.products[product.product_id].min10 %}{{ data.products[product.product_id].min10 }}{% endif %}</td>
-                                        <td class="text-center">{% if data.products[product.product_id].min30 %}{{ data.products[product.product_id].min30 }}{% endif %}</td>
+                                        {% set tot_qty = data.products[product.product_id].min1 + data.products[product.product_id].min5 + data.products[product.product_id].min10 + data.products[product.product_id].min30 %}
+                                        <td class="text-center">{{ tot_qty }}</td>
                                         <td class="right">{% if data.products[product.product_id].tot_price %}{{ data.products[product.product_id].tot_price | money_format }}{% endif %}</td>
                                         {% endfor %}
                                         <td class="text-right">{% if data.payments[1] %}{{ data.payments[1] | money_format | default('-') }}{% endif %}</td>
@@ -112,7 +107,7 @@ Transaksi Harian Per Warehouse - {{ App.params.site_name }}
                                     </tr>
                                     {% set no = no + 1 %}
                                     {% else %}
-                                    {% set tot_col = 11 + (5 * products | length) %}
+                                    {% set tot_col = 11 + (2 * products | length) %}
                                     <tr class="no-data">
                                         <td colspan="{{ tot_col }}">No data founds</td>
                                     </tr>
@@ -122,7 +117,7 @@ Transaksi Harian Per Warehouse - {{ App.params.site_name }}
                                     <tfoot>
                                     <tr class="bg-info" style="font-weight: bold;">
                                         <td class="text-bold" colspan="3">TOTAL</td>
-                                        {% set tot_prod = 5 * products | length %}
+                                        {% set tot_prod = 2 * products | length %}
                                         <td colspan="{{ tot_prod }}"></td>
                                         <td class="text-right">{{ tot_payment_1 | money_format }}</td>
                                         <td class="text-right">{{ tot_payment_2 | money_format }}</td>

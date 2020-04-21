@@ -170,7 +170,7 @@ class ReportsController extends BaseController
         $whp_model = new \Model\WarehouseProductsModel();
         $products = $whp_model->getWhProducts();
 
-        $datas = [];
+        $datas = []; $fees = [];
         if (isset($_GET['wh'])) {
             $warehouse = $model->model()->findByPk($_GET['wh']);
             $products = $whp_model->getWhProducts(['warehouse_id' => $warehouse->id]);
@@ -195,6 +195,8 @@ class ReportsController extends BaseController
             ];
 
             $datas = $ph_model->getRangeSales($params);
+            $f_model = new \Model\InvoiceFeesModel();
+            $fees = $f_model->getWHSFeeEachDate($params);
         }
 
         return $this->_container->module->render(
@@ -205,6 +207,7 @@ class ReportsController extends BaseController
                 'warehouse' => isset($_GET['wh'])? $warehouse : false,
                 'products' => $products,
                 'datas' => $datas,
+                'fees' => $fees
             ]
         );
     }
@@ -249,10 +252,6 @@ class ReportsController extends BaseController
             ];
 
             $datas = $ph_model->getDailyTransactions($params);
-            /*echo '<pre>';
-            print_r($datas);
-            echo '</pre>';
-            exit;*/
         }
 
         return $this->_container->module->render(
