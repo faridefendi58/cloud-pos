@@ -17,11 +17,12 @@
         <div class="form-group">
             <label class="checkbox-inline">
                 <input type="checkbox" name="WarehouseProducts[product_id][]"
-                       value="{{ product.id }}" onclick="showPriceBox(this);" {% if price_data %}checked{% endif %}> <b>{{ product.title | upper }}</b>
+                       value="{{ product.id }}" onclick="showPriceBox2(this);" {% if price_data %}checked{% endif %}> <b>{{ product.title | upper }}</b>
+                <input type="hidden" name="WarehouseProducts[unset_product_id][{{ product.id }}]" id="unset-fee-product-{{ product.id }}" value="0">
             </label>
         </div>
         {% if prices %}
-        <a href="javascript:void(0);" onclick="openWhOption(this);" class="pull-right"><i class="fa fa-copy"></i> Copy ke Warehouse lain</a>
+        <a href="javascript:void(0);" onclick="openWhOption2(this);" id="wh-fee-option-{{ product.id }}" class="pull-right"><i class="fa fa-copy"></i> Copy ke Warehouse lain</a>
         {% endif %}
         <div class="form-group padding10 copy-wh" style="display: none;">
             <label>Copy Harga {{ product.title }} Ke Warehouse Lainnya :</label>
@@ -125,11 +126,15 @@
             }
         });
     }
-    function showPriceBox(dt) {
+    function showPriceBox2(dt) {
         if ($(dt).is(':checked')) {
             $("#product-fees-price_container-"+ $(dt).val()).show();
+            $("#wh-fee-option-"+ $(dt).val()).show();
+            $("#unset-fee-product-"+ $(dt).val()).val(0);
         } else {
             $("#product-fees-price_container-"+ $(dt).val()).hide();
+            $("#wh-fee-option-"+ $(dt).val()).hide();
+            $("#unset-fee-product-"+ $(dt).val()).val(1);
         }
     }
     $(function () {
@@ -173,7 +178,7 @@
         }
     });
 
-    function openWhOption(dt) {
+    function openWhOption2(dt) {
         var copy_wh = $(dt).parent().find('.copy-wh');
         if (copy_wh.is(":visible")) {
             $(dt).html('<i class="fa fa-copy"></i> Copy ke Warehouse lain');

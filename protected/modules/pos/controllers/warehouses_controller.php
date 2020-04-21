@@ -806,6 +806,15 @@ class WarehousesController extends BaseController
             }
         }
 
+        // remove unset product
+        if (isset($_POST['WarehouseProducts']['unset_product_id']) && is_array($_POST['WarehouseProducts']['unset_product_id']) && !empty($_POST['WarehouseProducts']['warehouse_id'])) {
+            foreach (($_POST['WarehouseProducts']['unset_product_id']) as $prod_id => $is_unset) {
+                if ($is_unset > 0) {
+                    $unset = \Model\WarehouseProductsModel::model()->deleteAllByAttributes(['warehouse_id' => $_POST['WarehouseProducts']['warehouse_id'], 'product_id' => $prod_id]);
+                }
+            }
+        }
+
         if ($save_counter > 0) {
             return $response->withJson(
                 [
@@ -996,6 +1005,15 @@ class WarehousesController extends BaseController
                             $simpan = \Model\WarehouseProductFeesModel::model()->save(@$model);
                         }
                     }
+                }
+            }
+        }
+
+        // remove unset product
+        if (isset($_POST['WarehouseProducts']['unset_product_id']) && is_array($_POST['WarehouseProducts']['unset_product_id']) && !empty($_POST['WarehouseProducts']['warehouse_id'])) {
+            foreach (($_POST['WarehouseProducts']['unset_product_id']) as $prod_id => $is_unset) {
+                if ($is_unset > 0) {
+                    $unset = \Model\WarehouseProductFeesModel::model()->deleteAllByAttributes(['warehouse_id' => $_POST['WarehouseProducts']['warehouse_id'], 'product_id' => $prod_id]);
                 }
             }
         }
