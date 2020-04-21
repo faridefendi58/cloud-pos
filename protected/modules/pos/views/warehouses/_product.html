@@ -21,7 +21,7 @@
             </label>
         </div>
         {% if prices %}
-        <a href="javascript:void(0);" onclick="openWhOption(this);" class="pull-right">Copy ke Warehouse lain</a>
+        <a href="javascript:void(0);" onclick="openWhOption(this);" class="pull-right"><i class="fa fa-copy"></i> Copy ke Warehouse lain</a>
         {% endif %}
         <div class="form-group padding10 copy-wh" style="display: none;">
             <label>Copy Harga {{ product.title }} Ke Warehouse Lainnya :</label>
@@ -177,12 +177,12 @@
     function openWhOption(dt) {
         var copy_wh = $(dt).parent().find('.copy-wh');
         if (copy_wh.is(":visible")) {
-            $(dt).html('Copy ke Warehouse lain');
+            $(dt).html('<i class="fa fa-copy"></i> Copy ke Warehouse lain');
             copy_wh.hide();
             copy_wh.find('.s2_tokenization').select2("val", "");
         } else {
             copy_wh.show();
-            $(dt).html('Jangan Copy ke WH lain');
+            $(dt).html('<i class="fa fa-times"></i> Jangan Copy ke WH lain');
         }
     }
 </script>
