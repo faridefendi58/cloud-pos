@@ -33,8 +33,13 @@
         {% set config = model.config | json_decode %}
         <div class="form-group">
             <label class="checkbox-inline">
-                <input type="checkbox" name="Products[avoid_stock]" {% if config.avoid_stock %}checked{% endif %}> Avoid Stock
+                <input type="checkbox" name="Products[avoid_stock]" {% if config.avoid_stock %}checked{% endif %} onclick="isAvoidStock(this);"> Avoid Stock
             </label>
+        </div>
+
+        <div class="form-group {% if not config.avoid_stock %}hidden{% endif %}" id="hpp-container">
+            <label>HPP</label>
+            <input type="text" id="hpp" name="Products[current_cost]" class="form-control" {% if model.current_cost %}value="{{ model.current_cost }}"{% endif %} required>
         </div>
     </div>
 
@@ -130,4 +135,12 @@
             return false;
         });
     });
+
+    function isAvoidStock(dt) {
+        if ($(dt).is(':checked')) {
+            $('#hpp-container').removeClass('hidden');
+        } else {
+            $('#hpp-container').addClass('hidden');
+        }
+    }
 </script>

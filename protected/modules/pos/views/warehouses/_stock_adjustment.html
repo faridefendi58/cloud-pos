@@ -33,6 +33,8 @@
     </div>
     <div class="col-md-6">
         <h4 class="mb20"><b>Stok Terkini di {{ model.title }}</b></h4>
+        <form method="post" id="cost-adjustment-form" action="{{ 'pos/warehouses/product-cost' | link }}/{{ model.id }}">
+            <div class="alert alert-success" style="display: none;"></div>
         <table class="table table-bordered">
             <thead>
             <tr>
@@ -43,16 +45,37 @@
             </tr>
             </thead>
             {% for i, price_data in price_datas %}
+            {% set configs =  price_data.product_config | json_decode %}
             {% set stock = App.call.model("\\Model\\ProductStocksModel", 'getStock', {"product_id":price_data.product_id, "warehouse_id":model.id}) %}
             <tr>
                 <td class="text-center">{{ i+1 }}</td>
-                <td>{{ price_data.product_name }}</td>
-                <td class="text-center">{{ stock | default(0) }}  {{ price_data.product_unit }}</td>
-                <td class="text-center">{{ price_data.current_cost | money_format | default(0) }}</td>
+                <td><a href="{{ 'pos/products/update' | link }}/{{ price_data.product_id }}" target="_blank">{{ price_data.product_name }}</a></td>
+                <td class="text-center">
+                    {% if configs.avoid_stock %}
+                    avoid stock
+                    {% else %}
+                    {{ stock | default(0) }}  {{ price_data.product_unit }}
+                    {% endif %}
+                </td>
+                <td class="text-center">
+                    {% if configs.avoid_stock %}
+                    {% set current_cost = price_data.current_cost %}
+                    {% if current_cost <= 0 %}
+                        {% set current_cost = price_data.global_current_cost %}
+                    {% endif %}
+                    <center>
+                    <input type="text" name="WarehouseProduct[current_cost][{{ price_data.product_id }}]" value="{{ current_cost }}" id="{{ price_data.product_id }}" class="form-control" style="max-width:120px;">
+                    </center>
+                    {% else %}
+                    {{ price_data.current_cost | money_format | default(0) }}
+                    {% endif %}
+                </td>
             </tr>
             {% endfor %}
             </tbody>
         </table>
+            <input type="submit" class="btn btn-info" value="Ubah Current Cost">
+        </form>
         <tbody>
     </div>
 </div>
@@ -105,6 +128,38 @@
                 }
             });
 
+            return false;
+        });
+
+        $('#cost-adjustment-form').submit(function () {
+            if (confirm('Anda yakin ingin merubah data tersebut?')) {
+                var url = $(this).attr('action');
+                $.ajax({
+                    'beforeSend': function () {
+                        $('.loader').show();
+                    },
+                    'complete': function () {
+                        $('.loader').hide();
+                    },
+                    'url': url,
+                    'type': 'post',
+                    'data': $('#cost-adjustment-form').serialize(),
+                    'success': function (data) {
+                        console.log(data);
+                        if (data.status == 'success') {
+                            var alert_success = $('#cost-adjustment-form').find('.alert-success');
+                            alert_success.html(data.message);
+                            alert_success.show();
+                            setTimeout(function () {
+                                window.location.reload(true);
+                            }, 5000);
+                        }
+                    },
+                    error: function (XMLHttpRequest, textStatus, errorThrown) {
+                        console.log("Status: " + textStatus + " Message: " + errorThrown);
+                    }
+                });
+            }
             return false;
         });
     });

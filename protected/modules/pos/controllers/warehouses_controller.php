@@ -34,6 +34,7 @@ class WarehousesController extends BaseController
         $app->map(['POST'], '/product-prices/[{id}]', [$this, 'price_prices']);
         $app->map(['POST'], '/product-stock/[{id}]', [$this, 'product_stock']);
         $app->map(['POST'], '/product-fees/[{id}]', [$this, 'price_fees']);
+        $app->map(['POST'], '/product-cost/[{id}]', [$this, 'product_cost']);
         $app->map(['POST'], '/related/[{id}]', [$this, 'related']);
         $app->map(['POST'], '/assign-user/[{id}]', [$this, 'get_assign_user']);
     }
@@ -1137,5 +1138,50 @@ class WarehousesController extends BaseController
         }
 
         return $response->withJson($results, 201);
+    }
+
+    public function product_cost($request, $response, $args)
+    {
+        $isAllowed = $this->isAllowed($request, $response, $args);
+        if ($isAllowed instanceof \Slim\Http\Response)
+            return $isAllowed;
+
+        if (!$isAllowed) {
+            return $this->notAllowedAction();
+        }
+
+        if (!isset($args['id'])) {
+            return false;
+        }
+
+        $save_counter = 0;
+        if (isset($_POST['WarehouseProduct'])) {
+            foreach ($_POST['WarehouseProduct']['current_cost'] as $product_id => $cost) {
+                $model = \Model\WarehouseProductsModel::model()->findByAttributes(['warehouse_id' => $args['id'], 'product_id' => $product_id]);
+                if ($model instanceof \RedBeanPHP\OODBBean && ($cost > 0)) {
+                    $model->current_cost = (int) $cost;
+                    $model->updated_at = date("Y-m-d H:i:s");
+                    $model->updated_by = $this->_user->id;
+                    $update = \Model\WarehouseProductsModel::model()->update(@$model);
+                    if ($update) {
+                        $save_counter = $save_counter + 1;
+                    }
+                }
+            }
+        }
+
+        if ($save_counter > 0) {
+            return $response->withJson(
+                [
+                    'status' => 'success',
+                    'message' => $save_counter.' data berhasil disimpan.',
+                ], 201);
+        } else {
+            return $response->withJson(
+                [
+                    'status' => 'failed',
+                    'message' => 'Data gagal disimpan',
+                ], 201);
+        }
     }
 }

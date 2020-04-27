@@ -33,7 +33,7 @@ class WarehouseProductsModel extends \Model\BaseModel
     public function getData($data = array())
     {
         $sql = 'SELECT t.*, a.name AS admin_name, w.title AS warehouse_name, 
-            p.title AS product_name, p.unit AS product_unit, p.config AS product_config       
+            p.title AS product_name, p.unit AS product_unit, p.config AS product_config, p.current_cost AS global_current_cost       
             FROM {tablePrefix}ext_warehouse_product t 
             LEFT JOIN {tablePrefix}ext_warehouse w ON w.id = t.warehouse_id 
             LEFT JOIN {tablePrefix}ext_product p ON p.id = t.product_id 

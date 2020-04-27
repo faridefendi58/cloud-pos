@@ -183,6 +183,9 @@ class ProductsController extends BaseController
             $model->active = $_POST['Products']['active'];
             if (!empty($_POST['Products']['avoid_stock'])) {
                 $config['avoid_stock'] = '1';
+                if (!empty($_POST['Products']['current_cost'])) {
+                    $model->current_cost = $_POST['Products']['current_cost'];
+                }
             } else {
                 unset($config['avoid_stock']);
             }

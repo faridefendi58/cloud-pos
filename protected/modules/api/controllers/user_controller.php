@@ -135,6 +135,9 @@ class UserController extends BaseController
                 $admodel->username = $username;
                 $admodel->name = (isset($_POST['name'])) ? $_POST['name'] : $_POST['username'];
                 $admodel->email = $_POST['email'];
+				if (isset($_POST['phone'])) {
+                    $admodel->phone = $_POST['phone'];
+                }
                 $admodel->salt = md5(time());
                 $admodel->password = $admodel->hasPassword($_POST['password'], $admodel->salt);
                 $admodel->group_id = 2;
