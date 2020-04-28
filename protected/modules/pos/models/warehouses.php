@@ -120,4 +120,36 @@ class WarehousesModel extends \Model\BaseModel
 
         return $items;
     }
+
+    public function getProducts($data = array())
+    {
+        $sql = 'SELECT t.product_id, p.code AS product_code, p.title AS product_name, p.unit AS product_unit       
+            FROM {tablePrefix}ext_warehouse_product t 
+            LEFT JOIN {tablePrefix}ext_warehouse w ON w.id = t.warehouse_id 
+            LEFT JOIN {tablePrefix}ext_product p ON p.id = t.product_id 
+            WHERE 1';
+
+        $params = [];
+        if (isset($data['warehouse_id'])) {
+            $sql .= ' AND t.warehouse_id =:warehouse_id';
+            $params['warehouse_id'] = $data['warehouse_id'];
+        }
+
+        if (isset($data['product_id'])) {
+            $sql .= ' AND t.product_id =:product_id';
+            $params['product_id'] = $data['product_id'];
+        }
+
+        if (isset($data['warehouse_id'])) {
+            $sql .= ' ORDER BY t.priority ASC';
+        } else {
+            $sql .= ' ORDER BY t.id ASC';
+        }
+
+        $sql = str_replace(['{tablePrefix}'], [$this->_tbl_prefix], $sql);
+
+        $rows = R::getAll( $sql, $params );
+
+        return $rows;
+    }
 }

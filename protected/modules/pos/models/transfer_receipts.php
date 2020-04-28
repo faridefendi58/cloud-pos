@@ -246,4 +246,30 @@ class TransferReceiptsModel extends \Model\BaseModel
 
         return $rows;
     }
+
+    public function getItems($tr_id = 0)
+    {
+        $sql = 'SELECT t.product_id, t.title, t.quantity, t.unit, ti.quantity AS quantity_issue  
+            FROM {tablePrefix}ext_transfer_receipt_item t   
+            LEFT JOIN {tablePrefix}ext_transfer_issue_item ti ON ti.id = t.ti_item_id 
+            WHERE 1';
+
+        $params = [];
+        if ($tr_id > 0) {
+            $sql .= ' AND t.tr_id =:tr_id';
+            $params['tr_id'] = $tr_id;
+        }
+
+        $sql = str_replace(['{tablePrefix}'], [$this->_tbl_prefix], $sql);
+
+        $rows = R::getAll( $sql, $params );
+
+        $items = [];
+        foreach ($rows as $i => $row) {
+            $row['selisih'] = (int)$row['quantity'] - (int)$row['quantity_issue'];
+            $items[$row['product_id']] = $row;
+        }
+
+        return $items;
+    }
 }

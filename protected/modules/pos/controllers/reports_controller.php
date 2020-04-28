@@ -19,6 +19,7 @@ class ReportsController extends BaseController
         $app->map(['GET'], '/activity', [$this, 'activity']);
         $app->map(['GET'], '/sales', [$this, 'sales']);
         $app->map(['GET'], '/daily-transaction', [$this, 'daily_transaction']);
+        $app->map(['GET'], '/inventory-history', [$this, 'inventory_history']);
     }
 
     public function accessRules()
@@ -29,7 +30,7 @@ class ReportsController extends BaseController
                 'users'=> ['@'],
             ],
             ['allow',
-                'actions' => ['stock', 'activity', 'sales', 'daily-transaction'],
+                'actions' => ['stock', 'activity', 'sales', 'daily-transaction', 'inventory-history'],
                 'expression' => $this->hasAccess('pos/reports/read'),
             ],
             ['deny',
@@ -260,6 +261,62 @@ class ReportsController extends BaseController
             [
                 'warehouses' => $warehouses,
                 'warehouse' => isset($_GET['wh'])? $warehouse : false,
+                'products' => $products,
+                'datas' => $datas,
+            ]
+        );
+    }
+
+    public function inventory_history($request, $response, $args)
+    {
+        $isAllowed = $this->isAllowed($request, $response);
+        if ($isAllowed instanceof \Slim\Http\Response)
+            return $isAllowed;
+
+        if(!$isAllowed){
+            return $this->notAllowedAction();
+        }
+
+        $model = new \Model\WarehousesModel();
+        $warehouses = $model->getData();
+        $products = [];
+        $ti_model = new \Model\TransferIssuesModel();
+        $tr_model = new \Model\TransferReceiptsModel();
+
+        $datas = [];
+        if (isset($_GET['wh'])) {
+            $warehouse = $model->model()->findByPk($_GET['wh']);
+            $products = $model->getProducts(['warehouse_id'=>$_GET['wh']]);
+
+            if (isset($_GET['start'])) {
+                $date_start = date("Y-m-d", $_GET['start']/1000);
+            } else {
+                $date_start = date("Y-m-d");
+            }
+
+            if (isset($_GET['end'])) {
+                $date_end = date("Y-m-d", $_GET['end']/1000);
+            } else {
+                $date_end = date("Y-m-d");
+            }
+
+            $params = [
+                'warehouse_id' => $warehouse->id,
+                'date_start' => $date_start,
+                'date_end' => $date_end
+            ];
+
+            $datas = $ti_model->getWHHistory($params);
+        }
+
+        return $this->_container->module->render(
+            $response,
+            'reports/inventory_history.html',
+            [
+                'warehouses' => $warehouses,
+                'warehouse' => isset($_GET['wh'])? $warehouse : false,
+                'ti_model' => $ti_model,
+                'tr_model' => $tr_model,
                 'products' => $products,
                 'datas' => $datas,
             ]

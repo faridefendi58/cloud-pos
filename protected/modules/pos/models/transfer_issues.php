@@ -215,4 +215,73 @@ class TransferIssuesModel extends \Model\BaseModel
 
         return $rows;
     }
+
+    public function getWHHistory($data = null)
+    {
+        $sql = 'SELECT t.*, a.name AS admin_name, wf.title AS warehouse_from_name, wf.code AS warehouse_from_code, 
+            wt.title AS warehouse_to_name, wt.code AS warehouse_to_code, tr.id AS tr_id, tr.tr_number
+            FROM {tablePrefix}ext_transfer_issue t 
+            LEFT JOIN {tablePrefix}admin a ON a.id = t.created_by 
+            LEFT JOIN {tablePrefix}ext_warehouse wf ON wf.id = t.warehouse_from 
+            LEFT JOIN {tablePrefix}ext_warehouse wt ON wt.id = t.warehouse_to  
+            LEFT JOIN {tablePrefix}ext_transfer_receipt tr ON tr.ti_id = t.id  
+            WHERE 1';
+
+        $params = [];
+        if (is_array($data)) {
+            if (isset($data['status'])) {
+                $sql .= ' AND t.status =:status';
+                $params['status'] = $data['status'];
+            }
+
+            if (isset($data['warehouse_id'])) {
+                $sql .= ' AND (t.warehouse_from =:warehouse_id OR t.warehouse_to =:warehouse_id)';
+                $params['warehouse_id'] = $data['warehouse_id'];
+            }
+
+            if (isset($data['date_start']) && isset($data['date_end'])) {
+                $sql .= ' AND DATE_FORMAT(t.date_transfer, "%Y-%m-%d") BETWEEN :date_start AND :date_end';
+                $params['date_start'] = $data['date_start'];
+                $params['date_end'] = $data['date_end'];
+            }
+        }
+
+        $sql .= ' ORDER BY t.date_transfer DESC';
+
+        if (isset($data['limit'])) {
+            $sql .= ' LIMIT '. $data['limit'];
+        }
+
+        $sql = str_replace(['{tablePrefix}'], [$this->_tbl_prefix], $sql);
+
+        $rows = R::getAll( $sql, $params );
+
+        return $rows;
+    }
+
+    public function getItems($ti_id = 0)
+    {
+        $sql = 'SELECT t.product_id, t.title, t.quantity, t.unit, tr.quantity AS quantity_receipt  
+            FROM {tablePrefix}ext_transfer_issue_item t   
+            LEFT JOIN {tablePrefix}ext_transfer_receipt_item tr ON tr.ti_item_id = t.id 
+            WHERE 1';
+
+        $params = [];
+        if ($ti_id > 0) {
+            $sql .= ' AND t.ti_id =:ti_id';
+            $params['ti_id'] = $ti_id;
+        }
+
+        $sql = str_replace(['{tablePrefix}'], [$this->_tbl_prefix], $sql);
+
+        $rows = R::getAll( $sql, $params );
+
+        $items = [];
+        foreach ($rows as $i => $row) {
+            $row['selisih'] = (int)$row['quantity_receipt'] - (int)$row['quantity'];
+            $items[$row['product_id']] = $row;
+        }
+
+        return $items;
+    }
 }

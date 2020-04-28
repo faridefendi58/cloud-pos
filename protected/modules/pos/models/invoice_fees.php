@@ -339,7 +339,7 @@ class InvoiceFeesModel extends \Model\BaseModel
 
     public function getWHSFeeEachDate($data = []) {
         $params = [];
-        $sql = 'SELECT (t.fee - t.fee_refund) AS tot_fee, DATE_FORMAT(i.created_at,"%Y-%m-%d") AS invoice_date
+        $sql = 'SELECT SUM(t.fee - t.fee_refund) AS tot_fee, DATE_FORMAT(i.created_at,"%Y-%m-%d") AS invoice_date
 			FROM {tablePrefix}ext_invoice_fee t 
 			LEFT JOIN {tablePrefix}ext_invoice i ON i.id = t.invoice_id
             WHERE 1';
@@ -358,7 +358,7 @@ class InvoiceFeesModel extends \Model\BaseModel
             $params['warehouse_id'] = $data['warehouse_id'];
         }
 
-        $sql .= ' GROUP BY invoice_date ORDER BY invoice_date ASC';
+        $sql .= ' GROUP BY DATE_FORMAT(t.created_at,"%Y-%m-%d") ORDER BY invoice_date ASC';
 
         $sql = str_replace(['{tablePrefix}'], [$this->_tbl_prefix], $sql);
         $rows = R::getAll( $sql, $params );
