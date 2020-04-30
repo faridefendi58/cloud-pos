@@ -146,4 +146,63 @@ class InventoryIssuesModel extends \Model\BaseModel
 
         return $rows;
     }
+
+    public function nonTransactions($data = []) {
+        $sql = 'SELECT t.id, DATE_FORMAT(t.created_at, "%Y-%m-%d") AS created_date, t.type 
+            FROM {tablePrefix}ext_inventory_issue t  
+            WHERE t.status =:status';
+
+        $params = [];
+        if (!empty($data['warehouse_id'])) {
+            $sql .= ' AND t.warehouse_id =:warehouse_id';
+            $params['warehouse_id'] = $data['warehouse_id'];
+        }
+
+        if (!empty($data['status'])) {
+            $params['status'] = $data['status'];
+        } else {
+            $params['status'] = self::STATUS_COMPLETED;
+        }
+
+        if (isset($data['date_start']) && isset($data['date_end'])) {
+            $sql .= ' AND DATE_FORMAT(t.created_at, "%Y-%m-%d") BETWEEN :date_start AND :date_end';
+            $params['date_start'] = $data['date_start'];
+            $params['date_end'] = $data['date_end'];
+        }
+
+        $sql .= ' ORDER BY t.created_at DESC';
+
+        if (!isset($data['limit'])) {
+            $sql .= ' LIMIT 100';
+        }
+
+        $sql = str_replace(['{tablePrefix}'], [$this->_tbl_prefix], $sql);
+
+        $rows = R::getAll( $sql, $params );
+
+        return $rows;
+    }
+
+    public function getItems($ii_id = 0) {
+        $sql = 'SELECT t.product_id, t.title, t.quantity, t.unit  
+            FROM {tablePrefix}ext_inventory_issue_item t    
+            WHERE 1';
+
+        $params = [];
+        if ($ii_id > 0) {
+            $sql .= ' AND t.ii_id =:ii_id';
+            $params['ii_id'] = $ii_id;
+        }
+
+        $sql = str_replace(['{tablePrefix}'], [$this->_tbl_prefix], $sql);
+
+        $rows = R::getAll( $sql, $params );
+
+        $items = [];
+        foreach ($rows as $i => $row) {
+            $items[$row['product_id']] = $row;
+        }
+
+        return $items;
+    }
 }

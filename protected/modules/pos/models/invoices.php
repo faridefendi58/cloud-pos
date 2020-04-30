@@ -440,4 +440,63 @@ class InvoicesModel extends \Model\BaseModel
 
         return (int)$row['tot'];
     }
+
+    public function getTransactionHistory($data = []) {
+        $sql = 'SELECT t.id, DATE_FORMAT(t.delivered_at, "%Y-%m-%d") AS delivered_date, t.status, t.config 
+            FROM {tablePrefix}ext_invoice t  
+            WHERE t.delivered =1';
+
+        $params = [];
+        if (!empty($data['warehouse_id'])) {
+            $sql .= ' AND t.warehouse_id =:warehouse_id';
+            $params['warehouse_id'] = $data['warehouse_id'];
+        }
+
+        if (!empty($data['status'])) {
+            $sql .= ' AND t.status =:status';
+            $params['status'] = $data['status'];
+        }
+
+        if (isset($data['date_start']) && isset($data['date_end'])) {
+            $sql .= ' AND DATE_FORMAT(t.delivered_at, "%Y-%m-%d") BETWEEN :date_start AND :date_end';
+            $params['date_start'] = $data['date_start'];
+            $params['date_end'] = $data['date_end'];
+        }
+
+        $sql .= ' ORDER BY t.delivered_at ASC';
+
+        if (!isset($data['limit'])) {
+            $sql .= ' LIMIT 100';
+        }
+
+        $sql = str_replace(['{tablePrefix}'], [$this->_tbl_prefix], $sql);
+
+        $rows = R::getAll( $sql, $params );
+
+        return $rows;
+    }
+
+    public function getInvoiceItems($invoice_id = 0) {
+        $sql = 'SELECT o.product_id, t.title, t.quantity  
+            FROM {tablePrefix}ext_invoice_item t    
+            LEFT JOIN {tablePrefix}ext_order o ON o.id = t.rel_id
+            WHERE 1';
+
+        $params = [];
+        if ($invoice_id > 0) {
+            $sql .= ' AND t.invoice_id =:invoice_id';
+            $params['invoice_id'] = $invoice_id;
+        }
+
+        $sql = str_replace(['{tablePrefix}'], [$this->_tbl_prefix], $sql);
+
+        $rows = R::getAll( $sql, $params );
+
+        $items = [];
+        foreach ($rows as $i => $row) {
+            $items[$row['product_id']] = $row;
+        }
+
+        return $items;
+    }
 }

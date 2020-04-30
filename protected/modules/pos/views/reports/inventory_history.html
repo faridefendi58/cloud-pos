@@ -31,8 +31,8 @@ Riwayat Inventaris Per Warehouse - {{ App.params.site_name }}
             <div class="col-sm-3 text-right">
                 <div id="reportrange" class="btn">
                     <i class="fa fa-calendar"></i>
-                    {% if params.date_start %}
-                    <span>{{ params.date_start | date("M d, Y") }} - {{ params.date_end | date("M d, Y") }}</span> <b class="caret"></b>
+                    {% if date_start %}
+                    <span>{{ date_start | date("M d, Y") }} - {{ date_end | date("M d, Y") }}</span> <b class="caret"></b>
                     {% else %}
                     <span>{{ "now" | date("M d, Y") }} - {{ "now" | date("M d, Y") }}</span> <b class="caret"></b>
                     {% endif %}
@@ -85,6 +85,98 @@ Riwayat Inventaris Per Warehouse - {{ App.params.site_name }}
                                             {% endif %}
                                             {% else %}
                                             -
+                                            {% endif %}
+                                        </td>
+                                        {% endfor %}
+                                    </tr>
+                                    {% set no = no + 1 %}
+                                    {% else %}
+                                    <tr class="no-data">
+                                        <td colspan="4">No data founds</td>
+                                    </tr>
+                                    {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- transaksi penjualan -->
+                <div class="col-lg-12 mt20">
+                    <div class="panel panel-default">
+                        <div class="panel-heading">Transaksi Penjualan di Warehouse {{ warehouse.title }}</div>
+                        <div class="panel-body" style="overflow-x: scroll;">
+                            <div class="dataTables_wrapper form-inline no-footer table-responsive mt20" role="grid">
+                                <table id="dt_basic2" class="table table-bordered dataTable2" style="width:100%">
+                                    <thead>
+                                    <tr>
+                                        <th class="text-center">Date</th>
+                                        <th class="text-center">Desc</th>
+                                        <th class="text-center">From/To</th>
+                                        {% for p, product in products %}
+                                        <th class="text-center">{{ product.product_code }}</th>
+                                        {% endfor %}
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    {% set no = 1 %}
+                                    {% for i, transaction in transactions %}
+                                    <tr>
+                                        <td class="text-center">{{ transaction.delivered_data | date('d M') }}</td>
+                                        <td class="text-center">Sales</td>
+                                        <td class="text-center">To {{ warehouse.code }}</td>
+                                        {% set t_items = i_model.getInvoiceItems(transaction.id) %}
+                                        {% for p, product in products %}
+                                        <td class="text-center">
+                                            {% if t_items[product.product_id] %}
+                                            {% if transaction.status < 2 %} - {% endif %}{{ t_items[product.product_id].quantity }}
+                                            {% endif %}
+                                        </td>
+                                        {% endfor %}
+                                    </tr>
+                                    {% set no = no + 1 %}
+                                    {% else %}
+                                    <tr class="no-data">
+                                        <td colspan="4">No data founds</td>
+                                    </tr>
+                                    {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- non transaction -->
+                <div class="col-lg-12 mt20">
+                    <div class="panel panel-default">
+                        <div class="panel-heading">Non Transaksi di Warehouse {{ warehouse.title }}</div>
+                        <div class="panel-body" style="overflow-x: scroll;">
+                            <div class="dataTables_wrapper form-inline no-footer table-responsive mt20" role="grid">
+                                <table id="dt_basic3" class="table table-bordered dataTable2" style="width:100%">
+                                    <thead>
+                                    <tr>
+                                        <th class="text-center">Date</th>
+                                        <th class="text-center">Desc</th>
+                                        <th class="text-center">From/To</th>
+                                        {% for p, product in products %}
+                                        <th class="text-center">{{ product.product_code }}</th>
+                                        {% endfor %}
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    {% set no = 1 %}
+                                    {% for i, non_transaction in non_transactions %}
+                                    <tr>
+                                        <td class="text-center">{{ non_transaction.created_date | date('d M') }}</td>
+                                        <td class="text-center">OUT</td>
+                                        <td class="text-center">{{ non_transaction_types[non_transaction.type] }}</td>
+                                        {% set ii_items = ii_model.getItems(non_transaction.id) %}
+                                        {% for p, product in products %}
+                                        <td class="text-center">
+                                            {% if ii_items[product.product_id] %}
+                                            - {{ ii_items[product.product_id].quantity }}
                                             {% endif %}
                                         </td>
                                         {% endfor %}

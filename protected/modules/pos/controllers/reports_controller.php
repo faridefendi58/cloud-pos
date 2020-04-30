@@ -282,8 +282,12 @@ class ReportsController extends BaseController
         $products = [];
         $ti_model = new \Model\TransferIssuesModel();
         $tr_model = new \Model\TransferReceiptsModel();
+        $ii_model = new \Model\InventoryIssuesModel();
+        $i_model = new \Model\InvoicesModel();
 
-        $datas = [];
+        $date_start = date("Y-m-01");
+        $date_end = date("Y-m-d");
+        $datas = []; $non_transactions = [];
         if (isset($_GET['wh'])) {
             $warehouse = $model->model()->findByPk($_GET['wh']);
             $products = $model->getProducts(['warehouse_id'=>$_GET['wh']]);
@@ -291,7 +295,7 @@ class ReportsController extends BaseController
             if (isset($_GET['start'])) {
                 $date_start = date("Y-m-d", $_GET['start']/1000);
             } else {
-                $date_start = date("Y-m-d");
+                $date_start = date("Y-m-01");
             }
 
             if (isset($_GET['end'])) {
@@ -307,6 +311,17 @@ class ReportsController extends BaseController
             ];
 
             $datas = $ti_model->getWHHistory($params);
+            $non_transactions = $ii_model->nonTransactions($params);
+            $transactions = $i_model->getTransactionHistory($params);
+        }
+
+        $non_transaction_types = [];
+        $ext_pos = $this->_container->get('settings')['params']['ext_pos'];
+        if (!empty($ext_pos)) {
+            $ext_pos = json_decode($ext_pos, true);
+            if (is_array($ext_pos) && array_key_exists('non_transaction_type', $ext_pos)) {
+                $non_transaction_types = $ext_pos['non_transaction_type'];
+            }
         }
 
         return $this->_container->module->render(
@@ -317,8 +332,15 @@ class ReportsController extends BaseController
                 'warehouse' => isset($_GET['wh'])? $warehouse : false,
                 'ti_model' => $ti_model,
                 'tr_model' => $tr_model,
+                'ii_model' => $ii_model,
+                'i_model' => $i_model,
                 'products' => $products,
                 'datas' => $datas,
+                'non_transactions' => $non_transactions,
+                'date_start' => $date_start,
+                'date_end' => $date_end,
+                'non_transaction_types' => $non_transaction_types,
+                'transactions' => $transactions
             ]
         );
     }
