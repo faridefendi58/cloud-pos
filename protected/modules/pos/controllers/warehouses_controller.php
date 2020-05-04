@@ -85,18 +85,6 @@ class WarehousesController extends BaseController
         
         $model = new \Model\WarehousesModel();
         $warehouses = $model->getData();
-$items = [];
-foreach($warehouses as $i => $wh) {
-if ($wh['id'] <= 10) {
-$phone = $wh['phone'];
-$phone = str_replace("-", "", $phone);
-if (substr($phone, 0, 1) === '0') {
-   $phone = '+62' . substr($phone, 1);
-}
-$items[$wh['code']] = ['name'=>$wh['title'],'phone'=>$phone];
-}
-}
-var_dump(serialize($items));exit;
 
         // wh group
         $wgmodel = new \Model\WarehouseGroupsModel();

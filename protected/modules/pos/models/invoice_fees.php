@@ -214,7 +214,7 @@ class InvoiceFeesModel extends \Model\BaseModel
 
         $params = ['warehouse_id' => $data['warehouse_id'], 'created_at' => $data['date']];
 
-        $sql = 'SELECT t.invoice_id, ch.code AS pay_channel, SUM(t.amount - t.change_due) AS amount, t.amount AS amount_tendered, t.change_due 
+        $sql = 'SELECT t.invoice_id, ch.code AS pay_channel, SUM(t.amount) AS amount_tendered, SUM(t.amount - t.change_due) AS amount, t.change_due 
           FROM {tablePrefix}ext_payment_history t 
           LEFT JOIN {tablePrefix}ext_invoice_fee h ON h.invoice_id = t.invoice_id
           LEFT JOIN {tablePrefix}ext_payment_channel ch ON ch.id = t.channel_id
