@@ -61,6 +61,7 @@ Riwayat Inventaris Per Warehouse - {{ App.params.site_name }}
                                     </thead>
                                     <tbody>
                                     {% set no = 1 %}
+									{% set tots = {} %}
                                     {% for i, data in datas %}
                                     <tr>
                                         <td class="text-center">{{ data.date_transfer | date('d M') }}</td>
@@ -77,11 +78,27 @@ Riwayat Inventaris Per Warehouse - {{ App.params.site_name }}
                                         </td>
                                         <td class="text-center">{% if data.warehouse_from == warehouse.id %}<b>TO</b> {{ data.warehouse_to_name }}{% else %}<b>FROM</b> {{ data.warehouse_from_name }}{% endif %}</td>
                                         {% for p, product in products %}
-                                        <td class="text-center">
+                                        <td class="text-center qty">
                                             {% if items[product.product_id] %}
                                             {% if is_out %}-{% endif %}{{ items[product.product_id].quantity }}
                                             {% if items[product.product_id].selisih %}
-                                            <br/><b>Missing ({{ items[product.product_id].quantity }} {{ items[product.product_id].selisih }})</b>
+											{% if not is_out %}
+                                            <br/><small><i>({{ items[product.product_id].quantity - items[product.product_id].selisih }} {{ items[product.product_id].selisih }} miss)<i></small>
+											{% endif %}
+                                            {% endif %}
+                                            <!-- calculate total -->
+                                            {% if items[product.product_id] %}
+                                                {% set _qty = items[product.product_id].quantity %}
+                                                {% if is_out %}
+                                                    {% set _qty = -1 * _qty %}
+                                                {% endif %}
+                                                {% if not attribute(tots, 'p-' ~ product.product_id) is defined %}
+                                                    {% set tots = tots|merge({ ('p-' ~ product.product_id) : [_qty] }) %}
+                                                {% else %}
+                                                    {% set titles = attribute(tots, 'p-' ~ product.product_id) %}
+                                                    {% set titles = titles|merge([_qty]) %}
+                                                    {% set tots = tots|merge({ ('p-' ~ product.product_id) : titles }) %}
+                                                {% endif %}
                                             {% endif %}
                                             {% else %}
                                             -
@@ -96,6 +113,17 @@ Riwayat Inventaris Per Warehouse - {{ App.params.site_name }}
                                     </tr>
                                     {% endfor %}
                                     </tbody>
+									<tfooter>
+										<td colspan="3"></td>
+                                        {% for p, product in products %}
+										<td class="text-center">
+                                            {% if tots['p-'~product.product_id] %}
+                                                {{ tots['p-'~product.product_id] | array_sum }}
+                                            {% else %}
+                                            {% endif %}
+                                        </td>
+										{% endfor %}
+									</tfooter>
                                 </table>
                             </div>
                         </div>
@@ -120,7 +148,7 @@ Riwayat Inventaris Per Warehouse - {{ App.params.site_name }}
                                     </tr>
                                     </thead>
                                     <tbody>
-                                    {% set no = 1 %}
+                                    {% set no = 1 %} {% set tots2 = {} %}
                                     {% for i, transaction in transactions %}
                                     <tr>
                                         <td class="text-center">{{ transaction.delivered_data | date('d M') }}</td>
@@ -132,6 +160,21 @@ Riwayat Inventaris Per Warehouse - {{ App.params.site_name }}
                                             {% if t_items[product.product_id] %}
                                             {% if transaction.status < 2 %} - {% endif %}{{ t_items[product.product_id].quantity }}
                                             {% endif %}
+
+                                            <!-- calculate total -->
+                                            {% if t_items[product.product_id] %}
+                                                {% set _qty = t_items[product.product_id].quantity %}
+                                                {% if transaction.status < 2 %}
+                                                    {% set _qty = -1 * _qty %}
+                                                {% endif %}
+                                                {% if not attribute(tots2, 'p-' ~ product.product_id) is defined %}
+                                                    {% set tots2 = tots2|merge({ ('p-' ~ product.product_id) : [_qty] }) %}
+                                                {% else %}
+                                                    {% set titles = attribute(tots2, 'p-' ~ product.product_id) %}
+                                                    {% set titles = titles|merge([_qty]) %}
+                                                    {% set tots2 = tots2|merge({ ('p-' ~ product.product_id) : titles }) %}
+                                                {% endif %}
+                                            {% endif %}
                                         </td>
                                         {% endfor %}
                                     </tr>
@@ -142,6 +185,17 @@ Riwayat Inventaris Per Warehouse - {{ App.params.site_name }}
                                     </tr>
                                     {% endfor %}
                                     </tbody>
+                                    <tfooter>
+                                        <td colspan="3"></td>
+                                        {% for p, product in products %}
+                                        <td class="text-center">
+                                            {% if tots2['p-'~product.product_id] %}
+                                                {{ tots2['p-'~product.product_id] | array_sum }}
+                                            {% else %}
+                                            {% endif %}
+                                        </td>
+                                        {% endfor %}
+                                    </tfooter>
                                 </table>
                             </div>
                         </div>
@@ -166,7 +220,7 @@ Riwayat Inventaris Per Warehouse - {{ App.params.site_name }}
                                     </tr>
                                     </thead>
                                     <tbody>
-                                    {% set no = 1 %}
+                                    {% set no = 1 %} {% set tots3 = {} %}
                                     {% for i, non_transaction in non_transactions %}
                                     <tr>
                                         <td class="text-center">{{ non_transaction.created_date | date('d M') }}</td>
@@ -178,6 +232,18 @@ Riwayat Inventaris Per Warehouse - {{ App.params.site_name }}
                                             {% if ii_items[product.product_id] %}
                                             - {{ ii_items[product.product_id].quantity }}
                                             {% endif %}
+
+                                            <!-- calculate total -->
+                                            {% if ii_items[product.product_id] %}
+                                                {% set _qty = -1 * ii_items[product.product_id].quantity %}
+                                                {% if not attribute(tots3, 'p-' ~ product.product_id) is defined %}
+                                                    {% set tots3 = tots3|merge({ ('p-' ~ product.product_id) : [_qty] }) %}
+                                                {% else %}
+                                                    {% set titles = attribute(tots3, 'p-' ~ product.product_id) %}
+                                                    {% set titles = titles|merge([_qty]) %}
+                                                    {% set tots3 = tots3|merge({ ('p-' ~ product.product_id) : titles }) %}
+                                                {% endif %}
+                                            {% endif %}
                                         </td>
                                         {% endfor %}
                                     </tr>
@@ -188,6 +254,17 @@ Riwayat Inventaris Per Warehouse - {{ App.params.site_name }}
                                     </tr>
                                     {% endfor %}
                                     </tbody>
+                                    <tfooter>
+                                        <td colspan="3"></td>
+                                        {% for p, product in products %}
+                                        <td class="text-center">
+                                            {% if tots3['p-'~product.product_id] %}
+                                                {{ tots3['p-'~product.product_id] | array_sum }}
+                                            {% else %}
+                                            {% endif %}
+                                        </td>
+                                        {% endfor %}
+                                    </tfooter>
                                 </table>
                             </div>
                         </div>

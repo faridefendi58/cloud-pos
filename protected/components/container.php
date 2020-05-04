@@ -169,6 +169,7 @@ function addFilter($env, $c)
                 return $number;
             }
         }),
+        new \Twig_SimpleFilter('array_sum', 'array_sum'),
     ];
 
     $uri_path = $c->get('request')->getUri()->getPath();
