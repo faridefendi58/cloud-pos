@@ -137,4 +137,24 @@ class ProductStocksModel extends \Model\BaseModel
 
         return null;
     }
+
+    public function getStockInDate($data)
+    {
+        $sql = 'SELECT t.product_id, SUM(t.quantity) AS total     
+            FROM {tablePrefix}ext_product_stock t 
+            WHERE t.warehouse_id =:warehouse_id AND DATE_FORMAT(t.created_at, "%Y-%m-%d") <=:created_at 
+            GROUP BY t.product_id';
+
+        $params = ['warehouse_id' => $data['warehouse_id'], 'created_at' => date("Y-m-d", strtotime($data['created_at']))];
+
+        $sql = str_replace(['{tablePrefix}'], [$this->_tbl_prefix], $sql);
+
+        $rows = R::getAll( $sql, $params );
+        $items = [];
+        foreach ($rows as $row) {
+            $items[$row['product_id']] = $row['total'];
+        }
+
+        return $items;
+    }
 }

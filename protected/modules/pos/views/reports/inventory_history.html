@@ -6,7 +6,10 @@ Riwayat Inventaris Per Warehouse - {{ App.params.site_name }}
 {% block content %}
 <link rel="stylesheet" href="{{ 'lib/bootstrap-daterangepicker/daterangepicker-bs3.css' | admin_asset_url }}">
 <link rel="stylesheet" href="https://cdn.datatables.net/1.10.20/css/jquery.dataTables.min.css">
-
+<style>
+    tbody tr:nth-child(even) {background-color: #e8f6ff;}
+    tbody tr.even {background-color: #e8f6ff !important;}
+</style>
 <div id="main_wrapper">
     <div class="page_bar clearfix">
         <div class="row">
@@ -126,6 +129,46 @@ Riwayat Inventaris Per Warehouse - {{ App.params.site_name }}
 									</tfooter>
                                 </table>
                             </div>
+                            <div class="row">
+                                {% set dt_length = datas | length %}
+                                {% set first_date = datas[(dt_length -1 )].date_transfer %}
+                                {% set stock_awal = ps_model.getStockInDate({'warehouse_id':warehouse.id, 'created_at':first_date}) %}
+                                {% set stock_akhir = ps_model.getStockInDate({'warehouse_id':warehouse.id, 'created_at':datas[0].date_transfer}) %}
+                                <div class="col-lg-12">
+                                    <table class="table table-bordered">
+                                        <thead>
+                                        <tr>
+                                            <th>&nbsp;</th>
+                                            {% for p, product in products %}
+                                            <th class="text-center">{{ product.product_code }}</th>
+                                            {% endfor %}
+                                        </tr>
+                                        </thead>
+                                        <tbody>
+                                        <tr>
+                                            <td class="text-bold">Stok Awal Per {{ date_start | date_modify("-1 day") | date("d M Y") }}</td>
+                                            {% for p, product in products %}
+                                            <td class="text-center">
+                                                {% if stock_awal[product.product_id] %}
+                                                {{ stock_awal[product.product_id] }}
+                                                {% else %}0{% endif %}
+                                            </td>
+                                            {% endfor %}
+                                        </tr>
+                                        <tr>
+                                            <td class="text-bold">Stok Akhir Per {{ date_end | date("d M Y") }}</td>
+                                            {% for p, product in products %}
+                                            <td class="text-center">
+                                                {% if stock_akhir[product.product_id] %}
+                                                {{ stock_akhir[product.product_id] }}
+                                                {% else %}0{% endif %}
+                                            </td>
+                                            {% endfor %}
+                                        </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -134,6 +177,7 @@ Riwayat Inventaris Per Warehouse - {{ App.params.site_name }}
                 <div class="col-lg-12 mt20">
                     <div class="panel panel-default">
                         <div class="panel-heading">Transaksi Penjualan di Warehouse {{ warehouse.title }}</div>
+						<p class="text-warning">Mustinya bukan rincian, tapi summary sales per day</p>
                         <div class="panel-body" style="overflow-x: scroll;">
                             <div class="dataTables_wrapper form-inline no-footer table-responsive mt20" role="grid">
                                 <table id="dt_basic2" class="table table-bordered dataTable2" style="width:100%">
@@ -151,7 +195,7 @@ Riwayat Inventaris Per Warehouse - {{ App.params.site_name }}
                                     {% set no = 1 %} {% set tots2 = {} %}
                                     {% for i, transaction in transactions %}
                                     <tr>
-                                        <td class="text-center">{{ transaction.delivered_data | date('d M') }}</td>
+                                        <td class="text-center">{{ transaction.delivered_date | date('d M') }}</td>
                                         <td class="text-center">Sales</td>
                                         <td class="text-center">To {{ warehouse.code }}</td>
                                         {% set t_items = i_model.getInvoiceItems(transaction.id) %}
@@ -396,7 +440,7 @@ Riwayat Inventaris Per Warehouse - {{ App.params.site_name }}
         return (sa);
     }
     $(function () {
-        if ($('.dataTable2').length > 0) {
+        if ($('.dataTable3').length > 0) {
             var buttonCommon = {
                 exportOptions: {
                     format: {
@@ -409,7 +453,8 @@ Riwayat Inventaris Per Warehouse - {{ App.params.site_name }}
                 }
             };
 
-            $('.dataTable2').DataTable( {
+            $('.dataTable3').DataTable( {
+				paging:false,
                 dom: 'Bfrtip',
                 buttons: [
                     'copyHtml5',

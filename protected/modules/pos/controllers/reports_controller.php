@@ -284,6 +284,7 @@ class ReportsController extends BaseController
         $tr_model = new \Model\TransferReceiptsModel();
         $ii_model = new \Model\InventoryIssuesModel();
         $i_model = new \Model\InvoicesModel();
+        $ps_model = new \Model\ProductStocksModel();
 
         $date_start = date("Y-m-01");
         $date_end = date("Y-m-d");
@@ -340,7 +341,8 @@ class ReportsController extends BaseController
                 'date_start' => $date_start,
                 'date_end' => $date_end,
                 'non_transaction_types' => $non_transaction_types,
-                'transactions' => $transactions
+                'transactions' => $transactions,
+                'ps_model' => $ps_model
             ]
         );
     }

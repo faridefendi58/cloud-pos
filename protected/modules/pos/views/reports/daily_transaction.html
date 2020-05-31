@@ -6,6 +6,10 @@ Transaksi Harian Per Warehouse - {{ App.params.site_name }}
 {% block content %}
 <link rel="stylesheet" href="{{ 'lib/bootstrap-daterangepicker/daterangepicker-bs3.css' | admin_asset_url }}">
 <link rel="stylesheet" href="https://cdn.datatables.net/1.10.20/css/jquery.dataTables.min.css">
+<style>
+    tbody tr:nth-child(even) {background-color: #e8f6ff;}
+    tbody tr.even {background-color: #e8f6ff !important;}
+</style>
 
 <div id="main_wrapper">
     <div class="page_bar clearfix">

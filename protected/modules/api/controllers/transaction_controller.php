@@ -24,6 +24,7 @@ class TransactionController extends BaseController
         $app->map(['GET'], '/list-fee-on', [$this, 'get_list_fee_on']);
         $app->map(['POST'], '/verify-transfer', [$this, 'verify_transfer']);
         $app->map(['GET'], '/list-sale-counter', [$this, 'get_sale_counter']);
+        $app->map(['POST'], '/delete', [$this, 'delete']);
     }
 
     public function accessRules()
@@ -31,7 +32,7 @@ class TransactionController extends BaseController
         return [
             ['allow',
                 'actions' => ['create', 'detail', 'complete', 'list', 
-					'complete-payment', 'refund', 'list-fee', 'list-fee-on', 'verify-transfer', 'list-sale-counter'],
+					'complete-payment', 'refund', 'list-fee', 'list-fee-on', 'verify-transfer', 'list-sale-counter', 'delete'],
                 'users' => ['@'],
             ]
         ];
@@ -1195,6 +1196,39 @@ class TransactionController extends BaseController
 				'summary' => $summary,
 				'returs' => $returs
 			];
+        }
+
+        return $response->withJson($result, 201);
+    }
+
+	public function delete($request, $response, $args)
+    {
+        $isAllowed = $this->isAllowed($request, $response);
+
+        if (!$isAllowed['allow']) {
+            $result = [
+                'success' => 0,
+                'message' => $isAllowed['message'],
+            ];
+            return $response->withJson($result, 201);
+        }
+
+        $result = ['success' => 0, 'message' => 'Gagal menghapus transaksi.'];
+        $params = $request->getParams();
+
+        if (!empty($params['invoice_id'])) {
+            $model = \Model\InvoicesModel::model()->findByPk($params['invoice_id']);
+			if (($model instanceof \RedBeanPHP\OODBBean) && ($model->delivered <= 0)) {
+				$delete = \Model\InvoicesModel::model()->delete($model);
+				if ($delete) {
+					// delete invoice items
+					$delete2 = \Model\InvoiceItemsModel::model()->deleteAllByAttributes(['invoice_id' => $params['invoice_id']]);
+					$delete3 = \Model\PaymentHistoryModel::model()->deleteAllByAttributes(['invoice_id' => $params['invoice_id']]);
+					$delete4 = \Model\OrdersModel::model()->deleteAllByAttributes(['invoice_id' => $params['invoice_id']]);
+					$result['success'] = 1;
+                	$result['message'] = 'Data berhasil dihapus.';
+				}
+			}
         }
 
         return $response->withJson($result, 201);
