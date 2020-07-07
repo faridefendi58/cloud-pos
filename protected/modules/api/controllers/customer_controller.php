@@ -14,13 +14,14 @@ class CustomerController extends BaseController
     public function register($app)
     {
         $app->map(['GET'], '/list', [$this, 'get_list']);
+        $app->map(['GET'], '/detail', [$this, 'get_detail']);
     }
 
     public function accessRules()
     {
         return [
             ['allow',
-                'actions' => ['list'],
+                'actions' => ['list', 'detail'],
                 'users'=> ['@'],
             ]
         ];
@@ -62,6 +63,14 @@ class CustomerController extends BaseController
 			$q_params['status'] = $params['status'];
 		}
 
+		if (isset($params['group_id'])) {
+			$q_params['group_id'] = $params['group_id'];
+		}
+
+		if (isset($params['order_by'])) {
+			$q_params['order_by'] = $params['order_by'];
+		}
+
 		if (isset($params['limit'])) {
 			$q_params['limit'] = $params['limit'];
 		}
@@ -81,4 +90,34 @@ class CustomerController extends BaseController
 
         return $response->withJson($result, 201);
     }
+
+	public function get_detail($request, $response, $args)
+    {
+        $isAllowed = $this->isAllowed($request, $response);
+
+        if (!$isAllowed['allow']) {
+            $result = [
+                'success' => 0,
+                'message' => $isAllowed['message'],
+            ];
+            return $response->withJson($result, 201);
+        }
+
+		$result = ['success' => 0];
+        $params = $request->getParams();
+        if (isset($params['admin_id']) && isset($params['id'])) {
+            $model = new \Model\CustomersModel();
+			$detail = $model->getDetail($params['id']);
+            if (!empty($detail)) {
+                $result = [
+                    "success" => 1,
+                    "data" => $detail,
+                ];
+            } else {
+                $result['message'] = 'Data tidak ditemukan';
+            }
+        }
+
+		return $response->withJson($result, 201);
+	}
 }

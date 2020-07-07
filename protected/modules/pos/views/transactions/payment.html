@@ -8,12 +8,14 @@ Riwayat Pembayaran - {{ App.params.site_name }}
 <div id="main_wrapper">
     <div class="page_bar clearfix">
         <div class="row">
-            <div class="col-sm-9">
+            <div class="col-sm-3">
                 <h1 class="page_title">Daftar Riwayat Pembayaran</h1>
                 <p class="text-muted">Halaman daftar semua transaksi penjualan</p>
             </div>
-            <div class="col-sm-3 text-right">
+            <div class="col-sm-9 text-right">
                 <a class="btn btn-default" href="{{ 'pos/transactions/payment' | link }}?sync=1">Sinkronkan Data</a>
+                <a class="btn btn-default" href="{{ 'pos/transactions/payment' | link }}?clear_receipt=1"
+                   onclick="return confirm('Anda yakin ingin mengosongkan data bukti pembayaran tahun lalu?');">Kosongkan Bukti Pembayaran</a>
                 <a class="btn btn-default" href="{{ 'pos/transactions/create' | link }}">Transaksi Baru</a>
             </div>
         </div>
@@ -25,6 +27,9 @@ Riwayat Pembayaran - {{ App.params.site_name }}
                     <div class="panel panel-default">
                         <div class="panel-heading">Daftar Riwayat Pembayaran</div>
                         <div class="panel-body">
+                            {% if message %}
+                            <div class="alert alert-warning">{{ message | raw }}</div>
+                            {% endif %}
                             <div id="dt_basic_wrapper" class="dataTables_wrapper form-inline no-footer table-responsive" role="grid">
                                 <table id="dt_basic" class="table table-striped dataTable">
                                     <thead>

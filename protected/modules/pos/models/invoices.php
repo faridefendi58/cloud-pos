@@ -257,7 +257,7 @@ class InvoicesModel extends \Model\BaseModel
                 if (isset($data['order_type'])) {
                     $order_type = $data['order_type'];
                 }
-                $sql .= ' ORDER BY '. $data['custom_order_by'] .' '.$order_type;
+                $sql .= ' ORDER BY '. $data['custom_order_by'] .', t.delivered_plan_at '.$order_type;
             } else {
                 $sql .= ' ORDER BY t.created_at DESC';
             }

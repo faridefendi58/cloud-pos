@@ -17,6 +17,7 @@ class ProductController extends BaseController
         $app->map(['POST'], '/create', [$this, 'create']);
         $app->map(['POST'], '/update', [$this, 'update']);
         $app->map(['POST'], '/delete', [$this, 'delete']);
+        $app->map(['POST'], '/update-price/[{id}]', [$this, 'update_price']);
     }
 
     public function accessRules()
@@ -309,6 +310,42 @@ class ProductController extends BaseController
                     ];
                 } else {
                     $result['message'] = 'Data gagal dihapus';
+                }
+            }
+        }
+
+        return $response->withJson($result, 201);
+    }
+
+    public function update_price($request, $response, $args)
+    {
+        $isAllowed = $this->isAllowed($request, $response);
+
+        if (!$isAllowed['allow']) {
+            $result = [
+                'success' => 0,
+                'message' => $isAllowed['message'],
+            ];
+            return $response->withJson($result, 201);
+        }
+
+        $result = ['success' => 0];
+        $params = $request->getParams();
+        if (isset($params['admin_id']) && isset($params['id']) && ($params['id'] == $args['id'])) {
+            $wh = \Model\WarehousesModel::model()->findByAttributes(['code' => $params['warehouse_code']]);
+            if ($wh instanceof \RedBeanPHP\OODBBean) {
+                $wh_product = \Model\WarehouseProductsModel::model()->findByAttributes(['product_id' => $params['id'], 'warehouse_id' => $wh->id]);
+                if ($wh_product instanceof \RedBeanPHP\OODBBean) {
+                    $wh_product->configs = json_encode($params['prices']);
+                    $wh_product->updated_at = date('c');
+                    $wh_product->updated_by = $params['admin_id'];
+                    $update = \Model\WarehouseProductsModel::model()->update($wh_product);
+                    if ($update) {
+                        $result = [
+                            "success" => 1,
+                            'message' => 'Data berhasil diubah.'
+                        ];
+                    }
                 }
             }
         }

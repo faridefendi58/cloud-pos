@@ -829,6 +829,27 @@ class TransactionsController extends BaseController
             $sync = true;
         }
 
+        $message = null;
+        if (array_key_exists('clear_receipt', $params) && $params['clear_receipt'] > 0) {
+            $settings = $this->_settings;
+            $del = 0;
+            foreach(glob($settings['basePath'] . '/../uploads/images/transfers/*') as $_img) {
+                $info = pathinfo($_img);
+                if (array_key_exists('basename', $info) && $info['basename'] != 'index.php') {
+                    if (filectime($_img) <= strtotime("-1 year")) {
+                        if (unlink($_img)) {
+                            $del++;
+                        }
+                    }
+                }
+            }
+            if ($del > 0) {
+                $message = 'Successfully delete ' . $del . ' files payment receipt.';
+            } else {
+                $message = 'Found no files to be deleted.';
+            }
+        }
+
         $c_model = new \Model\PaymentChannelsModel();
         $this->payment_channels = $c_model->getChannelIds();
 
@@ -859,7 +880,8 @@ class TransactionsController extends BaseController
             $response,
             'transactions/payment.html',
             [
-                'items' => $items
+                'items' => $items,
+                'message' => $message
             ]
         );
     }

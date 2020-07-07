@@ -32,7 +32,7 @@ class InvoiceFeesModel extends \Model\BaseModel
      */
     public function getData($data = array())
     {
-        $sql = 'SELECT t.*, i.serie AS invoice_serie, i.nr AS invoice_nr, i.status AS invoice_status, i.config AS invoice_configs, i.paid_at, i.delivered_at,
+        $sql = 'SELECT t.*, i.serie AS invoice_serie, i.nr AS invoice_nr, i.status AS invoice_status, i.config AS invoice_configs, i.paid_at, i.delivered_at, i.customer_id, 
             w.title AS warehouse_name, (SELECT (SUM(ii.price*ii.quantity) - iv.discount) AS itot FROM {tablePrefix}ext_invoice_item ii 
             LEFT JOIN {tablePrefix}ext_invoice iv ON iv.id = ii.invoice_id WHERE ii.invoice_id = t.invoice_id) AS total_revenue, SUM(t.fee + t.fee_refund) AS total_fee, COUNT(t.id) AS total_transaction     
             FROM {tablePrefix}ext_invoice_fee t 
@@ -69,6 +69,11 @@ class InvoiceFeesModel extends \Model\BaseModel
 		if (isset($data['created_at'])) {
             $sql .= ' AND DATE_FORMAT(t.created_at,"%Y-%m-%d") =:created_at';
             $params['created_at'] = $data['created_at'];
+        }
+
+		if (isset($data['customer_id'])) {
+            $sql .= ' AND i.customer_id =:customer_id';
+            $params['customer_id'] = $data['customer_id'];
         }
 
 		if (isset($data['group_by'])) {
@@ -322,11 +327,17 @@ class InvoiceFeesModel extends \Model\BaseModel
             $params['date_to'] = $data['created_at_to'];
         }
 
+		if (isset($data['customer_id'])) {
+            $where .= ' AND iii.customer_id =:customer_id';
+            $params['customer_id'] = $data['customer_id'];
+        }
+
 		$sql = 'SELECT t.invoice_id, ii.title, ii.quantity, 
 			(SELECT SUM(it.quantity) FROM {tablePrefix}ext_invoice_item it WHERE it.invoice_id = t.invoice_id) AS tot_quantity,
 			(SELECT i.config FROM {tablePrefix}ext_invoice i WHERE i.refunded_invoice_id = t.invoice_id) AS refund_configs
 			FROM {tablePrefix}ext_invoice_fee t 
 			LEFT JOIN {tablePrefix}ext_invoice_item ii ON ii.invoice_id = t.invoice_id
+			LEFT JOIN {tablePrefix}ext_invoice iii ON iii.id = t.invoice_id
             WHERE 1 '. $where .'  
 			ORDER BY t.created_at ASC';
 

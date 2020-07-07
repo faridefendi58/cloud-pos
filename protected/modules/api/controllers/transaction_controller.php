@@ -25,6 +25,16 @@ class TransactionController extends BaseController
         $app->map(['POST'], '/verify-transfer', [$this, 'verify_transfer']);
         $app->map(['GET'], '/list-sale-counter', [$this, 'get_sale_counter']);
         $app->map(['POST'], '/delete', [$this, 'delete']);
+        $app->map(['POST'], '/stagging-order', [$this, 'stagging_order']);
+        $app->map(['GET'], '/list-stagging', [$this, 'get_list_stagging']);
+        $app->map(['GET'], '/detail-stagging', [$this, 'get_detail_stagging']);
+        $app->map(['POST'], '/delete-stagging', [$this, 'delete_stagging']);
+        $app->map(['POST'], '/proceed-stagging', [$this, 'proceed_stagging']);
+        $app->map(['GET'], '/list-customer-order', [$this, 'get_customer_order']);
+        $app->map(['GET'], '/list-customer-sale-counter', [$this, 'get_customer_sale_counter']);
+        $app->map(['GET'], '/list-deposit-take', [$this, 'get_deposit_take']);
+        $app->map(['POST','GET'], '/create-deposit-take', [$this, 'create_deposit_take']);
+        $app->map(['GET'], '/last-deposit-take', [$this, 'get_last_deposit_take']);
     }
 
     public function accessRules()
@@ -32,7 +42,8 @@ class TransactionController extends BaseController
         return [
             ['allow',
                 'actions' => ['create', 'detail', 'complete', 'list', 
-					'complete-payment', 'refund', 'list-fee', 'list-fee-on', 'verify-transfer', 'list-sale-counter', 'delete'],
+					'complete-payment', 'refund', 'list-fee', 'list-fee-on', 'verify-transfer', 'list-sale-counter', 'delete',
+                    'stagging-order', 'list-stagging', 'delete-stagging', 'proceed-stagging', 'list-customer-order', 'list-customer-sale-counter'],
                 'users' => ['@'],
             ]
         ];
@@ -62,7 +73,7 @@ class TransactionController extends BaseController
                     $model2->customer_id = $params['customer']['id'];
                     $cust_id = $params['customer']['id'];
                 } else {
-                    if (isset($params['customer']['email']) && ($params['customer']['email']) != "-") {
+                    if (isset($params['customer']['email']) && !empty($params['customer']['email']) && ($params['customer']['email']) != "-") {
                         $cmodel = \Model\CustomersModel::model()->findByAttributes(['email' => $params['customer']['email']]);
                         if ($cmodel instanceof \RedBeanPHP\OODBBean) {
                             $model2->customer_id = $cmodel->id;
@@ -84,7 +95,7 @@ class TransactionController extends BaseController
                     $cmodel->name = $params['customer']['name'];
                     $cmodel->email = (!empty($params['customer']['email'])) ? $params['customer']['email'] : "-";
                     $cmodel->telephone = $params['customer']['phone'];
-                    $cmodel->address = $params['customer']['address'];
+                    $cmodel->address = (!empty($params['customer']['address']) && ($params['customer']['address'] != 'na')) ? $params['customer']['address'] : "-";
                     $cmodel->status = \Model\CustomersModel::STATUS_ACTIVE;
                     $cmodel->created_at = date("Y-m-d H:i:s");
                     $cmodel->created_by = (isset($params['admin_id'])) ? $params['admin_id'] : 1;
@@ -140,6 +151,12 @@ class TransactionController extends BaseController
 			if (isset($params['merchant'])) {
 				$cf['merchant'] = $params['merchant'];
 			}
+			if (isset($params['ongkir'])) {
+				$cf['ongkir'] = $params['ongkir'];
+			}
+			if (isset($params['ongkir_cash_to_driver'])) {
+				$cf['ongkir_cash_to_driver'] = $params['ongkir_cash_to_driver'];
+			}
             $model2->config = json_encode($cf);
             $model2->currency_id = 1;
             $model2->change_value = 1;
@@ -164,6 +181,44 @@ class TransactionController extends BaseController
 
             $save = \Model\InvoicesModel::model()->save(@$model2);
             if ($save) {
+				// if any transfer receipt
+				if (!empty($params['receipt_mandiri']) || !empty($params['receipt_bca']) || !empty($params['receipt_bri'])) {
+					try {
+						$rcpt = []; $p_type = ''; $f_name = '';
+		            	if (isset($params['receipt_mandiri']) && !empty($params['receipt_mandiri'])) {
+							$f_name = 'uploads/images/transfers/'. $model2->id. '_mandiri.jpg';
+							$this->base64_to_jpeg($params['receipt_mandiri'], $f_name);
+							$rcpt['mandiri'] = $f_name;
+							$p_type = 'nominal_mandiri';
+						}
+						if (isset($params['receipt_bca']) && !empty($params['receipt_bca'])) {
+							$f_name = 'uploads/images/transfers/'. $model2->id. '_bca.jpg';
+							$this->base64_to_jpeg($params['receipt_bca'], $f_name);
+							$rcpt['bca'] = $f_name;
+							$p_type = 'nominal_bca';
+						}
+						if (isset($params['receipt_bri']) && !empty($params['receipt_bri'])) {
+							$f_name = 'uploads/images/transfers/'. $model2->id. '_bri.jpg';
+							$this->base64_to_jpeg($params['receipt_bri'], $f_name);
+							$rcpt['bri'] = $f_name;
+							$p_type = 'nominal_bri';
+						}
+						if (count($rcpt) > 0) {
+							$cf2 = json_decode($model2->config, true);
+							$cf2['transfer_receipt'] = $rcpt;
+							if (!empty($cf2['payment']) && is_array($cf2['payment']) && !empty($p_type) && !empty($f_name)) {
+								foreach ($cf2['payment'] as $ip => $pymnt) {
+								    if ($pymnt['type'] == $p_type) {
+								        $cf2['payment'][$ip]['transfer_receipt'] = $f_name;
+								    }
+								}
+							}
+							$xmodel = \Model\InvoicesModel::model()->findByPk($model2->id);
+							$xmodel->config = json_encode($cf2);
+							$upd = \Model\InvoicesModel::model()->update($xmodel);
+						}
+					} catch (\Exception $e) {}
+            	}
                 $omodel = new \Model\OrdersModel();
                 $group_id = $omodel->getNextGroupId();
                 $items_belanja = $params['items_belanja'];
@@ -415,6 +470,13 @@ class TransactionController extends BaseController
             $model->delivered = 1;
             $model->delivered_at = date("Y-m-d H:i:s");
             $model->delivered_by = (isset($params['admin_id'])) ? $params['admin_id'] : 1;
+
+			$ship = $configs['shipping'][0];
+			if (is_array($ship) && array_key_exists('method', $ship) && ((int)$ship['method'] == 6)) {
+				$model->delivered = 0;
+            	$model->delivered_at = null;
+	            $model->delivered_by = 0;
+			}
             if ($has_new_config) {
                 $model->config = json_encode($configs);
             }
@@ -553,6 +615,52 @@ class TransactionController extends BaseController
             }
 
             $has_new_config = false;
+			// if any transfer receipt
+            if (!empty($params['receipt_mandiri']) || !empty($params['receipt_bca']) || !empty($params['receipt_bri'])) {
+                try {
+                    $rcpt = []; $f_name = ""; $p_type = '';
+                    if (isset($params['receipt_mandiri']) && !empty($params['receipt_mandiri'])) {
+                        $f_name = 'uploads/images/transfers/'. $model->id. '_mandiri_'. time() .'.jpg';
+                        $this->base64_to_jpeg($params['receipt_mandiri'], $f_name);
+                        $rcpt['mandiri'] = $f_name;
+						$p_type = 'nominal_mandiri';
+                    }
+                    if (isset($params['receipt_bca']) && !empty($params['receipt_bca'])) {
+                        $f_name = 'uploads/images/transfers/'. $model->id. '_bca_'. time() .'.jpg';
+                        $this->base64_to_jpeg($params['receipt_bca'], $f_name);
+                        $rcpt['bca'] = $f_name;
+						$p_type = 'nominal_bca';
+                    }
+                    if (isset($params['receipt_bri']) && !empty($params['receipt_bri'])) {
+                        $f_name = 'uploads/images/transfers/'. $model->id. '_bri_'. time() .'.jpg';
+                        $this->base64_to_jpeg($params['receipt_bri'], $f_name);
+                        $rcpt['bri'] = $f_name;
+						$p_type = 'nominal_bri';
+                    }
+                    if (count($rcpt) > 0) {
+						if (!array_key_exists('transfer_receipt', $configs)) {
+							$configs['transfer_receipt'] = $rcpt;
+						} else {
+							$transfer_receipt = $configs['transfer_receipt'];
+							foreach ($rcpt as $_channel => $_path) {
+								if (array_key_exists($_channel, $transfer_receipt)) {
+									$configs['transfer_receipt'][$_channel .'_'. time()] = $_path;
+								}
+							}
+						}
+						if (isset($params['payment'])) {
+							if (!empty($params['payment']) && is_array($params['payment']) && !empty($p_type) && !empty($f_name)) {
+								foreach ($params['payment'] as $ip => $pymnt) {
+								    if ($pymnt['type'] == $p_type) {
+								        $params['payment'][$ip]['transfer_receipt'] = $f_name;
+								    }
+								}
+							}
+						}
+                    	$has_new_config = true;
+                    }
+                } catch (\Exception $e) {}
+            }
             if (isset($params['payment'])) {
                 if (in_array('payment', array_keys($configs))) {
                     if (is_array($configs['payment'])) {
@@ -1229,6 +1337,741 @@ class TransactionController extends BaseController
                 	$result['message'] = 'Data berhasil dihapus.';
 				}
 			}
+        }
+
+        return $response->withJson($result, 201);
+    }
+
+    public function stagging_order($request, $response, $args)
+    {
+        $isAllowed = $this->isAllowed($request, $response);
+
+        if (!$isAllowed['allow']) {
+            $result = [
+                'success' => 0,
+                'message' => $isAllowed['message'],
+            ];
+            return $response->withJson($result, 201);
+        }
+
+        $result = ['success' => 0];
+        $params = $request->getParams();
+        if (isset($params['warehouse_code'])) {
+            $wh_model = \Model\WarehousesModel::model()->findByAttributes(['code' => $params['warehouse_code']]);
+            if ($wh_model instanceof \RedBeanPHP\OODBBean) {
+                $model = new \Model\StaggingOrdersModel();
+                if (!empty($params['order_key'])) {
+                    $model->order_key = $params['order_key'];
+                    $st_order = \Model\StaggingOrdersModel::model()->findByAttributes(['order_key' => $params['order_key']]);
+                    if ($st_order instanceof \RedBeanPHP\OODBBean) {
+                        $result['success'] = 0;
+                        $result['message'] = 'Dublicate data. Your order data was saved before.';
+                        return $response->withJson($result, 201);
+                    }
+                }
+				$model->serie = 'WEB-'. $wh_model->code .'-'. date('y') . '-';
+				$model->nr = $model->getNextNR($wh_model->id, $model->serie);
+                $model->warehouse_id = $wh_model->id;
+                $model->name = $params['name'];
+                $model->phone = $params['phone'];
+                $model->address = $params['address'];
+                $model->shipping_method = $params['shipping_method'];
+                if (!empty($params['order_total'])) {
+                    $model->total = (int)$params['order_total'];
+                }
+                if (!empty($params['order_ongkir'])) {
+                    $model->ongkir = (int)$params['order_ongkir'];
+                }
+                if (!empty($params['items'])) {
+                    $model->items = json_encode($params['items']);
+                }
+                $model->created_at = date('c');
+                $save = \Model\StaggingOrdersModel::model()->save($model);
+                if ($save) {
+                    $result['success'] = 1;
+                    $result['message'] = 'Order berhasil disimpan.';
+                } else {
+                    $result['message'] = 'Data gagal disimpan.';
+                }
+            }
+        }
+
+        return $response->withJson($result, 201);
+    }
+
+    public function get_list_stagging($request, $response, $args)
+    {
+        $isAllowed = $this->isAllowed($request, $response);
+
+        if (!$isAllowed['allow']) {
+            $result = [
+                'success' => 0,
+                'message' => $isAllowed['message'],
+            ];
+            return $response->withJson($result, 201);
+        }
+
+        $result = ['success' => 0];
+        $params = $request->getParams();
+        $s_model = new \Model\StaggingOrdersModel();
+        if (!isset($params['limit'])) {
+            $params['limit'] = 20;
+        }
+
+        $items = $s_model->getData($params);
+        if (is_array($items)) {
+            $result['success'] = 1;
+            foreach ($items as $i => $item) {
+                $items[$i]['items'] = json_decode($item['items'], true);
+            }
+            $result['data'] = $items;
+        } else {
+            $result = [
+                'success' => 0,
+                'message' => "Data transaksi tidak ditemukan.",
+            ];
+        }
+
+        return $response->withJson($result, 201);
+    }
+
+	public function get_detail_stagging($request, $response, $args)
+    {
+        $isAllowed = $this->isAllowed($request, $response);
+
+        if (!$isAllowed['allow']) {
+            $result = [
+                'success' => 0,
+                'message' => $isAllowed['message'],
+            ];
+            return $response->withJson($result, 201);
+        }
+
+        $result = ['success' => 0];
+        $params = $request->getParams();
+        $config = [];
+
+        if (isset($params['admin_id']) && isset($params['order_key'])) {
+        	$s_model = new \Model\StaggingOrdersModel();
+			$data = $s_model->getItem($params['order_key']);
+			if (!empty($data)) {
+				$result['success'] = 1;
+				$result['data'] = $data;
+			}
+		}
+
+		return $response->withJson($result, 201);
+	}
+
+	public function delete_stagging($request, $response, $args)
+    {
+        $isAllowed = $this->isAllowed($request, $response);
+
+        if (!$isAllowed['allow']) {
+            $result = [
+                'success' => 0,
+                'message' => $isAllowed['message'],
+            ];
+            return $response->withJson($result, 201);
+        }
+
+        $result = ['success' => 0, 'message' => 'Gagal menghapus transaksi.'];
+        $params = $request->getParams();
+
+        if (!empty($params['admin_id']) && !empty($params['order_key'])) {
+            $model = \Model\StaggingOrdersModel::model()->findByAttributes(['order_key' => $params['order_key']]);
+			if (($model instanceof \RedBeanPHP\OODBBean) && ($model->status <= 0)) {
+				$delete = \Model\StaggingOrdersModel::model()->delete($model);
+				if ($delete) {
+					$result['success'] = 1;
+                	$result['message'] = 'Data berhasil dihapus.';
+				}
+			}
+        }
+
+        return $response->withJson($result, 201);
+    }
+
+	public function proceed_stagging($request, $response, $args)
+    {
+        $isAllowed = $this->isAllowed($request, $response);
+
+        if (!$isAllowed['allow']) {
+            $result = [
+                'success' => 0,
+                'message' => $isAllowed['message'],
+            ];
+            return $response->withJson($result, 201);
+        }
+
+        $result = ['success' => 0, 'message' => 'Gagal memproses transaksi.'];
+        $params = $request->getParams();
+		if (isset($params['admin_id']) && !empty($params['order_key'])) {
+			$model = \Model\StaggingOrdersModel::model()->findByAttributes(['order_key' => $params['order_key']]);
+			if (($model instanceof \RedBeanPHP\OODBBean) && ($model->status <= 0)) {
+				$model2 = new \Model\InvoicesModel();
+				$cust_id = 0;
+				$cmodel = \Model\CustomersModel::model()->findByAttributes(['telephone' => $model->phone]);
+				if ($cmodel instanceof \RedBeanPHP\OODBBean) {
+					$model2->customer_id = $cmodel->id;
+					$cust_id = $cmodel->id;
+				}
+				// if still empty
+                if ($cust_id == 0) {
+                    $cmodel = new \Model\CustomersModel();
+                    $cmodel->name = $model->name;
+                    $cmodel->telephone = $model->phone;
+                    $cmodel->address = $model->address;
+                    $cmodel->status = \Model\CustomersModel::STATUS_ACTIVE;
+                    $cmodel->created_at = date("Y-m-d H:i:s");
+                    $cmodel->created_by = (isset($params['admin_id'])) ? $params['admin_id'] : 1;
+                    $csave = \Model\CustomersModel::model()->save(@$cmodel);
+                    if ($csave) {
+                        $model2->customer_id = $cmodel->id;
+                        $cust_id = $cmodel->id;
+                    }
+                }
+
+				$model2->status = \Model\InvoicesModel::STATUS_UNPAID;
+				$model2->cash = 0; //$model->total;
+	            $model2->serie = $model2->getWHInvoiceNumber($model->warehouse_id, $model2->status, 'serie');
+				$model2->nr = $model2->getWHInvoiceNumber($model->warehouse_id, $model2->status, 'nr');
+
+				$wh_model = \Model\WarehousesModel::model()->findByPk($model->warehouse_id);
+				$items_belanja = [];
+				$_items = json_decode($model->items, true);
+				if (is_array($_items)) {
+					foreach ($_items as $i => $_item) {
+						if (array_key_exists("barcode", $_item)) {
+							$barcode = $_item['barcode'];
+						}
+						$items_belanja[] = [
+						    'qty' => $_item['order_item_qty'],
+                            'name' => $_item['order_item_name'],
+                            'base_price' => $_item['order_item_price'],
+                            'unit_price' => $_item['order_item_price'],
+                            'id' => $_item['order_item_id'],
+                            'barcode' => $barcode
+                        ];
+					}
+				}
+
+				$ship_methods = ['ambil_nanti' => ['id' => 1, 'title' => 'Ambil Nanti'], 'gosend' => ['id' => 2, 'title' => 'GoSend / Grab Express']];
+				$cf = [
+		                'items_belanja' => $items_belanja,
+		                'payment' => [["change_due" => "0.0","type" => "cash_receive","amount_tendered" => "0.0"]],
+		                'customer' => [
+		                    "address" => $model->address,
+                            "phone" => $model->phone,
+                            "name" => $model->name,
+                            "email" => ""
+                        ],
+		                'discount' => 0,
+		                'shipping' => [
+		                    [
+		                        "date" => $model->created_at,
+                                "date_added" => $model->created_at,
+                                "configs" => "null",
+                                "pickup_date" => $model->created_at,
+                                "address" => $model->address,
+                                "warehouse_name" => $wh_model->title,
+                                "method" => (array_key_exists($model->shipping_method, $ship_methods))? $ship_methods[$model->shipping_method]['id'] : 1,
+                                "method_name" => (array_key_exists($model->shipping_method, $ship_methods))? $ship_methods[$model->shipping_method]['title'] : 'Ambil Nanti',
+                                "recipient_name" => $model->name,
+                                "warehouse_id" => $model->warehouse_id,
+                                "recipient_phone" => $model->phone
+                            ]
+                        ]
+		            ];
+
+            	$model2->config = json_encode($cf);
+	            $model2->currency_id = 1;
+    	        $model2->change_value = 1;
+                $model2->warehouse_id = $model->warehouse_id;
+				$model2->delivered_plan_at = $model->created_at;
+	            $model2->created_at = date("Y-m-d H:i:s");
+    	        $model2->created_by = (isset($params['admin_id'])) ? $params['admin_id'] : 1;
+
+        	    $save = \Model\InvoicesModel::model()->save(@$model2);
+		        if ($save) {
+		            $omodel = new \Model\OrdersModel();
+		            $group_id = $omodel->getNextGroupId();
+		            $success = true;
+		            foreach ($items_belanja as $index => $data) {
+						if (!empty($data['barcode'])) {
+							$model3 = new \Model\OrdersModel();
+				            $model3->product_id = $data['barcode'];
+				            if (!empty($model2->customer_id)) {
+				                $model3->customer_id = $model2->customer_id;
+				            }
+				            $model3->title = $data['name'];
+				            $model3->group_id = $group_id;
+				            $model3->group_master = ($index == 0) ? 1 : 0;
+				            $model3->invoice_id = $model2->id;
+				            $model3->quantity = $data['qty'];
+				            $model3->price = $data['unit_price'];
+				            $model3->discount = 0;
+				            $model3->warehouse_id = $model->warehouse_id;
+
+				            // use cost price from server
+				            if (!empty($model3->warehouse_id)) {
+				                $wh_prod_model = new \Model\WarehouseProductsModel();
+				                $current_cost = $wh_prod_model->getCurrentCost(['warehouse_id' => $model->warehouse_id, 'product_id' => $model3->product_id]);
+				                $model3->cost_price = $current_cost;
+				            } else {
+				                if (isset($data['cost_price'])) {
+				                    $model3->cost_price = $data['cost_price'];
+				                } else {
+				                    $model3->cost_price = $data['unit_price'];
+				                }
+				            }
+
+				            if ($params['promocode']) {
+				                $model3->promo_id = $params['promocode'];
+				            }
+				            $model3->currency_id = $model2->currency_id;
+				            $model3->change_value = $model2->change_value;
+				            $model3->type = (!empty($params['payment_type'])) ? $params['payment_type'] : 1;
+
+				            $model3->status = 1;
+				            $model3->created_at = date("Y-m-d H:i:s");
+				            $model3->created_by = (isset($params['admin_id'])) ? $params['admin_id'] : 1;
+				            $save2 = \Model\OrdersModel::model()->save(@$model3);
+				            if ($save2) {
+				                $model4 = new \Model\InvoiceItemsModel();
+				                $model4->invoice_id = $model2->id;
+				                $model4->type = \Model\InvoiceItemsModel::TYPE_ORDER;
+				                $model4->rel_id = $model3->id;
+				                $model4->title = $model3->title;
+				                $model4->quantity = $model3->quantity;
+				                $model4->price = $model3->price;
+				                $model4->cost_price = $model3->cost_price;
+				                $model4->created_at = date("Y-m-d H:i:s");
+				                $model4->created_by = (isset($params['admin_id'])) ? $params['admin_id'] : 1;
+				                $save3 = \Model\InvoiceItemsModel::model()->save(@$model4);
+				                if (!$save3) {
+				                    $success &= false;
+				                }
+				            } else {
+				                $success &= false;
+				                $errors = \Model\OrdersModel::model()->getErrors(true, true);
+				            }
+						}
+		            }
+		            if ($success) {
+		                // update stagging data
+                        $model->rel_id = $model2->id;
+                        $model->status = 1;
+                        $model->processed_at = date('c');
+                        $model->processed_by = (isset($params['admin_id'])) ? $params['admin_id'] : 1;
+                        $update_stag = \Model\StaggingOrdersModel::model()->update($model);
+		                $result = [
+		                    "success" => 1,
+		                    "id" => $model2->id,
+		                    "invoice_id" => $model2->id,
+		                    "invoice_number" => $model2->getInvoiceFormatedNumber(['id' => $model2->id]),
+							"config" => $cf,
+							"customer_id" => $model2->customer_id,
+		                    'message' => 'Data berhasil disimpan.'
+		                ];
+		            } else {
+		                $result['message'] = 'Data gagal disimpan';
+		            }
+				}
+			}
+		}
+
+		return $response->withJson($result, 201);
+	}
+
+	private function base64_to_jpeg($base64_string, $output_file) {
+		file_put_contents($output_file, base64_decode($base64_string));
+
+		return $output_file; 
+	}
+
+	public function get_customer_order($request, $response, $args)
+    {
+        $isAllowed = $this->isAllowed($request, $response);
+
+        if (!$isAllowed['allow']) {
+            $result = [
+                'success' => 0,
+                'message' => $isAllowed['message'],
+            ];
+            return $response->withJson($result, 201);
+        }
+
+        $result = ['success' => 0];
+        $params = $request->getParams();
+        $model = new \Model\InvoiceFeesModel();
+        $items = $model->getData($params);
+        if (is_array($items) && count($items) > 0) {
+            $result['success'] = 1;
+            $i_model = new \Model\InvoicesModel();
+            $total_revenue = 0;
+            $total_transaction = 0;
+            $total_fee = 0;
+            $payments = [];
+			$change_due = 0;
+            foreach ($items as $i => $item) {
+                $total_revenue = $total_revenue + $item['total_revenue'];
+                $total_transaction = $total_transaction + $item['total_transaction'];
+                $total_fee = $total_fee + $item['total_fee'];
+                $items[$i]['configs'] = json_decode($items[$i]['configs'], true);
+                $items[$i]['invoice_configs'] = json_decode($items[$i]['invoice_configs'], true);
+                $invoice_configs = $items[$i]['invoice_configs'];
+                if (array_key_exists('payment', $invoice_configs)) {
+                    $items[$i]['payments'] = $invoice_configs['payment'];
+                    if (is_array($invoice_configs['payment'])) {
+                        foreach ($invoice_configs['payment'] as $j => $pay_channel) {
+                            if (array_key_exists($pay_channel['type'], $payments)) {
+                                $payments[$pay_channel['type']] = $payments[$pay_channel['type']] + $pay_channel['amount_tendered'];
+                            } else {
+                                $payments[$pay_channel['type']] = $pay_channel['amount_tendered'] * 1;
+                            }
+							if (array_key_exists('change_due', $pay_channel)) {
+								$change_due = $change_due + ($pay_channel['change_due'] * 1);
+							}
+                        }
+                    }
+                }
+                $items[$i]['invoice_number'] = $i_model->getInvoiceFormatedNumber(['id' => $item['invoice_id']]);
+				$rmodel = \Model\InvoicesModel::model()->findByAttributes(['refunded_invoice_id' => $item['invoice_id']]);
+				$items[$i]['total_refund'] = 0;
+				if ($rmodel instanceof \RedBeanPHP\OODBBean) {
+					$cfg = json_decode($rmodel->config, true);
+					if (array_key_exists('payments', $cfg) && !empty($cfg['payments'])) {
+						if (is_array($cfg['payments'])) {
+							foreach ($cfg['payments'] as $j => $payment) {
+								$items[$i]['total_refund'] =  $items[$i]['total_refund'] + ($payment['amount'] * 1);
+							}
+						}
+					}
+				}
+            }
+
+			$sum = [
+                    'total_revenue' => $total_revenue,
+                    'total_transaction' => $total_transaction,
+                    'total_fee' => $total_fee,
+                    'payments' => $payments,
+					'change_due' => $change_due 
+                ];
+			$refunds = $model->getRefundData($params);
+			if (is_array($refunds) && count($refunds)) {
+				$sum['refunds'] = $refunds;
+			}
+
+            $result['data'] = [
+                'summary' => $sum,
+                'items' => $items
+            ];
+        }
+
+        return $response->withJson($result, 201);
+    }
+
+	public function get_customer_sale_counter($request, $response, $args)
+    {
+        $isAllowed = $this->isAllowed($request, $response);
+
+        if (!$isAllowed['allow']) {
+            $result = [
+                'success' => 0,
+                'message' => $isAllowed['message'],
+            ];
+            return $response->withJson($result, 201);
+        }
+
+        $result = ['success' => 0];
+        $params = $request->getParams();
+		$model = new \Model\InvoiceFeesModel();
+        $items = $model->getCounterData($params);
+
+        if (is_array($items) && count($items) > 0) {
+            $result['success'] = 1;
+			$datas = [];
+			$datas_ori = [];
+			$summary = [];
+			$summary_ori = [];
+			$returs = [];
+            foreach ($items as $i => $item) {
+				$title = ucwords($item['title']);
+				$summary[$title] += $item['quantity'];
+				// refund data
+				$refund_configs = null;
+				if (!empty($item['refund_configs'])) {
+					$refund_configs = json_decode($item['refund_configs'], true);
+				}
+                if ($item['tot_quantity']<5) {
+					$datas['eceran'][$title] += $item['quantity'];
+					$datas_ori['eceran'][$title] += $item['quantity'];
+					if (!empty($refund_configs)) {
+						foreach($refund_configs['items'] as $ci => $citem) {
+							if (strtolower($citem['name']) == strtolower($title) && $citem['returned_qty'] > 0) {
+								$returs['eceran'][$title] -= $citem['returned_qty'];
+								$datas['eceran'][$title] -= $citem['returned_qty'];
+							}
+						}
+						if (array_key_exists('items_change', $refund_configs)) {
+							foreach($refund_configs['items_change'] as $chi => $chitem) {
+								if (strtolower($chitem['name']) == strtolower($title)) {
+									$returs['eceran'][$title] += $chitem['quantity'];
+									$datas['eceran'][$title] += $chitem['quantity'];
+								}
+							}
+						}
+					}
+				} elseif ($item['tot_quantity']>=5 && $item['tot_quantity']<10) {
+					$datas['semi_grosir'][$title] += $item['quantity'];
+					$datas_ori['semi_grosir'][$title] += $item['quantity'];
+					if (!empty($refund_configs)) {
+						foreach($refund_configs['items'] as $ci => $citem) {
+							if (strtolower($citem['name']) == strtolower($title) && $citem['returned_qty'] > 0) {
+								$returs['semi_grosir'][$title] -= $citem['returned_qty'];
+								$datas['semi_grosir'][$title] -= $citem['returned_qty'];
+							}
+						}
+						if (array_key_exists('items_change', $refund_configs)) {
+							foreach($refund_configs['items_change'] as $chi => $chitem) {
+								if (strtolower($chitem['name']) == strtolower($title)) {
+									$returs['semi_grosir'][$title] += $chitem['quantity'];
+									$datas['semi_grosir'][$title] += $chitem['quantity'];
+								}
+							}
+						}
+					}
+				} else {
+					$datas['grosir'][$title] += $item['quantity'];
+					$datas_ori['grosir'][$title] += $item['quantity'];
+					if (!empty($refund_configs)) {
+						foreach($refund_configs['items'] as $ci => $citem) {
+							if (strtolower($citem['name']) == strtolower($title) && $citem['returned_qty'] > 0) {
+								$returs['grosir'][$title] -= $citem['returned_qty'];
+								$datas['grosir'][$title] -= $citem['returned_qty'];
+							}
+						}
+						if (array_key_exists('items_change', $refund_configs)) {
+							foreach($refund_configs['items_change'] as $chi => $chitem) {
+								if (strtolower($chitem['name']) == strtolower($title)) {
+									$returs['grosir'][$title] += $chitem['quantity'];
+									$datas['grosir'][$title] += $chitem['quantity'];
+								}
+							}
+						}
+					}
+				}
+			}
+
+			$summary_ori = $summary;
+			if (count($returs) > 0) {
+				foreach($returs as $type => $products) {
+					foreach($products as $p => $tot) {
+						$summary[$p] += $tot;
+					}
+				}
+			}
+
+            $result['data'] = [
+				'items_original' => $datas_ori,
+				'summary_original' => $summary_ori,
+				'items' => $datas,
+				'summary' => $summary,
+				'returs' => $returs
+			];
+        }
+
+        return $response->withJson($result, 201);
+    }
+
+    public function get_deposit_take($request, $response, $args)
+    {
+        $isAllowed = $this->isAllowed($request, $response);
+
+        if (!$isAllowed['allow']) {
+            $result = [
+                'success' => 0,
+                'message' => $isAllowed['message'],
+            ];
+            return $response->withJson($result, 201);
+        }
+
+        $result = ['success' => 0];
+        $params = $request->getParams();
+        $model = new \Model\DepositTakesModel();
+        $items = $model->getData($params);
+        if (count($items)>0) {
+            $result['success'] = 1;
+            foreach ($items as $i => $item) {
+                if (isset($item['items']) && !empty($item['items'])) {
+                    $items[$i]['items'] = json_decode($item['items'], true);
+                }
+            }
+            $result['data'] = $items;
+        }
+
+        return $response->withJson($result, 201);
+    }
+
+    public function create_deposit_take($request, $response, $args)
+    {
+        $isAllowed = $this->isAllowed($request, $response);
+
+        if (!$isAllowed['allow']) {
+            $result = [
+                'success' => 0,
+                'message' => $isAllowed['message'],
+            ];
+            return $response->withJson($result, 201);
+        }
+
+        $result = ['success' => 0];
+        $params = $request->getParams();
+
+        if (isset($params['admin_id'])) {
+            $model = new \Model\DepositTakesModel();
+            if (isset($params['invoice_id']) && isset($params['items'])) {
+                $last_take = $model->getLastTake($params);
+                $allow_take = false;
+                if (empty($last_take)) {
+                    $allow_take = true;
+                } else {
+                    if ($last_take['available_qty'] > 0) {
+                        $allow_take = true;
+                    }
+                }
+                if ($allow_take) {
+                    $model->invoice_id = $params['invoice_id'];
+                    if (isset($params['notes']) && !empty($params['notes'])) {
+                        $model->notes = $params['notes'];
+                    }
+                    $tot_take_qty = 0; $available_qty = 0; $tot_qty_before = 0;
+                    if (!is_array($params['items'])) {
+                        $params['items'] = json_decode($params['items'], true);
+                    }
+					$items_available = [];
+					if (isset($params['items_available']) && is_array($params['items_available'])) {
+						$items_available = $params['items_available'];
+					}
+                    $model->items = json_encode($params['items']);
+                    foreach ($params['items'] as $i => $item) {
+                        $tot_take_qty = $tot_take_qty + $item['quantity'];
+                        $tot_qty_before = $tot_qty_before + $item['quantity_before'];
+                        $available_qty = $available_qty + ($item['quantity_before'] - $item['quantity']);
+						if (array_key_exists($item['product_id'], $items_available)) {
+							$items_available[$item['product_id']] = $items_available[$item['product_id']] - $item['quantity'];
+						} else {
+							$items_available[$item['product_id']] = 0;
+						}
+                    }
+                    $model->tot_take_qty = $tot_take_qty;
+                    $model->available_qty = (count($items_available)>0)? array_sum($items_available) : $available_qty;
+                    if (($model->tot_take_qty > 0) && ($model->tot_take_qty <= $tot_qty_before)) {
+                        $model->created_at = date('c');
+                        $model->created_by = $params['admin_id'];
+                        $save = \Model\DepositTakesModel::model()->save(@$model);
+                        if ($save) {
+							if ($model->available_qty == 0) {
+        	                    $imodel = \Model\InvoicesModel::model()->findByPk($model->invoice_id);
+		                        if ($imodel instanceof \RedBeanPHP\OODBBean) {
+		                            $imodel->delivered = 1;
+		                            $imodel->delivered_at = date("Y-m-d H:i:s");
+		                            $imodel->delivered_by = $params['admin_id'];
+		                            $imodel->updated_at = date("Y-m-d H:i:s");
+		                            $imodel->updated_by = $params['admin_id'];
+		                            $update = \Model\InvoicesModel::model()->update($imodel);
+
+                                    // real update the stock
+                                    $prod_model = new \Model\ProductsModel();
+                                    $avoid_stocks = $prod_model->getAvoidStockProducts();
+                                    if (is_array($params['items'])) {
+                                        $smodel = new \Model\ProductStocksModel();
+                                        foreach ($params['items'] as $i => $item) {
+                                            // several product has been flaged to be uncalculated stock
+                                            if (!in_array($item['product_id'], $avoid_stocks)) {
+                                                $stock = $smodel->getStockByQuantity([
+                                                    'product_id' => $item['product_id'],
+                                                    'warehouse_id' => $imodel->warehouse_id,
+                                                    'quantity' => $item['quantity']
+                                                ]);
+
+                                                if ($stock instanceof \RedBeanPHP\OODBBean) {
+                                                    $stock->quantity = $stock->quantity - $item['quantity'];
+                                                    $stock->updated_at = date("Y-m-d H:i:s");
+                                                    $stock->updated_by = $params['admin_id'];
+                                                    $update_stock = \Model\ProductStocksModel::model()->update($stock);
+                                                }
+                                            }
+                                        }
+                                    }
+                                    //store the manager fee
+                                    try {
+                                        $this->onAfterInvoiceCompleted($model->invoice_id);
+                                    } catch (\Exception $e) {}
+		                        }
+							} else { //incomplete inv, just update stock
+                                $imodel = \Model\InvoicesModel::model()->findByPk($model->invoice_id);
+                                if ($imodel instanceof \RedBeanPHP\OODBBean) {
+                                    // real update the stock
+                                    $prod_model = new \Model\ProductsModel();
+                                    $avoid_stocks = $prod_model->getAvoidStockProducts();
+                                    if (is_array($params['items'])) {
+                                        $smodel = new \Model\ProductStocksModel();
+                                        foreach ($params['items'] as $i => $item) {
+                                            // several product has been flaged to be uncalculated stock
+                                            if (!in_array($item['product_id'], $avoid_stocks)) {
+                                                $stock = $smodel->getStockByQuantity([
+                                                    'product_id' => $item['product_id'],
+                                                    'warehouse_id' => $imodel->warehouse_id,
+                                                    'quantity' => $item['quantity']
+                                                ]);
+
+                                                if ($stock instanceof \RedBeanPHP\OODBBean) {
+                                                    $stock->quantity = $stock->quantity - $item['quantity'];
+                                                    $stock->updated_at = date("Y-m-d H:i:s");
+                                                    $stock->updated_by = $params['admin_id'];
+                                                    $update_stock = \Model\ProductStocksModel::model()->update($stock);
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+
+                            $result['success'] = 1;
+                            $result['message'] = 'Your data is successfully saved';
+                            $result['available_qty'] = $model->available_qty;
+                        }
+                    }
+                } else {
+                    $result['message'] = 'No available item to be taken';
+                }
+            }
+        }
+
+        return $response->withJson($result, 201);
+    }
+
+    public function get_last_deposit_take($request, $response, $args)
+    {
+        $isAllowed = $this->isAllowed($request, $response);
+
+        if (!$isAllowed['allow']) {
+            $result = [
+                'success' => 0,
+                'message' => $isAllowed['message'],
+            ];
+            return $response->withJson($result, 201);
+        }
+
+        $result = ['success' => 0];
+        $params = $request->getParams();
+        $model = new \Model\DepositTakesModel();
+        $item = $model->getLastTake($params);
+        if (!empty($item)) {
+            $result['success'] = 1;
+            $result['data'] = $item;
         }
 
         return $response->withJson($result, 201);
